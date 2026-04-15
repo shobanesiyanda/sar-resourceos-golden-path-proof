@@ -25,7 +25,13 @@
       "stage": "Delivery",
       "reason": "Delivered tons are lower than dispatched tons.",
       "nextAction": "Open short-delivery claim and adjust accepted tons.",
-      "financeImpact": "Payable reduced"
+      "financeImpact": "Payable reduced",
+"owner": "Operations Manager",
+"priority": "Medium",
+"approvalRequired": "Yes",
+"financeAllowed": "Partial",
+"deadline": "2026-04-16 15:00",
+"actionStatus": "Claim logged"
     },
     {
       "id": "EXC-004",
@@ -34,7 +40,13 @@
       "stage": "Settlement",
       "reason": "Counterparty dispute has been opened against the parcel.",
       "nextAction": "Hold payout and await dispute outcome.",
-      "financeImpact": "Payout blocked"
+      "financeImpact": "Payout blocked",
+"owner": "Legal and Commercial",
+"priority": "High",
+"approvalRequired": "Yes",
+"financeAllowed": "No",
+"deadline": "2026-04-17 09:00",
+"actionStatus": "Awaiting dispute review"
     },
     {
       "id": "EXC-005",
@@ -43,7 +55,13 @@
       "stage": "Finance",
       "reason": "Manual finance approval is required before export.",
       "nextAction": "Finance manager must approve export release.",
-      "financeImpact": "Accounting export blocked"
+      "financeImpact": "Accounting export blocked",
+"owner": "Finance Manager",
+"priority": "High",
+"approvalRequired": "Yes",
+"financeAllowed": "No",
+"deadline": "2026-04-16 17:00",
+"actionStatus": "Pending manager approval"
     }
   ]
 }

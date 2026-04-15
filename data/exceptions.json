@@ -1,0 +1,49 @@
+{
+  "exceptions": [
+    {
+      "id": "EXC-001",
+      "type": "Missing Document",
+      "status": "blocked",
+      "stage": "Release",
+      "reason": "Required release document is missing.",
+      "nextAction": "Upload missing release document and re-run release check.",
+      "financeImpact": "Finance blocked"
+    },
+    {
+      "id": "EXC-002",
+      "type": "Weighbridge Variance",
+      "status": "pending review",
+      "stage": "Reconciliation",
+      "reason": "Source and destination weights differ beyond tolerance.",
+      "nextAction": "Open variance review and confirm accepted tons.",
+      "financeImpact": "Finance pending"
+    },
+    {
+      "id": "EXC-003",
+      "type": "Short Delivery",
+      "status": "claim opened",
+      "stage": "Delivery",
+      "reason": "Delivered tons are lower than dispatched tons.",
+      "nextAction": "Open short-delivery claim and adjust accepted tons.",
+      "financeImpact": "Payable reduced"
+    },
+    {
+      "id": "EXC-004",
+      "type": "Dispute Opened",
+      "status": "held",
+      "stage": "Settlement",
+      "reason": "Counterparty dispute has been opened against the parcel.",
+      "nextAction": "Hold payout and await dispute outcome.",
+      "financeImpact": "Payout blocked"
+    },
+    {
+      "id": "EXC-005",
+      "type": "Finance Hold",
+      "status": "manual approval required",
+      "stage": "Finance",
+      "reason": "Manual finance approval is required before export.",
+      "nextAction": "Finance manager must approve export release.",
+      "financeImpact": "Accounting export blocked"
+    }
+  ]
+}

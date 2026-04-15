@@ -113,7 +113,6 @@ h2, h3, h4 { margin: 0; }
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  align-items: start;
 }
 .badge {
   display: inline-flex;

@@ -9,6 +9,7 @@ export default function Header() {
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <a className="btn" href="/">Overview</a>
           <a className="btn btn-primary" href="/golden-path">Open Proof</a>
+          <a className="btn" href="/exceptions">Open Exceptions</a>
         </div>
       </div>
     </header>

@@ -1,0 +1,130 @@
+{
+  "parcel": {
+    "parcelId": "PAR-CHR-2026-0001",
+    "dealId": "DEAL-CHR-2026-0012",
+    "commodity": "Chrome",
+    "entity": "SAR Chrome Operations",
+    "counterparty": "Example Buyer / Offtaker",
+    "documentNumber": "SAR-SCO-CON-OFTAKE-2026-00017-V1",
+    "dispatchRef": "D-CHR-0042",
+    "truckReg": "CLT908GP",
+    "plannedTons": 34.0,
+    "weighbridgeTons": 33.9,
+    "deliveredTons": 33.9,
+    "acceptedTons": 33.9,
+    "grossValueZAR": 81360,
+    "payableReadyZAR": 40680,
+    "financeState": "finance_handoff_ready",
+    "accountingExportState": "ready_for_export"
+  },
+  "timeline": [
+    {
+      "step": 1,
+      "title": "Document",
+      "status": "done",
+      "state": "issued",
+      "evidence": [
+        "Number reserved",
+        "Offtake agreement generated",
+        "Document issued under controlled number"
+      ],
+      "eventRef": "DOC-EVT-001"
+    },
+    {
+      "step": 2,
+      "title": "Dispatch",
+      "status": "done",
+      "state": "approved_for_loading",
+      "evidence": [
+        "Dispatch created",
+        "Truck and route assigned",
+        "Approval complete"
+      ],
+      "eventRef": "DSP-EVT-010"
+    },
+    {
+      "step": 3,
+      "title": "Movement",
+      "status": "done",
+      "state": "released",
+      "evidence": [
+        "Gate check-in captured",
+        "Loading completed",
+        "Weighbridge recorded",
+        "Truck released"
+      ],
+      "eventRef": "OPS-EVT-042"
+    },
+    {
+      "step": 4,
+      "title": "Delivery",
+      "status": "done",
+      "state": "delivered",
+      "evidence": [
+        "Destination arrival confirmed",
+        "GRN / POD captured",
+        "Delivery accepted"
+      ],
+      "eventRef": "DLV-EVT-008"
+    },
+    {
+      "step": 5,
+      "title": "Reconciliation",
+      "status": "done",
+      "state": "reconciled",
+      "evidence": [
+        "Source vs destination variance within tolerance",
+        "Accepted tons finalized",
+        "Settlement statement generated"
+      ],
+      "eventRef": "REC-EVT-003"
+    },
+    {
+      "step": 6,
+      "title": "Finance",
+      "status": "done",
+      "state": "finance_handoff_ready",
+      "evidence": [
+        "No active holds",
+        "Payable candidate approved",
+        "Accounting export prepared"
+      ],
+      "eventRef": "FIN-EVT-014"
+    }
+  ],
+  "documents": [
+    {
+      "type": "Offtake Agreement",
+      "number": "SAR-SCO-CON-OFTAKE-2026-00017-V1",
+      "status": "issued"
+    },
+    {
+      "type": "Dispatch Instruction",
+      "number": "SAR-SCO-OPS-DSPINS-2026-00002-V1",
+      "status": "generated"
+    },
+    {
+      "type": "Truck Release Form",
+      "number": "SAR-SCO-OPS-TRKREL-2026-00007-V1",
+      "status": "generated"
+    },
+    {
+      "type": "Delivery Confirmation / GRN",
+      "number": "SAR-SCO-OPS-GRN-2026-00001-V1",
+      "status": "generated"
+    },
+    {
+      "type": "Settlement Statement",
+      "number": "SAR-SCO-FIN-SETTLE-2026-00012-V1",
+      "status": "generated"
+    }
+  ],
+  "holds": [],
+  "proof": {
+    "goldenPathPassed": true,
+    "activeBlockers": 0,
+    "auditEventsCaptured": 6,
+    "documentsLinked": 5,
+    "accountingExportPrepared": true
+  }
+        }

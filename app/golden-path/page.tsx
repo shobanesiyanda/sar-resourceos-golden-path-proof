@@ -1,5 +1,5 @@
-import Header from "@/components/Header";
-import { getGoldenPathParcel } from "@/lib/goldenPath";
+import Header from "../../components/Header";
+import { getGoldenPathParcel } from "../../lib/goldenPath";
 
 export default function GoldenPathPage() {
   const data = getGoldenPathParcel();

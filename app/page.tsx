@@ -14,11 +14,10 @@ export default function HomePage() {
             This baseline proves one controlled parcel from document reserve and issuance through dispatch,
             movement, delivery, reconciliation, and finance handoff readiness.
           </p>
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 24 }}>
-            <a className="btn btn-primary" href="/golden-path">View full proof</a>
-            <a className="btn" href="/api/demo/parcel">API demo JSON</a>
-          </div>
-        </div>
+<div style={{ display: "flex", gap: "12px" }}>
+  <a className="btn btn-primary" href="/
+golden-path">View full proof</a>
+</div>
       </section>
 
       <section className="section">

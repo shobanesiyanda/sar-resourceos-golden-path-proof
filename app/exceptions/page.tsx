@@ -104,41 +104,4 @@ export default function ExceptionsPage() {
       </section>
     </>
   );
-            }                    <td>{item.type}</td>
-                    <td>{item.status}</td>
-                    <td>{item.stage}</td>
-                    <td>{item.financeImpact}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Exception details</h3>
-            <div className="step-list">
-              {data.exceptions.map((item) => (
-                <div className="step" key={item.id}>
-                  <div className="step-top">
-                    <div>
-                      <strong>{item.type}</strong>
-                      <div className="muted" style={{ marginTop: 6 }}>
-                        ID: <span className="code">{item.id}</span> • Stage: <span className="code">{item.stage}</span>
-                      </div>
-                    </div>
-                    <span className="badge">{item.status}</span>
-                  </div>
-                  <ul className="clean">
-                    <li><strong>Reason:</strong> {item.reason}</li>
-                    <li><strong>Next action:</strong> {item.nextAction}</li>
-                    <li><strong>Finance impact:</strong> {item.financeImpact}</li>
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
-  );
-        }
+            }                    

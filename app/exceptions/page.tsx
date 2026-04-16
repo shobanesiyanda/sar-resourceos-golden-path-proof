@@ -78,7 +78,24 @@ export default function ExceptionsPage() {
       <div className="mobile-exception-card" key={item.id}>
         <strong>{item.type}</strong>
         <div className="row"><strong>ID:</strong> <span className="code">{item.id}</span></div>
-        <div className="row"><strong>Status:</strong> {item.status}</div>
+        <div className="row">
+  <strong>Status:</strong>{" "}
+  <span
+    className={
+      item.status === "blocked"
+        ? "badge badge-blocked"
+        : item.status === "pending review"
+        ? "badge badge-pending"
+        : item.status === "held"
+        ? "badge badge-held"
+        : item.status === "manual approval required"
+        ? "badge badge-approval"
+        : "badge"
+    }
+  >
+    {item.status}
+  </span>
+</div>
         <div className="row"><strong>Owner:</strong> {item.owner}</div>
         <div className="row"><strong>Priority:</strong> {item.priority}</div>
         <div className="row"><strong>Finance:</strong> {item.financeAllowed}</div>

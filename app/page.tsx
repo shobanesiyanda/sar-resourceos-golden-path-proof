@@ -1,4 +1,4 @@
-          import Header from "../components/Header";
+     import Header from "../components/Header";
 import { getGoldenPathParcel } from "../lib/goldenPath";
 import { getExceptions } from "../lib/exceptions";
 
@@ -30,14 +30,12 @@ export default function HomePage() {
             <a className="btn btn-primary" href="/golden-path">
               Open Golden Path
             </a>
-            <a className="btn" href="/exceptions">
+            <a
+              className="btn"
+              href="/exceptions"
+              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
+            >
               Open Exceptions
-            </a>
-            <a className="btn" href="/api/demo/parcel">
-              Parcel API
-            </a>
-            <a className="btn" href="/api/demo/exceptions">
-              Exceptions API
             </a>
           </div>
         </div>
@@ -154,6 +152,22 @@ export default function HomePage() {
 
           <div className="grid grid-2" style={{ marginTop: 22 }}>
             <div className="card">
+              <h3>API endpoints</h3>
+              <p className="muted">
+                These demo endpoints expose the seeded parcel and exception data used by the proof environment.
+              </p>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/api/demo/parcel">
+                  Parcel API
+                </a>
+                <a className="btn" href="/api/demo/exceptions">
+                  Exceptions API
+                </a>
+              </div>
+            </div>
+
+            <div className="card">
               <h3>What this environment proves</h3>
               <ul className="clean">
                 <li>Controlled document-to-dispatch-to-finance parcel flow</li>
@@ -163,20 +177,9 @@ export default function HomePage() {
                 <li>Status badges for blocked, pending, held, and approval-required states</li>
               </ul>
             </div>
-
-            <div className="card">
-              <h3>Recommended next modules</h3>
-              <ul className="clean">
-                <li>Dispatch control dashboard</li>
-                <li>Finance handoff dashboard</li>
-                <li>Approval queue / escalation view</li>
-                <li>Document lifecycle screen</li>
-                <li>Claims and dispute workflow board</li>
-              </ul>
-            </div>
           </div>
         </div>
       </section>
     </>
   );
-    }
+}                                   

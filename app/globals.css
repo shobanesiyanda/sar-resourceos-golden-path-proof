@@ -164,3 +164,26 @@ ul.clean li { margin-bottom: 8px; line-height: 1.7; }
   .grid-2, .kpis { grid-template-columns: 1fr; }
   .hero h1 { font-size: 34px; }
     }
+.badge-blocked {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.badge-held {
+  background: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.badge-approval {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+  }

@@ -1,9 +1,13 @@
 import Header from "../../components/Header";
 import { getExceptions } from "../../lib/exceptions";
 
-export default function ExceptionsPage() {
+export default function ExceptionsPage({
+  searchParams,
+}: {
+  searchParams?: { filter?: string };
+}) {
   const data = getExceptions();
-const activeFilter = "All";
+const activeFilter = searchParams?.filter || "All";
   const total = data.exceptions.length;
   const blocked = data.exceptions.filter((x) => x.status === "blocked").length;
   const filters = [

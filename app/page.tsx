@@ -37,7 +37,11 @@ export default function HomePage() {
             >
               Open Exceptions
             </a>
-            <a className="btn" href="/finance-handoff">
+            <a
+              className="btn"
+              href="/finance-handoff"
+              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
+            >
               Open Finance Handoff
             </a>
           </div>
@@ -59,7 +63,9 @@ export default function HomePage() {
           <div className="kpis">
             <div className="kpi">
               <div className="label">Parcel ID</div>
-              <div className="value" style={{ fontSize: 18 }}>{data.parcel.parcelId}</div>
+              <div className="value" style={{ fontSize: 18 }}>
+                {data.parcel.parcelId}
+              </div>
             </div>
             <div className="kpi">
               <div className="label">Accepted tons</div>
@@ -67,11 +73,15 @@ export default function HomePage() {
             </div>
             <div className="kpi">
               <div className="label">Finance state</div>
-              <div className="value" style={{ fontSize: 16 }}>{data.parcel.financeState}</div>
+              <div className="value" style={{ fontSize: 16 }}>
+                {data.parcel.financeState}
+              </div>
             </div>
             <div className="kpi">
               <div className="label">Accounting export</div>
-              <div className="value" style={{ fontSize: 16 }}>{data.parcel.accountingExportState}</div>
+              <div className="value" style={{ fontSize: 16 }}>
+                {data.parcel.accountingExportState}
+              </div>
             </div>
           </div>
 
@@ -128,7 +138,10 @@ export default function HomePage() {
                 decision routing.
               </p>
 
-              <div className="kpis" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginTop: 14 }}>
+              <div
+                className="kpis"
+                style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginTop: 14 }}
+              >
                 <div className="kpi">
                   <div className="label">Total exceptions</div>
                   <div className="value">{totalExceptions}</div>
@@ -173,7 +186,8 @@ export default function HomePage() {
             <div className="card">
               <h3>API endpoints</h3>
               <p className="muted">
-                These demo endpoints expose the seeded parcel and exception data used by the proof environment.
+                These demo endpoints expose the seeded parcel and exception data used by the proof
+                environment.
               </p>
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
@@ -190,4 +204,5 @@ export default function HomePage() {
       </section>
     </>
   );
-                                                      }                             
+}
+                                                      }                    

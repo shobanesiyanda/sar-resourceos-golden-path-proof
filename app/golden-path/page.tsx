@@ -1,10 +1,35 @@
-          import Header from "../../components/Header";
+import Header from "../../components/Header";
 import { getGoldenPathParcel } from "../../lib/goldenPath";
 
 export default function GoldenPathPage() {
   const data = getGoldenPathParcel();
-  const parcel = data.parcel;
-  const timeline = data.timeline || [];
+  const parcel: any = data.parcel;
+  const timeline: any[] = data.timeline || [];
+
+  const parcelId = parcel.parcelId || parcel.id || "N/A";
+  const dealId = parcel.dealId || "N/A";
+  const entity = parcel.entityName || parcel.entity || "N/A";
+  const commodity = parcel.commodity || "N/A";
+  const counterparty = parcel.counterparty || "N/A";
+  const documentNumber = parcel.documentNumber || parcel.documentRef || "N/A";
+  const dispatchRef = parcel.dispatchRef || "N/A";
+  const truckReg = parcel.truckReg || parcel.truck || "N/A";
+  const financeState = parcel.financeState || "N/A";
+  const accountingExportState =
+    parcel.accountingExportState || parcel.accountingExport || "N/A";
+
+  const grossTons = parcel.grossTons ?? parcel.gross ?? "N/A";
+  const netTons = parcel.netTons ?? parcel.net ?? "N/A";
+  const acceptedTons = parcel.acceptedTons ?? parcel.accepted ?? "N/A";
+
+  const grossValueZAR = Number(parcel.grossValueZAR ?? parcel.grossValue ?? 0);
+  const deductionsZAR = Number(parcel.deductionsZAR ?? parcel.deductions ?? 0);
+  const payableReadyZAR = Number(parcel.payableReadyZAR ?? parcel.payableReady ?? 0);
+
+  const sourceLocation = parcel.sourceLocation || parcel.source || "N/A";
+  const destinationLocation = parcel.destinationLocation || parcel.destination || "N/A";
+  const deliveryDate = parcel.deliveryDate || "N/A";
+  const lastUpdatedAt = parcel.lastUpdatedAt || parcel.updatedAt || "N/A";
 
   return (
     <>
@@ -16,8 +41,9 @@ export default function GoldenPathPage() {
             <div>
               <h2>Golden-path parcel proof</h2>
               <p className="muted">
-                This page demonstrates one controlled parcel lifecycle from document issuance through dispatch,
-                delivery, reconciliation, and finance handoff readiness.
+                This page demonstrates one controlled parcel lifecycle from document
+                issuance through dispatch, delivery, reconciliation, and finance handoff
+                readiness.
               </p>
             </div>
           </div>
@@ -25,19 +51,21 @@ export default function GoldenPathPage() {
           <div className="kpis">
             <div className="kpi">
               <div className="label">Parcel ID</div>
-              <div className="value" style={{ fontSize: 18 }}>{parcel.parcelId}</div>
+              <div className="value" style={{ fontSize: 18 }}>{parcelId}</div>
             </div>
             <div className="kpi">
               <div className="label">Accepted tons</div>
-              <div className="value">{parcel.acceptedTons}</div>
+              <div className="value">{acceptedTons}</div>
             </div>
             <div className="kpi">
               <div className="label">Finance state</div>
-              <div className="value" style={{ fontSize: 16 }}>{parcel.financeState}</div>
+              <div className="value" style={{ fontSize: 16 }}>{financeState}</div>
             </div>
             <div className="kpi">
               <div className="label">Accounting export</div>
-              <div className="value" style={{ fontSize: 16 }}>{parcel.accountingExportState}</div>
+              <div className="value" style={{ fontSize: 16 }}>
+                {accountingExportState}
+              </div>
             </div>
           </div>
 
@@ -49,43 +77,43 @@ export default function GoldenPathPage() {
                 <tbody>
                   <tr>
                     <th>Parcel ID</th>
-                    <td><span className="code">{parcel.parcelId}</span></td>
+                    <td><span className="code">{parcelId}</span></td>
                   </tr>
                   <tr>
                     <th>Deal ID</th>
-                    <td><span className="code">{parcel.dealId}</span></td>
+                    <td><span className="code">{dealId}</span></td>
                   </tr>
                   <tr>
                     <th>Entity</th>
-                    <td>{parcel.entityName}</td>
+                    <td>{entity}</td>
                   </tr>
                   <tr>
                     <th>Commodity</th>
-                    <td>{parcel.commodity}</td>
+                    <td>{commodity}</td>
                   </tr>
                   <tr>
                     <th>Counterparty</th>
-                    <td>{parcel.counterparty}</td>
+                    <td>{counterparty}</td>
                   </tr>
                   <tr>
                     <th>Document</th>
-                    <td><span className="code">{parcel.documentNumber}</span></td>
+                    <td><span className="code">{documentNumber}</span></td>
                   </tr>
                   <tr>
                     <th>Dispatch ref</th>
-                    <td><span className="code">{parcel.dispatchRef}</span></td>
+                    <td><span className="code">{dispatchRef}</span></td>
                   </tr>
                   <tr>
                     <th>Truck</th>
-                    <td>{parcel.truckReg}</td>
+                    <td>{truckReg}</td>
                   </tr>
                   <tr>
                     <th>Finance state</th>
-                    <td>{parcel.financeState}</td>
+                    <td>{financeState}</td>
                   </tr>
                   <tr>
                     <th>Accounting export</th>
-                    <td>{parcel.accountingExportState}</td>
+                    <td>{accountingExportState}</td>
                   </tr>
                 </tbody>
               </table>
@@ -98,43 +126,43 @@ export default function GoldenPathPage() {
                 <tbody>
                   <tr>
                     <th>Gross tons</th>
-                    <td>{parcel.grossTons}</td>
+                    <td>{grossTons}</td>
                   </tr>
                   <tr>
                     <th>Net tons</th>
-                    <td>{parcel.netTons}</td>
+                    <td>{netTons}</td>
                   </tr>
                   <tr>
                     <th>Accepted tons</th>
-                    <td>{parcel.acceptedTons}</td>
+                    <td>{acceptedTons}</td>
                   </tr>
                   <tr>
                     <th>Gross value</th>
-                    <td>R {parcel.grossValueZAR.toLocaleString()}</td>
+                    <td>R {grossValueZAR.toLocaleString()}</td>
                   </tr>
                   <tr>
                     <th>Deductions</th>
-                    <td>R {parcel.deductionsZAR.toLocaleString()}</td>
+                    <td>R {deductionsZAR.toLocaleString()}</td>
                   </tr>
                   <tr>
                     <th>Payable-ready</th>
-                    <td>R {parcel.payableReadyZAR.toLocaleString()}</td>
+                    <td>R {payableReadyZAR.toLocaleString()}</td>
                   </tr>
                   <tr>
                     <th>Source mine / yard</th>
-                    <td>{parcel.sourceLocation}</td>
+                    <td>{sourceLocation}</td>
                   </tr>
                   <tr>
                     <th>Destination</th>
-                    <td>{parcel.destinationLocation}</td>
+                    <td>{destinationLocation}</td>
                   </tr>
                   <tr>
                     <th>Delivery date</th>
-                    <td>{parcel.deliveryDate}</td>
+                    <td>{deliveryDate}</td>
                   </tr>
                   <tr>
                     <th>Last control update</th>
-                    <td>{parcel.lastUpdatedAt}</td>
+                    <td>{lastUpdatedAt}</td>
                   </tr>
                 </tbody>
               </table>
@@ -203,8 +231,8 @@ export default function GoldenPathPage() {
                 <p className="muted">No timeline events available.</p>
               ) : (
                 <div className="step-list" style={{ marginTop: 14 }}>
-                  {timeline.map((item: any, index: number) => (
-                    <div className="step" key={item.id || `${item.stage}-${index}`}>
+                  {timeline.map((item, index) => (
+                    <div className="step" key={item.id || `${item.stage || "stage"}-${index}`}>
                       <div className="step-top">
                         <div>
                           <strong>{item.stage || "Stage"}</strong>
@@ -214,7 +242,9 @@ export default function GoldenPathPage() {
                         </div>
                         <span className="badge">{item.status || "logged"}</span>
                       </div>
-                      <div className="muted">{item.note || item.description || "No note available."}</div>
+                      <div className="muted">
+                        {item.note || item.description || "No note available."}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -225,10 +255,22 @@ export default function GoldenPathPage() {
               <h3>Proof notes</h3>
               <ul className="clean">
                 <li>This proof uses seeded demonstration data for one parcel lifecycle.</li>
-                <li>Document, dispatch, delivery, reconciliation, and finance states are linked in one control path.</li>
-                <li>The purpose is to show operational traceability, not a full production workflow engine.</li>
-                <li>The parcel can be paired with the exceptions dashboard to demonstrate non-golden-path states.</li>
-                <li>This module is intended as the baseline execution proof for broader ResourceOS control screens.</li>
+                <li>
+                  Document, dispatch, delivery, reconciliation, and finance states are
+                  linked in one control path.
+                </li>
+                <li>
+                  The purpose is to show operational traceability, not a full production
+                  workflow engine.
+                </li>
+                <li>
+                  The parcel can be paired with the exceptions dashboard to demonstrate
+                  non-golden-path states.
+                </li>
+                <li>
+                  This module is intended as the baseline execution proof for broader
+                  ResourceOS control screens.
+                </li>
               </ul>
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
@@ -245,4 +287,4 @@ export default function GoldenPathPage() {
       </section>
     </>
   );
-              }
+            }

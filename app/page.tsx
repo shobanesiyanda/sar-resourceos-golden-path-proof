@@ -1,4 +1,4 @@
-    import Header from "../components/Header";
+import Header from "../components/Header";
 import { getGoldenPathParcel } from "../lib/goldenPath";
 import { getExceptions } from "../lib/exceptions";
 
@@ -204,5 +204,4 @@ export default function HomePage() {
       </section>
     </>
   );
-}
-                                                      }                    
+        }

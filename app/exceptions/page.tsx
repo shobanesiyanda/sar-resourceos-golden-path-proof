@@ -6,6 +6,13 @@ export default function ExceptionsPage() {
 
   const total = data.exceptions.length;
   const blocked = data.exceptions.filter((x) => x.status === "blocked").length;
+  const filters = [
+    "All",
+    "Blocked",
+    "Pending review",
+    "Held",
+    "Approval required"
+  ];
   const pending = data.exceptions.filter((x) => x.status === "pending review").length;
   const held = data.exceptions.filter((x) => x.status === "held").length;
   const financeBlocked = data.exceptions.filter((x) => x.financeAllowed === "No").length;

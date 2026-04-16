@@ -214,6 +214,12 @@ export default function ExceptionsPage({
                           <strong>Next action:</strong> {item.nextAction}
                         </li>
                       </ul>
+
+                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+                        <a className="btn" href="/golden-path">
+                          View Parcel
+                        </a>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -224,4 +230,4 @@ export default function ExceptionsPage({
       </section>
     </>
   );
-    }
+}

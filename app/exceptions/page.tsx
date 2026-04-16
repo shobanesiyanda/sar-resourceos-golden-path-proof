@@ -83,7 +83,21 @@ export default function ExceptionsPage() {
                         ID: <span className="code">{item.id}</span> • Stage: <span className="code">{item.stage}</span>
                       </div>
                     </div>
-                    <span className="badge">{item.status}</span>
+                    <span
+  className={
+    item.status === "blocked"
+      ? "badge badge-blocked"
+      : item.status === "pending review"
+      ? "badge badge-pending"
+      : item.status === "held"
+      ? "badge badge-held"
+      : item.status === "manual approval required"
+      ? "badge badge-approval"
+      : "badge"
+  }
+>
+  {item.status}
+</span>
                   </div>
                   <ul className="clean">
                     <li><strong>Reason:</strong> {item.reason}</li>

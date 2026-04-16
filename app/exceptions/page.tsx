@@ -49,7 +49,13 @@ export default function ExceptionsPage() {
               <div className="value">{held + financeBlocked}</div>
             </div>
           </div>
-
+<div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18, marginBottom: 6 }}>
+  {filters.map((filter) => (
+    <span key={filter} className="badge">
+      {filter}
+    </span>
+  ))}
+</div>
           <div className="card" style={{ marginTop: 22 }}>
   <h3>Exception overview</h3>
 

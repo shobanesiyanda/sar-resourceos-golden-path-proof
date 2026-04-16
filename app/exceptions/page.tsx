@@ -66,9 +66,13 @@ const filteredExceptions =
           </div>
 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18, marginBottom: 6 }}>
   {filters.map((filter) => (
-    <span key={filter} className="badge">
+    <a
+      key={filter}
+      href={filter === "All" ? "/exceptions" : `/exceptions?filter=${encodeURIComponent(filter)}`}
+      className={filter === activeFilter ? "badge badge-approval" : "badge"}
+    >
       {filter}
-    </span>
+    </a>
   ))}
 </div>
           <div className="card" style={{ marginTop: 22 }}>

@@ -210,8 +210,6 @@ export default function ExceptionsPage({
                 </div>
               </div>
             </>
-          )}
-        </div>
       </section>
     </>
   );

@@ -7,7 +7,13 @@
       "stage": "Release",
       "reason": "Required release document is missing.",
       "nextAction": "Upload missing release document and re-run release check.",
-      "financeImpact": "Finance blocked"
+      "financeImpact": "Finance blocked",
+      "owner": "Document Controller",
+      "priority": "High",
+      "approvalRequired": "No",
+      "financeAllowed": "No",
+      "deadline": "2026-04-16 10:00",
+      "actionStatus": "Awaiting document upload"
     },
     {
       "id": "EXC-002",
@@ -16,7 +22,13 @@
       "stage": "Reconciliation",
       "reason": "Source and destination weights differ beyond tolerance.",
       "nextAction": "Open variance review and confirm accepted tons.",
-      "financeImpact": "Finance pending"
+      "financeImpact": "Finance pending",
+      "owner": "Reconciliation Officer",
+      "priority": "High",
+      "approvalRequired": "Yes",
+      "financeAllowed": "No",
+      "deadline": "2026-04-16 12:00",
+      "actionStatus": "Variance review in progress"
     },
     {
       "id": "EXC-003",

@@ -170,6 +170,19 @@ export default function GoldenPathPage() {
           </div>
 
           <div className="card" style={{ marginTop: 22 }}>
+            <h3>Related exceptions</h3>
+            <p className="muted">
+              Exceptions linked to this parcel that may block or impact finance readiness.
+            </p>
+
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+              <a className="btn" href="/exceptions">
+                View All Exceptions
+              </a>
+            </div>
+          </div>
+
+          <div className="card" style={{ marginTop: 22 }}>
             <h3>Control checkpoints</h3>
 
             <div className="grid grid-2" style={{ marginTop: 14 }}>
@@ -287,4 +300,4 @@ export default function GoldenPathPage() {
       </section>
     </>
   );
-            }
+}

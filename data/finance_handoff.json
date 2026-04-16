@@ -1,5 +1,66 @@
-import financeHandoffData from "../data/finance_handoff.json";
-
-export function getFinanceHandoffData() {
-  return financeHandoffData;
+{
+  "summary": {
+    "totalParcels": 5,
+    "readyForFinance": 2,
+    "blocked": 2,
+    "pendingApproval": 1,
+    "readyForExport": 2
+  },
+  "items": [
+    {
+      "id": "FH-001",
+      "parcelId": "PAR-CHR-2026-0001",
+      "counterparty": "Example Buyer / Offtaker",
+      "financeState": "finance_handoff_ready",
+      "approvalState": "approved",
+      "exportState": "ready_for_export",
+      "payableReadyZAR": 40680,
+      "blocker": "None",
+      "nextAction": "Send to accounting export queue"
+    },
+    {
+      "id": "FH-002",
+      "parcelId": "PAR-CHR-2026-0002",
+      "counterparty": "North Yard Trading",
+      "financeState": "blocked",
+      "approvalState": "pending",
+      "exportState": "not_ready",
+      "payableReadyZAR": 0,
+      "blocker": "Missing signed settlement statement",
+      "nextAction": "Obtain signed settlement statement"
+    },
+    {
+      "id": "FH-003",
+      "parcelId": "PAR-CHR-2026-0003",
+      "counterparty": "Mvela Commodities",
+      "financeState": "pending_review",
+      "approvalState": "pending",
+      "exportState": "not_ready",
+      "payableReadyZAR": 18500,
+      "blocker": "Manual finance approval required",
+      "nextAction": "Finance manager approval"
+    },
+    {
+      "id": "FH-004",
+      "parcelId": "PAR-CHR-2026-0004",
+      "counterparty": "Orelink Resources",
+      "financeState": "finance_handoff_ready",
+      "approvalState": "approved",
+      "exportState": "ready_for_export",
+      "payableReadyZAR": 52240,
+      "blocker": "None",
+      "nextAction": "Release to export"
+    },
+    {
+      "id": "FH-005",
+      "parcelId": "PAR-CHR-2026-0005",
+      "counterparty": "Delta Bulk Metals",
+      "financeState": "blocked",
+      "approvalState": "rejected",
+      "exportState": "blocked",
+      "payableReadyZAR": 0,
+      "blocker": "Dispute hold active",
+      "nextAction": "Resolve dispute before finance release"
+    }
+  ]
 }

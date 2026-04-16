@@ -20,7 +20,18 @@ const activeFilter = searchParams?.filter || "All";
   const pending = data.exceptions.filter((x) => x.status === "pending review").length;
   const held = data.exceptions.filter((x) => x.status === "held").length;
   const financeBlocked = data.exceptions.filter((x) => x.financeAllowed === "No").length;
-
+const filteredExceptions =
+    activeFilter === "All"
+      ? data.exceptions
+      : activeFilter === "Blocked"
+      ? data.exceptions.filter((x) => x.status === "blocked")
+      : activeFilter === "Pending review"
+      ? data.exceptions.filter((x) => x.status === "pending review")
+      : activeFilter === "Held"
+      ? data.exceptions.filter((x) => x.status === "held")
+      : activeFilter === "Approval required"
+      ? data.exceptions.filter((x) => x.approvalRequired === "Yes")
+      : data.exceptions;
   return (
     <>
       <Header />

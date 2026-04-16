@@ -37,16 +37,13 @@ export default function ExceptionsPage({
   const held = filteredExceptions.filter((x) => x.status === "held").length;
   const financeBlocked = filteredExceptions.filter((x) => x.financeAllowed === "No").length;
 
-  const statusBadgeClass = (status: string) =>
-    status === "blocked"
-      ? "badge badge-blocked"
-      : status === "pending review"
-      ? "badge badge-pending"
-      : status === "held"
-      ? "badge badge-held"
-      : status === "manual approval required"
-      ? "badge badge-approval"
-      : "badge";
+  function statusBadgeClass(status: string) {
+    if (status === "blocked") return "badge badge-blocked";
+    if (status === "pending review") return "badge badge-pending";
+    if (status === "held") return "badge badge-held";
+    if (status === "manual approval required") return "badge badge-approval";
+    return "badge";
+  }
 
   return (
     <>
@@ -82,11 +79,23 @@ export default function ExceptionsPage({
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18, marginBottom: 6 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              flexWrap: "wrap",
+              marginTop: 18,
+              marginBottom: 6,
+            }}
+          >
             {filters.map((filter) => (
               <a
                 key={filter}
-                href={filter === "All" ? "/exceptions" : `/exceptions?filter=${encodeURIComponent(filter)}`}
+                href={
+                  filter === "All"
+                    ? "/exceptions"
+                    : `/exceptions?filter=${encodeURIComponent(filter)}`
+                }
                 className={filter === activeFilter ? "badge badge-approval" : "badge"}
               >
                 {filter}
@@ -210,7 +219,9 @@ export default function ExceptionsPage({
                 </div>
               </div>
             </>
+          )}
+        </div>
       </section>
     </>
   );
-}
+    }

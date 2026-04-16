@@ -91,7 +91,7 @@ const filteredExceptions =
         </tr>
       </thead>
       <tbody>
-        {data.exceptions.map((item) => (
+        filteredExceptions.map((item) => (
           <tr key={item.id}>
             <td><span className="code">{item.id}</span></td>
             <td>{item.type}</td>
@@ -106,7 +106,7 @@ const filteredExceptions =
   </div>
 
   <div className="mobile-exception-list">
-    {data.exceptions.map((item) => (
+    filteredExceptions.map((item) => (
       <div className="mobile-exception-card" key={item.id}>
         <strong>{item.type}</strong>
         <div className="row"><strong>ID:</strong> <span className="code">{item.id}</span></div>
@@ -139,7 +139,7 @@ const filteredExceptions =
           <div className="card" style={{ marginTop: 22 }}>
             <h3>Action detail</h3>
             <div className="step-list">
-              {data.exceptions.map((item) => (
+              filteredExceptions.map((item) => (
                 <div className="step" key={item.id}>
                   <div className="step-top">
                     <div>

@@ -3,7 +3,7 @@ import { getExceptions } from "../../lib/exceptions";
 
 export default function ExceptionsPage() {
   const data = getExceptions();
-
+const activeFilter = "All";
   const total = data.exceptions.length;
   const blocked = data.exceptions.filter((x) => x.status === "blocked").length;
   const filters = [

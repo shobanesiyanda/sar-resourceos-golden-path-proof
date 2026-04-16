@@ -44,32 +44,48 @@ export default function ExceptionsPage() {
           </div>
 
           <div className="card" style={{ marginTop: 22 }}>
-            <h3>Exception overview</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Owner</th>
-                  <th>Priority</th>
-                  <th>Finance</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.exceptions.map((item) => (
-                  <tr key={item.id}>
-                    <td><span className="code">{item.id}</span></td>
-                    <td>{item.type}</td>
-                    <td>{item.status}</td>
-                    <td>{item.owner}</td>
-                    <td>{item.priority}</td>
-                    <td>{item.financeAllowed}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+  <h3>Exception overview</h3>
+
+  <div className="desktop-exception-table">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Owner</th>
+          <th>Priority</th>
+          <th>Finance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.exceptions.map((item) => (
+          <tr key={item.id}>
+            <td><span className="code">{item.id}</span></td>
+            <td>{item.type}</td>
+            <td>{item.status}</td>
+            <td>{item.owner}</td>
+            <td>{item.priority}</td>
+            <td>{item.financeAllowed}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div className="mobile-exception-list">
+    {data.exceptions.map((item) => (
+      <div className="mobile-exception-card" key={item.id}>
+        <strong>{item.type}</strong>
+        <div className="row"><strong>ID:</strong> <span className="code">{item.id}</span></div>
+        <div className="row"><strong>Status:</strong> {item.status}</div>
+        <div className="row"><strong>Owner:</strong> {item.owner}</div>
+        <div className="row"><strong>Priority:</strong> {item.priority}</div>
+        <div className="row"><strong>Finance:</strong> {item.financeAllowed}</div>
+      </div>
+    ))}
+  </div>
+</div>
 
           <div className="card" style={{ marginTop: 22 }}>
             <h3>Action detail</h3>

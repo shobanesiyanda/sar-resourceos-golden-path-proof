@@ -26,8 +26,11 @@ export default function Header() {
           <a className="btn" href="/reconciliation">
             Reconciliation
           </a>
+          <a className="btn" href="/approval-queue">
+            Approval Queue
+          </a>
         </div>
       </div>
     </header>
   );
-    }
+}

@@ -1,4 +1,3 @@
-// execution readiness homepage trigger
 import Header from "../components/Header";
 import { getGoldenPathParcel } from "../lib/goldenPath";
 import { getExceptions } from "../lib/exceptions";
@@ -20,30 +19,30 @@ export default function HomePage() {
       <section className="hero">
         <div className="container">
           <div className="eyebrow">SAR ResourceOS</div>
-          <h1>Transaction control from document to finance handoff.</h1>
+          <h1>Transaction control from opportunity to finance handoff.</h1>
           <p>
-            This live proof environment shows execution readiness, controlled parcel execution,
-            dispatch control, reconciliation, exception handling, approval gating, and finance
-            handoff readiness across one connected prototype.
+            This live proof environment shows opportunity intake, execution readiness,
+            controlled parcel execution, dispatch control, reconciliation, exception handling,
+            approval gating, and finance handoff readiness across one connected prototype.
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
+            <a
+              className="btn"
+              href="/opportunity-intake"
+              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
+            >
+              Open Opportunity Intake
+            </a>
+            <a
+              className="btn"
+              href="/execution-readiness"
+              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
+            >
+              Open Execution Readiness
+            </a>
             <a className="btn btn-primary" href="/golden-path">
               Open Golden Path
-            </a>
-            <a
-              className="btn"
-              href="/exceptions"
-              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
-            >
-              Open Exceptions
-            </a>
-            <a
-              className="btn"
-              href="/finance-handoff"
-              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
-            >
-              Open Finance Handoff
             </a>
             <a
               className="btn"
@@ -61,6 +60,13 @@ export default function HomePage() {
             </a>
             <a
               className="btn"
+              href="/exceptions"
+              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
+            >
+              Open Exceptions
+            </a>
+            <a
+              className="btn"
               href="/approval-queue"
               style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
             >
@@ -68,10 +74,10 @@ export default function HomePage() {
             </a>
             <a
               className="btn"
-              href="/execution-readiness"
+              href="/finance-handoff"
               style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
             >
-              Open Execution Readiness
+              Open Finance Handoff
             </a>
           </div>
         </div>
@@ -83,14 +89,44 @@ export default function HomePage() {
             <div>
               <h2>Control overview</h2>
               <p className="muted">
-                This overview summarizes the current proof environment across execution readiness,
-                parcel execution, dispatch control, reconciliation, exceptions, approval gating,
-                and finance-readiness controls.
+                This overview summarizes the current proof environment across opportunity intake,
+                execution readiness, parcel execution, dispatch control, reconciliation, exceptions,
+                approval gating, and finance-readiness controls.
               </p>
             </div>
           </div>
 
-          <div className="kpis">
+          <div className="grid grid-2" style={{ marginTop: 22 }}>
+            <div className="card">
+              <h3>Opportunity intake</h3>
+              <p className="muted">
+                The opportunity-intake module captures early-stage opportunities before they move
+                into execution readiness and live parcel control.
+              </p>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/opportunity-intake">
+                  View Opportunity Intake
+                </a>
+              </div>
+            </div>
+
+            <div className="card">
+              <h3>Execution readiness / release gate</h3>
+              <p className="muted">
+                The execution-readiness module shows whether a parcel is fully cleared to move
+                from upstream checks into live dispatch execution.
+              </p>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/execution-readiness">
+                  View Execution Readiness
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="kpis" style={{ marginTop: 22 }}>
             <div className="kpi">
               <div className="label">Parcel ID</div>
               <div className="value" style={{ fontSize: 18 }}>
@@ -116,20 +152,6 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-2" style={{ marginTop: 22 }}>
-            <div className="card">
-              <h3>Execution readiness / release gate</h3>
-              <p className="muted">
-                The execution-readiness module shows whether a parcel is fully cleared to move
-                from upstream checks into live dispatch execution.
-              </p>
-
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-                <a className="btn" href="/execution-readiness">
-                  View Execution Readiness
-                </a>
-              </div>
-            </div>
-
             <div className="card">
               <h3>Golden path proof</h3>
               <p className="muted">
@@ -173,9 +195,7 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-2" style={{ marginTop: 22 }}>
             <div className="card">
               <h3>Exception action dashboard</h3>
               <p className="muted">
@@ -212,20 +232,6 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
-
-            <div className="card">
-              <h3>Finance handoff dashboard</h3>
-              <p className="muted">
-                The finance module shows which parcels are ready for release into finance,
-                which are blocked, and which are pending approval before accounting export.
-              </p>
-
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-                <a className="btn" href="/finance-handoff">
-                  View Finance Handoff
-                </a>
-              </div>
-            </div>
           </div>
 
           <div className="grid grid-2" style={{ marginTop: 22 }}>
@@ -258,21 +264,37 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Approval queue dashboard</h3>
-            <p className="muted">
-              The approval queue module shows pending approvals, rejections, approval owners,
-              and the next required decision before parcels can continue through the control chain.
-            </p>
+          <div className="grid grid-2" style={{ marginTop: 22 }}>
+            <div className="card">
+              <h3>Approval queue dashboard</h3>
+              <p className="muted">
+                The approval queue module shows pending approvals, rejections, approval owners,
+                and the next required decision before parcels can continue through the control chain.
+              </p>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-              <a className="btn" href="/approval-queue">
-                View Approval Queue
-              </a>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/approval-queue">
+                  View Approval Queue
+                </a>
+              </div>
+            </div>
+
+            <div className="card">
+              <h3>Finance handoff dashboard</h3>
+              <p className="muted">
+                The finance module shows which parcels are ready for release into finance,
+                which are blocked, and which are pending approval before accounting export.
+              </p>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/finance-handoff">
+                  View Finance Handoff
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </>
   );
-    }
+}

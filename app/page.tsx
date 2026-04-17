@@ -22,8 +22,8 @@ export default function HomePage() {
           <h1>Transaction control from document to finance handoff.</h1>
           <p>
             This live proof environment shows controlled parcel execution, dispatch control,
-            reconciliation, exception handling, and finance handoff readiness across one
-            connected prototype.
+            reconciliation, exception handling, approval gating, and finance handoff readiness
+            across one connected prototype.
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
@@ -58,6 +58,13 @@ export default function HomePage() {
             >
               Open Reconciliation
             </a>
+            <a
+              className="btn"
+              href="/approval-queue"
+              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
+            >
+              Open Approval Queue
+            </a>
           </div>
         </div>
       </section>
@@ -69,7 +76,7 @@ export default function HomePage() {
               <h2>Control overview</h2>
               <p className="muted">
                 This overview summarizes the current proof environment across parcel execution,
-                dispatch control, reconciliation, exception handling, and finance-readiness controls.
+                dispatch control, reconciliation, exceptions, approval gating, and finance-readiness controls.
               </p>
             </div>
           </div>
@@ -212,21 +219,37 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Reconciliation dashboard</h3>
-            <p className="muted">
-              The reconciliation module shows source versus destination weight, accepted tons,
-              variance review, blocked reconciliations, and readiness to move into finance handoff.
-            </p>
+          <div className="grid grid-2" style={{ marginTop: 22 }}>
+            <div className="card">
+              <h3>Reconciliation dashboard</h3>
+              <p className="muted">
+                The reconciliation module shows source versus destination weight, accepted tons,
+                variance review, blocked reconciliations, and readiness to move into finance handoff.
+              </p>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-              <a className="btn" href="/reconciliation">
-                View Reconciliation
-              </a>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/reconciliation">
+                  View Reconciliation
+                </a>
+              </div>
+            </div>
+
+            <div className="card">
+              <h3>Approval queue dashboard</h3>
+              <p className="muted">
+                The approval queue module shows pending approvals, rejections, approval owners,
+                and the next required decision before parcels can continue through the control chain.
+              </p>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/approval-queue">
+                  View Approval Queue
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </>
   );
-    }
+                           }

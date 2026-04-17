@@ -129,6 +129,7 @@ export default function ReconciliationPage({
                         <th>Variance</th>
                         <th>Reconciliation</th>
                         <th>Finance</th>
+                        <th>Open</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -149,6 +150,11 @@ export default function ReconciliationPage({
                           </td>
                           <td>
                             <span className={badgeClass(item.financeState)}>{item.financeState}</span>
+                          </td>
+                          <td>
+                            <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
+                              View Parcel
+                            </a>
                           </td>
                         </tr>
                       ))}
@@ -178,6 +184,11 @@ export default function ReconciliationPage({
                       <div className="row">
                         <strong>Finance:</strong>{" "}
                         <span className={badgeClass(item.financeState)}>{item.financeState}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
+                        <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
+                          View Parcel
+                        </a>
                       </div>
                     </div>
                   ))}
@@ -232,7 +243,7 @@ export default function ReconciliationPage({
                     </ul>
 
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-                      <a className="btn" href="/golden-path">
+                      <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
                         View Parcel
                       </a>
                       <a className="btn" href="/dispatch-control">
@@ -251,4 +262,4 @@ export default function ReconciliationPage({
       </section>
     </>
   );
-}
+    }

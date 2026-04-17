@@ -1,12 +1,17 @@
 import Header from "../../components/Header";
 import { getGoldenPathParcel } from "../../lib/goldenPath";
 
-export default function GoldenPathPage() {
+export default function GoldenPathPage({
+  searchParams,
+}: {
+  searchParams?: { parcelId?: string };
+}) {
   const data = getGoldenPathParcel();
   const parcel: any = data.parcel;
   const timeline: any[] = data.timeline || [];
 
-  const parcelId = parcel.parcelId || parcel.id || "N/A";
+  const selectedParcelId = searchParams?.parcelId || parcel.parcelId || parcel.id || "N/A";
+
   const dealId = parcel.dealId || "N/A";
   const entity = parcel.entityName || parcel.entity || "N/A";
   const commodity = parcel.commodity || "N/A";
@@ -51,7 +56,7 @@ export default function GoldenPathPage() {
           <div className="kpis">
             <div className="kpi">
               <div className="label">Parcel ID</div>
-              <div className="value" style={{ fontSize: 18 }}>{parcelId}</div>
+              <div className="value" style={{ fontSize: 18 }}>{selectedParcelId}</div>
             </div>
             <div className="kpi">
               <div className="label">Accepted tons</div>
@@ -77,7 +82,7 @@ export default function GoldenPathPage() {
                 <tbody>
                   <tr>
                     <th>Parcel ID</th>
-                    <td><span className="code">{parcelId}</span></td>
+                    <td><span className="code">{selectedParcelId}</span></td>
                   </tr>
                   <tr>
                     <th>Deal ID</th>
@@ -300,4 +305,4 @@ export default function GoldenPathPage() {
       </section>
     </>
   );
-}
+    }

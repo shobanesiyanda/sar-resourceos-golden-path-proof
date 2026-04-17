@@ -1,0 +1,76 @@
+{
+  "summary": {
+    "totalParcels": 5,
+    "matched": 2,
+    "pendingReview": 2,
+    "blocked": 1,
+    "readyForFinance": 2
+  },
+  "items": [
+    {
+      "id": "REC-001",
+      "parcelId": "PAR-CHR-2026-0001",
+      "dispatchRef": "DSP-2026-0001",
+      "sourceWeight": 34.2,
+      "destinationWeight": 34.0,
+      "acceptedTons": 33.9,
+      "varianceTons": 0.2,
+      "reconciliationState": "matched",
+      "financeState": "ready_for_finance",
+      "blocker": "None",
+      "nextAction": "Release to finance handoff"
+    },
+    {
+      "id": "REC-002",
+      "parcelId": "PAR-CHR-2026-0002",
+      "dispatchRef": "DSP-2026-0002",
+      "sourceWeight": 33.8,
+      "destinationWeight": 0,
+      "acceptedTons": 0,
+      "varianceTons": 33.8,
+      "reconciliationState": "blocked",
+      "financeState": "blocked",
+      "blocker": "Missing destination weighbridge confirmation",
+      "nextAction": "Obtain destination weighbridge document"
+    },
+    {
+      "id": "REC-003",
+      "parcelId": "PAR-CHR-2026-0003",
+      "dispatchRef": "DSP-2026-0003",
+      "sourceWeight": 34.5,
+      "destinationWeight": 34.1,
+      "acceptedTons": 33.8,
+      "varianceTons": 0.4,
+      "reconciliationState": "pending_review",
+      "financeState": "pending_review",
+      "blocker": "Variance above tolerance threshold",
+      "nextAction": "Variance review and accepted ton confirmation"
+    },
+    {
+      "id": "REC-004",
+      "parcelId": "PAR-CHR-2026-0004",
+      "dispatchRef": "DSP-2026-0004",
+      "sourceWeight": 35.0,
+      "destinationWeight": 34.9,
+      "acceptedTons": 34.7,
+      "varianceTons": 0.1,
+      "reconciliationState": "matched",
+      "financeState": "ready_for_finance",
+      "blocker": "None",
+      "nextAction": "Proceed to finance export"
+    },
+    {
+      "id": "REC-005",
+      "parcelId": "PAR-CHR-2026-0005",
+      "dispatchRef": "DSP-2026-0005",
+      "sourceWeight": 34.1,
+      "destinationWeight": 33.5,
+      "acceptedTons": 33.1,
+      "varianceTons": 0.6,
+      "reconciliationState": "pending_review",
+      "financeState": "held",
+      "blocker": "Short-delivery review open",
+      "nextAction": "Resolve short-delivery claim before finance release"
+    }
+  ]
+    }

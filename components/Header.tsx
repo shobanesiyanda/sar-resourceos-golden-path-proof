@@ -20,6 +20,9 @@ export default function Header() {
           <a className="btn" href="/finance-handoff">
             Finance Handoff
           </a>
+          <a className="btn" href="/dispatch-control">
+            Dispatch Control
+          </a>
         </div>
       </div>
     </header>

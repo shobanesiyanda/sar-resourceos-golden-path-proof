@@ -1,4 +1,4 @@
-import Header from "../../components/Header";
+    import Header from "../../components/Header";
 import { getDispatchControlData } from "../../lib/dispatchControl";
 
 export default function DispatchControlPage({
@@ -142,6 +142,7 @@ export default function DispatchControlPage({
                         <th>Dispatch state</th>
                         <th>Movement</th>
                         <th>Delivery</th>
+                        <th>Open</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -162,6 +163,11 @@ export default function DispatchControlPage({
                           </td>
                           <td>
                             <span className={badgeClass(item.deliveryState)}>{item.deliveryState}</span>
+                          </td>
+                          <td>
+                            <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
+                              View Parcel
+                            </a>
                           </td>
                         </tr>
                       ))}
@@ -190,6 +196,11 @@ export default function DispatchControlPage({
                       <div className="row">
                         <strong>Delivery:</strong>{" "}
                         <span className={badgeClass(item.deliveryState)}>{item.deliveryState}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
+                        <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
+                          View Parcel
+                        </a>
                       </div>
                     </div>
                   ))}
@@ -245,7 +256,7 @@ export default function DispatchControlPage({
                     </ul>
 
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-                      <a className="btn" href="/golden-path">
+                      <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
                         View Parcel
                       </a>
                       <a className="btn" href="/exceptions">
@@ -264,4 +275,4 @@ export default function DispatchControlPage({
       </section>
     </>
   );
-}
+                          }

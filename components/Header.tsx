@@ -29,8 +29,11 @@ export default function Header() {
           <a className="btn" href="/approval-queue">
             Approval Queue
           </a>
+          <a className="btn" href="/execution-readiness">
+            Execution Readiness
+          </a>
         </div>
       </div>
     </header>
   );
-}
+            }

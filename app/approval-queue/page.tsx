@@ -1,6 +1,20 @@
 import Header from "../../components/Header";
 import { getApprovalQueueData } from "../../lib/approvalQueue";
 
+type ApprovalItem = {
+  id: string;
+  parcelId: string;
+  module: string;
+  requestType: string;
+  owner: string;
+  approvalState: string;
+  priority: string;
+  submittedAt: string;
+  blocker: string;
+  nextAction: string;
+  linkedRoute: string;
+};
+
 export default function ApprovalQueuePage({
   searchParams,
 }: {
@@ -30,6 +44,38 @@ export default function ApprovalQueuePage({
     if (value === "pending") return "badge badge-pending";
     if (value === "approved") return "badge badge-approval";
     return "badge";
+  }
+
+  function moduleHref(item: ApprovalItem) {
+    if (item.linkedRoute === "/finance-handoff") {
+      return item.approvalState === "approved"
+        ? "/finance-handoff?filter=Ready%20for%20finance"
+        : "/finance-handoff?filter=Pending%20approval";
+    }
+
+    if (item.linkedRoute === "/reconciliation") {
+      return "/reconciliation?filter=Pending%20review";
+    }
+
+    if (item.linkedRoute === "/exceptions") {
+      return "/exceptions?filter=Pending%20review";
+    }
+
+    if (item.linkedRoute === "/dispatch-control") {
+      return item.approvalState === "rejected"
+        ? "/dispatch-control?filter=Held"
+        : "/dispatch-control";
+    }
+
+    return item.linkedRoute;
+  }
+
+  function moduleLabel(item: ApprovalItem) {
+    if (item.linkedRoute === "/finance-handoff") return "Open Finance Handoff";
+    if (item.linkedRoute === "/reconciliation") return "Open Reconciliation";
+    if (item.linkedRoute === "/exceptions") return "Open Exceptions";
+    if (item.linkedRoute === "/dispatch-control") return "Open Dispatch Control";
+    return "Open Module";
   }
 
   const visibleTotal = filteredItems.length;
@@ -122,6 +168,7 @@ export default function ApprovalQueuePage({
                         <th>Owner</th>
                         <th>Approval</th>
                         <th>Priority</th>
+                        <th>Open</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -137,6 +184,11 @@ export default function ApprovalQueuePage({
                             <span className={badgeClass(item.approvalState)}>{item.approvalState}</span>
                           </td>
                           <td>{item.priority}</td>
+                          <td>
+                            <a className="btn" href={moduleHref(item)}>
+                              {moduleLabel(item)}
+                            </a>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -162,6 +214,11 @@ export default function ApprovalQueuePage({
                       </div>
                       <div className="row">
                         <strong>Priority:</strong> {item.priority}
+                      </div>
+                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
+                        <a className="btn" href={moduleHref(item)}>
+                          {moduleLabel(item)}
+                        </a>
                       </div>
                     </div>
                   ))}
@@ -211,8 +268,8 @@ export default function ApprovalQueuePage({
                       <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
                         View Parcel
                       </a>
-                      <a className="btn" href={item.linkedRoute}>
-                        Open Module
+                      <a className="btn" href={moduleHref(item)}>
+                        {moduleLabel(item)}
                       </a>
                     </div>
                   </div>

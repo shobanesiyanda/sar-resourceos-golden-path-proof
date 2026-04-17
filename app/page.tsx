@@ -21,9 +21,8 @@ export default function HomePage() {
           <div className="eyebrow">SAR ResourceOS</div>
           <h1>Transaction control from document to finance handoff.</h1>
           <p>
-            This live proof environment shows one controlled parcel lifecycle, one exception
-            action dashboard, and a finance handoff view that demonstrates release readiness,
-            blockers, and export preparation.
+            This live proof environment shows controlled parcel execution, dispatch control,
+            exception handling, and finance handoff readiness across one connected prototype.
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
@@ -44,6 +43,13 @@ export default function HomePage() {
             >
               Open Finance Handoff
             </a>
+            <a
+              className="btn"
+              href="/dispatch-control"
+              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
+            >
+              Open Dispatch Control
+            </a>
           </div>
         </div>
       </section>
@@ -55,7 +61,7 @@ export default function HomePage() {
               <h2>Control overview</h2>
               <p className="muted">
                 This overview summarizes the current proof environment across parcel execution,
-                exception handling, and finance-readiness controls.
+                dispatch control, exception handling, and finance-readiness controls.
               </p>
             </div>
           </div>
@@ -184,18 +190,15 @@ export default function HomePage() {
             </div>
 
             <div className="card">
-              <h3>API endpoints</h3>
+              <h3>Dispatch control dashboard</h3>
               <p className="muted">
-                These demo endpoints expose the seeded parcel and exception data used by the proof
-                environment.
+                The dispatch module shows release state, movement state, delivery progress,
+                dispatch blockers, and the next operational action before reconciliation.
               </p>
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-                <a className="btn" href="/api/demo/parcel">
-                  Parcel API
-                </a>
-                <a className="btn" href="/api/demo/exceptions">
-                  Exceptions API
+                <a className="btn" href="/dispatch-control">
+                  View Dispatch Control
                 </a>
               </div>
             </div>
@@ -204,4 +207,4 @@ export default function HomePage() {
       </section>
     </>
   );
-}
+    }

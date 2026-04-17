@@ -23,8 +23,11 @@ export default function Header() {
           <a className="btn" href="/dispatch-control">
             Dispatch Control
           </a>
+          <a className="btn" href="/reconciliation">
+            Reconciliation
+          </a>
         </div>
       </div>
     </header>
   );
-}
+          }

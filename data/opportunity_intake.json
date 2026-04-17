@@ -1,0 +1,86 @@
+{
+  "summary": {
+    "totalOpportunities": 5,
+    "new": 2,
+    "screening": 1,
+    "qualified": 1,
+    "rejected": 1
+  },
+  "items": [
+    {
+      "id": "OPP-001",
+      "opportunityName": "North Yard Chrome Parcel",
+      "commodity": "Chrome",
+      "sourceType": "Yard stock",
+      "location": "North West",
+      "counterparty": "North Yard",
+      "indicativeTons": 500,
+      "indicativeGrade": "38-42%",
+      "commercialState": "new",
+      "qualificationState": "screening",
+      "priority": "High",
+      "blocker": "Awaiting supplier commercial confirmation",
+      "nextAction": "Complete intake call and supplier verification"
+    },
+    {
+      "id": "OPP-002",
+      "opportunityName": "Mvela Bulk Parcel",
+      "commodity": "Chrome",
+      "sourceType": "ROM",
+      "location": "Limpopo",
+      "counterparty": "Mvela Commodities",
+      "indicativeTons": 700,
+      "indicativeGrade": "32-36%",
+      "commercialState": "screening",
+      "qualificationState": "screening",
+      "priority": "Medium",
+      "blocker": "Assay and logistics assumptions not yet confirmed",
+      "nextAction": "Request assay and transport confirmation"
+    },
+    {
+      "id": "OPP-003",
+      "opportunityName": "Orelink Ready Parcel",
+      "commodity": "Chrome",
+      "sourceType": "Concentrate",
+      "location": "North West",
+      "counterparty": "Orelink Resources",
+      "indicativeTons": 450,
+      "indicativeGrade": "40-42%",
+      "commercialState": "qualified",
+      "qualificationState": "qualified",
+      "priority": "High",
+      "blocker": "None",
+      "nextAction": "Promote into execution readiness"
+    },
+    {
+      "id": "OPP-004",
+      "opportunityName": "Delta Tailings Route",
+      "commodity": "Chrome",
+      "sourceType": "Tailings",
+      "location": "Mpumalanga",
+      "counterparty": "Delta Bulk Metals",
+      "indicativeTons": 1200,
+      "indicativeGrade": "18-24%",
+      "commercialState": "new",
+      "qualificationState": "new",
+      "priority": "Medium",
+      "blocker": "Early-stage opportunity with incomplete technical data",
+      "nextAction": "Capture intake sheet and route assumptions"
+    },
+    {
+      "id": "OPP-005",
+      "opportunityName": "Rejected Yard Parcel",
+      "commodity": "Chrome",
+      "sourceType": "Yard stock",
+      "location": "Gauteng",
+      "counterparty": "Unknown Counterparty",
+      "indicativeTons": 300,
+      "indicativeGrade": "Unknown",
+      "commercialState": "rejected",
+      "qualificationState": "rejected",
+      "priority": "Low",
+      "blocker": "Insufficient source credibility and no usable verification path",
+      "nextAction": "Do not advance"
+    }
+  ]
+    }

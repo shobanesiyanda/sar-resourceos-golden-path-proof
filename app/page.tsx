@@ -21,9 +21,9 @@ export default function HomePage() {
           <div className="eyebrow">SAR ResourceOS</div>
           <h1>Transaction control from document to finance handoff.</h1>
           <p>
-            This live proof environment shows controlled parcel execution, dispatch control,
-            reconciliation, exception handling, approval gating, and finance handoff readiness
-            across one connected prototype.
+            This live proof environment shows execution readiness, controlled parcel execution,
+            dispatch control, reconciliation, exception handling, approval gating, and finance
+            handoff readiness across one connected prototype.
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
@@ -65,6 +65,13 @@ export default function HomePage() {
             >
               Open Approval Queue
             </a>
+            <a
+              className="btn"
+              href="/execution-readiness"
+              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
+            >
+              Open Execution Readiness
+            </a>
           </div>
         </div>
       </section>
@@ -75,8 +82,9 @@ export default function HomePage() {
             <div>
               <h2>Control overview</h2>
               <p className="muted">
-                This overview summarizes the current proof environment across parcel execution,
-                dispatch control, reconciliation, exceptions, approval gating, and finance-readiness controls.
+                This overview summarizes the current proof environment across execution readiness,
+                parcel execution, dispatch control, reconciliation, exceptions, approval gating,
+                and finance-readiness controls.
               </p>
             </div>
           </div>
@@ -107,6 +115,20 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-2" style={{ marginTop: 22 }}>
+            <div className="card">
+              <h3>Execution readiness / release gate</h3>
+              <p className="muted">
+                The execution-readiness module shows whether a parcel is fully cleared to move
+                from upstream checks into live dispatch execution.
+              </p>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/execution-readiness">
+                  View Execution Readiness
+                </a>
+              </div>
+            </div>
+
             <div className="card">
               <h3>Golden path proof</h3>
               <p className="muted">
@@ -150,7 +172,9 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
+          </div>
 
+          <div className="grid grid-2" style={{ marginTop: 22 }}>
             <div className="card">
               <h3>Exception action dashboard</h3>
               <p className="muted">
@@ -187,9 +211,7 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-2" style={{ marginTop: 22 }}>
             <div className="card">
               <h3>Finance handoff dashboard</h3>
               <p className="muted">
@@ -203,7 +225,9 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
+          </div>
 
+          <div className="grid grid-2" style={{ marginTop: 22 }}>
             <div className="card">
               <h3>Dispatch control dashboard</h3>
               <p className="muted">
@@ -217,9 +241,7 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-2" style={{ marginTop: 22 }}>
             <div className="card">
               <h3>Reconciliation dashboard</h3>
               <p className="muted">
@@ -233,23 +255,23 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
+          </div>
 
-            <div className="card">
-              <h3>Approval queue dashboard</h3>
-              <p className="muted">
-                The approval queue module shows pending approvals, rejections, approval owners,
-                and the next required decision before parcels can continue through the control chain.
-              </p>
+          <div className="card" style={{ marginTop: 22 }}>
+            <h3>Approval queue dashboard</h3>
+            <p className="muted">
+              The approval queue module shows pending approvals, rejections, approval owners,
+              and the next required decision before parcels can continue through the control chain.
+            </p>
 
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-                <a className="btn" href="/approval-queue">
-                  View Approval Queue
-                </a>
-              </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+              <a className="btn" href="/approval-queue">
+                View Approval Queue
+              </a>
             </div>
           </div>
         </div>
       </section>
     </>
   );
-                           }
+    }

@@ -22,9 +22,10 @@ export default function HomePage() {
           <div className="eyebrow">SAR ResourceOS</div>
           <h1>Transaction control from opportunity to finance handoff.</h1>
           <p>
-            This live proof environment shows opportunity intake, execution readiness,
-            controlled parcel execution, dispatch control, reconciliation, exception handling,
-            approval gating, and finance handoff readiness across one connected prototype.
+            This live proof environment shows opportunity intake, route economics,
+            execution readiness, controlled parcel execution, dispatch control,
+            reconciliation, exception handling, approval gating, and finance handoff
+            readiness across one connected prototype.
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
@@ -34,6 +35,13 @@ export default function HomePage() {
               style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
             >
               Open Opportunity Intake
+            </a>
+            <a
+              className="btn"
+              href="/route-economics"
+              style={{ background: "white", color: "#111827", borderColor: "#e5e7eb" }}
+            >
+              Open Route Economics
             </a>
             <a
               className="btn"
@@ -91,8 +99,8 @@ export default function HomePage() {
               <h2>Control overview</h2>
               <p className="muted">
                 This overview summarizes the current proof environment across opportunity intake,
-                execution readiness, parcel execution, dispatch control, reconciliation, exceptions,
-                approval gating, and finance-readiness controls.
+                route economics, execution readiness, parcel execution, dispatch control,
+                reconciliation, exceptions, approval gating, and finance-readiness controls.
               </p>
             </div>
           </div>
@@ -102,7 +110,7 @@ export default function HomePage() {
               <h3>Opportunity intake</h3>
               <p className="muted">
                 The opportunity-intake module captures early-stage opportunities before they move
-                into execution readiness and live parcel control.
+                into route pricing, execution readiness, and live parcel control.
               </p>
 
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
@@ -112,6 +120,22 @@ export default function HomePage() {
               </div>
             </div>
 
+            <div className="card">
+              <h3>Route economics / pricing engine</h3>
+              <p className="muted">
+                The route-economics module back-solves target feedstock, transport, tolling,
+                and margin viability from the market or contract sell-side price.
+              </p>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/route-economics">
+                  View Route Economics
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-2" style={{ marginTop: 22 }}>
             <div className="card">
               <h3>Execution readiness / release gate</h3>
               <p className="muted">
@@ -125,34 +149,7 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
-          </div>
 
-          <div className="kpis" style={{ marginTop: 22 }}>
-            <div className="kpi">
-              <div className="label">Parcel ID</div>
-              <div className="value" style={{ fontSize: 18 }}>
-                {data.parcel.parcelId}
-              </div>
-            </div>
-            <div className="kpi">
-              <div className="label">Accepted tons</div>
-              <div className="value">{data.parcel.acceptedTons}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Finance state</div>
-              <div className="value" style={{ fontSize: 16 }}>
-                {data.parcel.financeState}
-              </div>
-            </div>
-            <div className="kpi">
-              <div className="label">Accounting export</div>
-              <div className="value" style={{ fontSize: 16 }}>
-                {data.parcel.accountingExportState}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-2" style={{ marginTop: 22 }}>
             <div className="card">
               <h3>Golden path proof</h3>
               <p className="muted">
@@ -196,41 +193,29 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
+          </div>
 
-            <div className="card">
-              <h3>Exception action dashboard</h3>
-              <p className="muted">
-                The exception module proves how ResourceOS handles blocked, disputed, and escalated
-                cases with visible ownership, next actions, finance impacts, and approval-linked
-                decision routing.
-              </p>
-
-              <div
-                className="kpis"
-                style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginTop: 14 }}
-              >
-                <div className="kpi">
-                  <div className="label">Total exceptions</div>
-                  <div className="value">{totalExceptions}</div>
-                </div>
-                <div className="kpi">
-                  <div className="label">Blocked</div>
-                  <div className="value">{blocked}</div>
-                </div>
-                <div className="kpi">
-                  <div className="label">Pending review</div>
-                  <div className="value">{pending}</div>
-                </div>
-                <div className="kpi">
-                  <div className="label">Held / finance blocked</div>
-                  <div className="value">{held + financeBlocked}</div>
-                </div>
+          <div className="kpis" style={{ marginTop: 22 }}>
+            <div className="kpi">
+              <div className="label">Parcel ID</div>
+              <div className="value" style={{ fontSize: 18 }}>
+                {data.parcel.parcelId}
               </div>
-
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-                <a className="btn" href="/exceptions">
-                  View Exceptions
-                </a>
+            </div>
+            <div className="kpi">
+              <div className="label">Accepted tons</div>
+              <div className="value">{data.parcel.acceptedTons}</div>
+            </div>
+            <div className="kpi">
+              <div className="label">Finance state</div>
+              <div className="value" style={{ fontSize: 16 }}>
+                {data.parcel.financeState}
+              </div>
+            </div>
+            <div className="kpi">
+              <div className="label">Accounting export</div>
+              <div className="value" style={{ fontSize: 16 }}>
+                {data.parcel.accountingExportState}
               </div>
             </div>
           </div>
@@ -267,6 +252,43 @@ export default function HomePage() {
 
           <div className="grid grid-2" style={{ marginTop: 22 }}>
             <div className="card">
+              <h3>Exception action dashboard</h3>
+              <p className="muted">
+                The exception module proves how ResourceOS handles blocked, disputed, and escalated
+                cases with visible ownership, next actions, finance impacts, and approval-linked
+                decision routing.
+              </p>
+
+              <div
+                className="kpis"
+                style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginTop: 14 }}
+              >
+                <div className="kpi">
+                  <div className="label">Total exceptions</div>
+                  <div className="value">{totalExceptions}</div>
+                </div>
+                <div className="kpi">
+                  <div className="label">Blocked</div>
+                  <div className="value">{blocked}</div>
+                </div>
+                <div className="kpi">
+                  <div className="label">Pending review</div>
+                  <div className="value">{pending}</div>
+                </div>
+                <div className="kpi">
+                  <div className="label">Held / finance blocked</div>
+                  <div className="value">{held + financeBlocked}</div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <a className="btn" href="/exceptions">
+                  View Exceptions
+                </a>
+              </div>
+            </div>
+
+            <div className="card">
               <h3>Approval queue dashboard</h3>
               <p className="muted">
                 The approval queue module shows pending approvals, rejections, approval owners,
@@ -279,19 +301,19 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
+          </div>
 
-            <div className="card">
-              <h3>Finance handoff dashboard</h3>
-              <p className="muted">
-                The finance module shows which parcels are ready for release into finance,
-                which are blocked, and which are pending approval before accounting export.
-              </p>
+          <div className="card" style={{ marginTop: 22 }}>
+            <h3>Finance handoff dashboard</h3>
+            <p className="muted">
+              The finance module shows which parcels are ready for release into finance,
+              which are blocked, and which are pending approval before accounting export.
+            </p>
 
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-                <a className="btn" href="/finance-handoff">
-                  View Finance Handoff
-                </a>
-              </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+              <a className="btn" href="/finance-handoff">
+                View Finance Handoff
+              </a>
             </div>
           </div>
         </div>

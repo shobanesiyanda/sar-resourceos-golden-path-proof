@@ -4,18 +4,6 @@ type NavItem = {
   primary?: boolean;
 };
 
-function compactLabel(label: string) {
-  return label
-    .replace("Opportunity Intake", "Opportunity\nIntake")
-    .replace("Route Economics", "Route\nEconomics")
-    .replace("Execution Readiness", "Execution\nReadiness")
-    .replace("Dispatch Control", "Dispatch\nControl")
-    .replace("Open Exceptions", "Open\nExceptions")
-    .replace("Approval Queue", "Approval\nQueue")
-    .replace("Finance Handoff", "Finance\nHandoff")
-    .replace("Open Proof", "Open\nProof");
-}
-
 export default function SidebarNav({
   items,
   activeHref,
@@ -43,10 +31,7 @@ export default function SidebarNav({
               className={`bb-nav-link ${active ? "is-active" : ""} ${item.primary ? "is-primary" : ""}`}
               title={item.label}
             >
-              <span className="bb-nav-label-desktop">{item.label}</span>
-              <span className="bb-nav-label-mobile">
-                {compactLabel(item.label)}
-              </span>
+              <span className="bb-nav-label">{item.label}</span>
               <span className="bb-nav-arrow">›</span>
             </a>
           );
@@ -54,4 +39,4 @@ export default function SidebarNav({
       </nav>
     </aside>
   );
-  }
+}

@@ -1,248 +1,294 @@
-import Header from "../../components/Header";
-import { getOpportunityIntakeData } from "../../lib/opportunityIntake";
+import ExecutiveShell from "../../components/ExecutiveShell";
+import opportunityData from "../../data/opportunity_intake.json";
+
+type SearchParams = {
+  filter?: string;
+};
 
 export default function OpportunityIntakePage({
   searchParams,
 }: {
-  searchParams?: { filter?: string };
+  searchParams?: SearchParams;
 }) {
-  const data = getOpportunityIntakeData();
-  const summary = data.summary;
-  const activeFilter = searchParams?.filter || "All";
+  const summary = opportunityData.summary;
+  const activeFilter = (searchParams?.filter || "all").toLowerCase();
 
-  const filters = ["All", "New", "Screening", "Qualified", "Rejected"];
+  const filteredItems: any[] = (opportunityData.items || []).filter((item: any) => {
+    const qualification = String(item?.qualification || "").toLowerCase();
+    return activeFilter === "all" || qualification === activeFilter;
+  });
 
-  const filteredItems =
-    activeFilter === "All"
-      ? data.items
-      : activeFilter === "New"
-      ? data.items.filter((item) => item.qualificationState === "new")
-      : activeFilter === "Screening"
-      ? data.items.filter((item) => item.qualificationState === "screening")
-      : activeFilter === "Qualified"
-      ? data.items.filter((item) => item.qualificationState === "qualified")
-      : activeFilter === "Rejected"
-      ? data.items.filter((item) => item.qualificationState === "rejected")
-      : data.items;
+  const leadItem: any = filteredItems[0] || (opportunityData.items || [])[0] || {};
 
-  function badgeClass(value: string) {
-    if (value === "rejected") return "badge badge-blocked";
-    if (value === "screening") return "badge badge-pending";
-    if (value === "qualified") return "badge badge-approval";
-    if (value === "new") return "badge";
-    return "badge";
+  function chipClass(value?: string) {
+    const v = String(value || "").toLowerCase();
+    if (v.includes("qualified")) return "bb-chip-blue";
+    if (v.includes("screen")) return "bb-chip-amber";
+    if (v.includes("reject")) return "bb-chip-red";
+    return "bb-chip-gold";
   }
 
-  const visibleTotal = filteredItems.length;
-  const visibleNew = filteredItems.filter((item) => item.qualificationState === "new").length;
-  const visibleScreening = filteredItems.filter((item) => item.qualificationState === "screening").length;
-  const visibleQualified = filteredItems.filter((item) => item.qualificationState === "qualified").length;
-  const visibleRejected = filteredItems.filter((item) => item.qualificationState === "rejected").length;
-
   return (
-    <>
-      <Header />
+    <ExecutiveShell
+      activeHref="/opportunity-intake"
+      title="Opportunity intake and qualification control."
+      subtitle="Institutional intake dashboard for upstream deal capture, first-screen qualification, and release into route economics."
+    >
+      <div className="bb-command-grid">
+        <section className="bb-command-panel">
+          <div className="bb-command-eyebrow">Intake command layer</div>
+          <div className="bb-command-title">Opportunity intake / qualification desk</div>
+          <p className="bb-command-text">
+            This dashboard captures upstream opportunities, applies first-screen
+            qualification, and routes viable parcels into commercial pricing and
+            execution control.
+          </p>
 
-      <section className="section">
-        <div className="container">
-          <div className="head">
-            <div>
-              <h2>Opportunity intake dashboard</h2>
-              <p className="muted">
-                This dashboard captures early-stage opportunities before they move into
-                execution readiness. It tracks source type, indicative tons, initial qualification,
-                and the next action required to progress a deal.
-              </p>
+          <div className="bb-command-tags">
+            <span className="bb-chip bb-chip-gold">Intake active</span>
+            <span className="bb-chip bb-chip-blue">Lead screened</span>
+            <span className="bb-chip bb-chip-amber">Front-door flow</span>
+          </div>
+        </section>
+
+        <section className="bb-command-side">
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Lead opportunity</div>
+            <div className="bb-side-value">{leadItem.name || "No active lead"}</div>
+            <div className="bb-side-sub">
+              {leadItem.commodity || "—"} · {leadItem.sourceType || "—"}
             </div>
           </div>
 
-          <div className="kpis">
-            <div className="kpi">
-              <div className="label">Visible opportunities</div>
-              <div className="value">{visibleTotal}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">New</div>
-              <div className="value">{visibleNew}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Screening</div>
-              <div className="value">{visibleScreening}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Qualified / rejected</div>
-              <div className="value">{visibleQualified + visibleRejected}</div>
-            </div>
+          <div className="bb-command-side-divider" />
+
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Qualification</div>
+            <div className="bb-side-state">{leadItem.qualification || "unknown"}</div>
           </div>
+        </section>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              flexWrap: "wrap",
-              marginTop: 18,
-              marginBottom: 6
-            }}
-          >
-            {filters.map((filter) => (
-              <a
-                key={filter}
-                href={
-                  filter === "All"
-                    ? "/opportunity-intake"
-                    : `/opportunity-intake?filter=${encodeURIComponent(filter)}`
-                }
-                className={filter === activeFilter ? "badge badge-approval" : "badge"}
-              >
-                {filter}
-              </a>
-            ))}
-          </div>
+        <aside className="bb-operator-card">
+          <div className="bb-user-role">Visible opportunities</div>
+          <div className="bb-user-name">{filteredItems.length}</div>
+          <div className="bb-user-org">Pipeline view</div>
+        </aside>
+      </div>
 
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Opportunity overview</h3>
-            <p className="muted">
-              Total seeded opportunities: {summary.totalOpportunities} • New: {summary.new} •
-              Screening: {summary.screening} • Qualified: {summary.qualified} • Rejected: {summary.rejected}
-            </p>
-
-            {filteredItems.length === 0 ? (
-              <div style={{ marginTop: 16 }}>
-                <p className="muted">No opportunity-intake records match the selected filter.</p>
-              </div>
-            ) : (
-              <>
-                <div className="desktop-exception-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Opportunity</th>
-                        <th>Commodity</th>
-                        <th>Counterparty</th>
-                        <th>Tons</th>
-                        <th>Qualification</th>
-                        <th>Priority</th>
-                        <th>Open</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredItems.map((item) => (
-                        <tr key={item.id}>
-                          <td>{item.opportunityName}</td>
-                          <td>{item.commodity}</td>
-                          <td>{item.counterparty}</td>
-                          <td>{item.indicativeTons}</td>
-                          <td>
-                            <span className={badgeClass(item.qualificationState)}>
-                              {item.qualificationState}
-                            </span>
-                          </td>
-                          <td>{item.priority}</td>
-                          <td>
-                            <a className="btn" href="/execution-readiness">
-                              Open Release Gate
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="mobile-exception-list">
-                  {filteredItems.map((item) => (
-                    <div className="mobile-exception-card" key={item.id}>
-                      <strong>{item.opportunityName}</strong>
-                      <div className="row">
-                        <strong>Commodity:</strong> {item.commodity}
-                      </div>
-                      <div className="row">
-                        <strong>Source:</strong> {item.sourceType}
-                      </div>
-                      <div className="row">
-                        <strong>Counterparty:</strong> {item.counterparty}
-                      </div>
-                      <div className="row">
-                        <strong>Tons:</strong> {item.indicativeTons}
-                      </div>
-                      <div className="row">
-                        <strong>Qualification:</strong>{" "}
-                        <span className={badgeClass(item.qualificationState)}>
-                          {item.qualificationState}
-                        </span>
-                      </div>
-                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
-                        <a className="btn" href="/execution-readiness">
-                          Open Release Gate
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Opportunity action queue</h3>
-
-            {filteredItems.length === 0 ? (
-              <p className="muted">No opportunity action items match the selected filter.</p>
-            ) : (
-              <div className="step-list">
-                {filteredItems.map((item) => (
-                  <div className="step" key={item.id}>
-                    <div className="step-top">
-                      <div>
-                        <strong>{item.opportunityName}</strong>
-                        <div className="muted" style={{ marginTop: 6 }}>
-                          {item.commodity} • {item.location} • {item.counterparty}
-                        </div>
-                      </div>
-                      <span className={badgeClass(item.qualificationState)}>
-                        {item.qualificationState}
-                      </span>
-                    </div>
-
-                    <ul className="clean">
-                      <li>
-                        <strong>Source type:</strong> {item.sourceType}
-                      </li>
-                      <li>
-                        <strong>Indicative tons:</strong> {item.indicativeTons}
-                      </li>
-                      <li>
-                        <strong>Indicative grade:</strong> {item.indicativeGrade}
-                      </li>
-                      <li>
-                        <strong>Commercial state:</strong> {item.commercialState}
-                      </li>
-                      <li>
-                        <strong>Priority:</strong> {item.priority}
-                      </li>
-                      <li>
-                        <strong>Blocker:</strong> {item.blocker}
-                      </li>
-                      <li>
-                        <strong>Next action:</strong> {item.nextAction}
-                      </li>
-                    </ul>
-
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-                      <a className="btn" href="/execution-readiness">
-                        Open Execution Readiness
-                      </a>
-                      <a className="btn" href="/approval-queue">
-                        Open Approval Queue
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+      <div className="bb-grid bb-grid-kpis">
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Visible opportunities</div>
+          <div className="bb-kpi-value">{filteredItems.length}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">New</div>
+          <div className="bb-kpi-value">{summary.new}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Screening</div>
+          <div className="bb-kpi-value">{summary.screening}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Qualified / rejected</div>
+          <div className="bb-kpi-value">
+            {summary.qualified} / {summary.rejected}
           </div>
         </div>
-      </section>
-    </>
+      </div>
+
+      <div className="bb-grid bb-grid-main">
+        <section className="bb-panel">
+          <div className="bb-panel-head">
+            <div>
+              <div className="bb-panel-title">Opportunity overview</div>
+              <div className="bb-panel-subtitle">
+                Intake queue by qualification state and first-screen decision
+              </div>
+            </div>
+            <span className="bb-chip bb-chip-gold">
+              {summary.totalOpportunities} total opportunities
+            </span>
+          </div>
+
+          <div className="bb-filter-row">
+            <a
+              href="/opportunity-intake"
+              className={`bb-filter-chip ${activeFilter === "all" ? "is-active" : ""}`}
+            >
+              All
+            </a>
+            <a
+              href="/opportunity-intake?filter=new"
+              className={`bb-filter-chip ${activeFilter === "new" ? "is-active" : ""}`}
+            >
+              New
+            </a>
+            <a
+              href="/opportunity-intake?filter=screening"
+              className={`bb-filter-chip ${activeFilter === "screening" ? "is-active" : ""}`}
+            >
+              Screening
+            </a>
+            <a
+              href="/opportunity-intake?filter=qualified"
+              className={`bb-filter-chip ${activeFilter === "qualified" ? "is-active" : ""}`}
+            >
+              Qualified
+            </a>
+            <a
+              href="/opportunity-intake?filter=rejected"
+              className={`bb-filter-chip ${activeFilter === "rejected" ? "is-active" : ""}`}
+            >
+              Rejected
+            </a>
+          </div>
+
+          <div className="bb-table-wrap">
+            <table className="bb-table">
+              <thead>
+                <tr>
+                  <th>Opportunity</th>
+                  <th>Commodity</th>
+                  <th>Source</th>
+                  <th>Tons</th>
+                  <th>Counterparty</th>
+                  <th>Qualification</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map((item: any) => (
+                  <tr key={item.id}>
+                    <td>{item.name}</td>
+                    <td>{item.commodity}</td>
+                    <td>{item.sourceType}</td>
+                    <td>{item.estimatedTons}</td>
+                    <td>{item.counterparty}</td>
+                    <td>
+                      <span className={`bb-chip ${chipClass(item.qualification)}`}>
+                        {item.qualification}
+                      </span>
+                    </td>
+                    <td>
+                      <a
+                        href={`/route-economics?parcelId=${item.parcelId || ""}`}
+                        className="bb-table-action"
+                      >
+                        Open
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div className="bb-stack">
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Lead opportunity detail</div>
+                <div className="bb-panel-subtitle">
+                  First-screen operating view for the active intake lead
+                </div>
+              </div>
+              <span className={`bb-chip ${chipClass(leadItem.qualification)}`}>
+                {leadItem.qualification || "unknown"}
+              </span>
+            </div>
+
+            <div className="bb-metric-list">
+              <div className="bb-metric-row">
+                <span>Name</span>
+                <strong>{leadItem.name || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Commodity</span>
+                <strong>{leadItem.commodity || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Parcel</span>
+                <strong>{leadItem.parcelId || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Source type</span>
+                <strong>{leadItem.sourceType || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Counterparty</span>
+                <strong>{leadItem.counterparty || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Estimated tons</span>
+                <strong>{leadItem.estimatedTons || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Location</span>
+                <strong>{leadItem.location || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Indicative grade</span>
+                <strong>{leadItem.indicativeGrade || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Status</span>
+                <strong>{leadItem.status || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Qualification</span>
+                <strong>{leadItem.qualification || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Blocker</span>
+                <strong>{leadItem.blocker || "None"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Next action</span>
+                <strong>{leadItem.nextAction || "—"}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Intake notes</div>
+                <div className="bb-panel-subtitle">
+                  Qualification interpretation and release cue
+                </div>
+              </div>
+            </div>
+
+            <div className="bb-notes">
+              <div className="bb-note">
+                <div className="bb-note-dot is-gold" />
+                <div className="bb-note-text">
+                  New opportunities should be verified for source, volume, and commercial seriousness before route pricing.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Screening opportunities require grade, logistics, and counterparty checks before qualification.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Qualified opportunities can move into Route Economics for pricing and viability testing.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Rejected opportunities remain visible for record purposes but should not advance without a material change.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </ExecutiveShell>
   );
-                   }
+      }

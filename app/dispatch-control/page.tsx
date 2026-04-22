@@ -1,278 +1,443 @@
-    import Header from "../../components/Header";
-import { getDispatchControlData } from "../../lib/dispatchControl";
+import ExecutiveShell from "../../components/ExecutiveShell";
+import { getGoldenPathParcel } from "../../lib/goldenPath";
+import { getExceptions } from "../../lib/exceptions";
+
+type SearchParams = {
+  parcelId?: string;
+};
+
+type DispatchLoad = {
+  id: string;
+  truckRef: string;
+  source: string;
+  destination: string;
+  tonnage: string;
+  releaseState: string;
+  movementState: string;
+  deliveryState: string;
+  note: string;
+};
+
+function chipClass(value?: string) {
+  const v = String(value || "").toLowerCase();
+
+  if (
+    v.includes("approved") ||
+    v.includes("released") ||
+    v.includes("dispatched") ||
+    v.includes("in transit") ||
+    v.includes("delivered") ||
+    v.includes("complete")
+  ) {
+    return "bb-chip-blue";
+  }
+
+  if (
+    v.includes("pending") ||
+    v.includes("review") ||
+    v.includes("awaiting") ||
+    v.includes("hold")
+  ) {
+    return "bb-chip-amber";
+  }
+
+  if (
+    v.includes("blocked") ||
+    v.includes("failed") ||
+    v.includes("exception") ||
+    v.includes("stopped")
+  ) {
+    return "bb-chip-red";
+  }
+
+  return "bb-chip-gold";
+}
+
+function buildDispatchLoads(parcel: any): DispatchLoad[] {
+  const sourceLoads: any[] =
+    (parcel?.dispatchLoads as any[]) ||
+    (parcel?.loads as any[]) ||
+    (parcel?.trucks as any[]) ||
+    [];
+
+  if (Array.isArray(sourceLoads) && sourceLoads.length > 0) {
+    return sourceLoads.map((item: any, index: number) => ({
+      id: String(item?.id || `LD-${index + 1}`),
+      truckRef: String(
+        item?.truckRef ||
+          item?.truckId ||
+          item?.vehicleRef ||
+          item?.registration ||
+          `Truck ${index + 1}`
+      ),
+      source: String(item?.source || item?.origin || "Source yard"),
+      destination: String(
+        item?.destination || item?.dest || item?.deliveryPoint || "Buyer route"
+      ),
+      tonnage: String(item?.tonnage || item?.tons || item?.weight || "0"),
+      releaseState: String(
+        item?.releaseState || item?.releaseStatus || item?.gateState || "pending review"
+      ),
+      movementState: String(
+        item?.movementState || item?.movementStatus || "pending movement"
+      ),
+      deliveryState: String(
+        item?.deliveryState || item?.deliveryStatus || "awaiting delivery"
+      ),
+      note: String(
+        item?.note || item?.comment || item?.detail || "No additional note"
+      ),
+    }));
+  }
+
+  return [
+    {
+      id: "LD-001",
+      truckRef: "NWX-001",
+      source: "North Yard",
+      destination: "Buyer route",
+      tonnage: "6.8",
+      releaseState: "released",
+      movementState: "in transit",
+      deliveryState: "awaiting weighbridge",
+      note: "Released and moving to destination weighbridge.",
+    },
+    {
+      id: "LD-002",
+      truckRef: "NWX-002",
+      source: "North Yard",
+      destination: "Buyer route",
+      tonnage: "6.7",
+      releaseState: "released",
+      movementState: "in transit",
+      deliveryState: "awaiting unload",
+      note: "Movement active and delivery confirmation pending.",
+    },
+    {
+      id: "LD-003",
+      truckRef: "NWX-003",
+      source: "North Yard",
+      destination: "Buyer route",
+      tonnage: "6.9",
+      releaseState: "pending review",
+      movementState: "not started",
+      deliveryState: "not started",
+      note: "Pending final dispatch approval before release.",
+    },
+    {
+      id: "LD-004",
+      truckRef: "NWX-004",
+      source: "North Yard",
+      destination: "Buyer route",
+      tonnage: "6.6",
+      releaseState: "blocked",
+      movementState: "held",
+      deliveryState: "held",
+      note: "Finance-linked exception still preventing release.",
+    },
+    {
+      id: "LD-005",
+      truckRef: "NWX-005",
+      source: "North Yard",
+      destination: "Buyer route",
+      tonnage: "6.9",
+      releaseState: "released",
+      movementState: "delivered",
+      deliveryState: "delivered",
+      note: "Load delivered and awaiting reconciliation sign-off.",
+    },
+  ];
+}
 
 export default function DispatchControlPage({
   searchParams,
 }: {
-  searchParams?: { filter?: string };
+  searchParams?: SearchParams;
 }) {
-  const data = getDispatchControlData();
-  const summary = data.summary;
-  const activeFilter = searchParams?.filter || "All";
+  const data: any = getGoldenPathParcel();
+  const exceptionsData: any = getExceptions();
 
-  const filters = ["All", "Released", "In transit", "Delivered", "Held"];
+  const parcel: any = data?.parcel || {};
+  const parcelId = String(
+    searchParams?.parcelId || parcel?.parcelId || "PAR-CHR-2026-0001"
+  );
 
-  const filteredItems =
-    activeFilter === "All"
-      ? data.items
-      : activeFilter === "Released"
-      ? data.items.filter((item) => item.dispatchState === "released")
-      : activeFilter === "In transit"
-      ? data.items.filter((item) => item.movementState === "in_transit")
-      : activeFilter === "Delivered"
-      ? data.items.filter((item) => item.deliveryState === "received")
-      : activeFilter === "Held"
-      ? data.items.filter((item) => item.dispatchState === "held")
-      : data.items;
+  const loads = buildDispatchLoads(parcel);
 
-  function badgeClass(value: string) {
-    if (
-      value === "held" ||
-      value === "missing_release_doc" ||
-      value === "not_released"
-    ) {
-      return "badge badge-blocked";
-    }
-    if (
-      value === "queued" ||
-      value === "awaiting_release" ||
-      value === "pending" ||
-      value === "not_started"
-    ) {
-      return "badge badge-pending";
-    }
-    if (
-      value === "released" ||
-      value === "verified" ||
-      value === "in_transit" ||
-      value === "delivered" ||
-      value === "received" ||
-      value === "at_source_exit"
-    ) {
-      return "badge badge-approval";
-    }
-    return "badge";
-  }
+  const releasedCount = loads.filter((item) =>
+    ["released", "approved"].includes(String(item.releaseState).toLowerCase())
+  ).length;
 
-  const visibleTotal = filteredItems.length;
-  const visibleReleased = filteredItems.filter((item) => item.dispatchState === "released").length;
-  const visibleInTransit = filteredItems.filter((item) => item.movementState === "in_transit").length;
-  const visibleDelivered = filteredItems.filter((item) => item.deliveryState === "received").length;
-  const visibleHeld = filteredItems.filter((item) => item.dispatchState === "held").length;
+  const movingCount = loads.filter((item) =>
+    ["in transit", "moving", "delivered"].includes(
+      String(item.movementState).toLowerCase()
+    )
+  ).length;
+
+  const deliveredCount = loads.filter((item) =>
+    ["delivered", "complete"].includes(String(item.deliveryState).toLowerCase())
+  ).length;
+
+  const heldCount = loads.filter((item) =>
+    ["blocked", "held", "pending review"].includes(
+      String(item.releaseState).toLowerCase()
+    )
+  ).length;
+
+  const relevantExceptions: any[] = (exceptionsData?.exceptions || []).filter(
+    (item: any) =>
+      !item?.parcelId || String(item.parcelId) === String(parcelId)
+  );
+
+  const financeBlocked = relevantExceptions.filter(
+    (item: any) => String(item?.financeAllowed || "").toLowerCase() === "no"
+  ).length;
+
+  const leadLoad: DispatchLoad =
+    loads.find((item) =>
+      ["blocked", "pending review", "held"].includes(
+        String(item.releaseState).toLowerCase()
+      )
+    ) || loads[0];
+
+  const nextAction =
+    ["blocked", "held"].includes(String(leadLoad?.releaseState).toLowerCase())
+      ? `Resolve ${leadLoad.truckRef} release blocker before movement`
+      : "Continue movement and delivery confirmation";
 
   return (
-    <>
-      <Header />
+    <ExecutiveShell
+      activeHref="/dispatch-control"
+      title="Dispatch movement and delivery control."
+      subtitle="Institutional dispatch dashboard for load release, movement tracking, delivery state, and downstream parcel control."
+    >
+      <div className="bb-command-grid">
+        <section className="bb-command-panel">
+          <div className="bb-command-eyebrow">Dispatch command layer</div>
+          <div className="bb-command-title">Dispatch control / movement desk</div>
+          <p className="bb-command-text">
+            This dashboard controls truck release, movement progression, and
+            delivery state across the parcel dispatch chain before reconciliation
+            and finance handoff.
+          </p>
 
-      <section className="section">
-        <div className="container">
-          <div className="head">
-            <div>
-              <h2>Dispatch control dashboard</h2>
-              <p className="muted">
-                This dashboard shows dispatch release status, movement progress, delivery state,
-                and dispatch blockers before reconciliation and finance handoff.
-              </p>
-            </div>
+          <div className="bb-command-tags">
+            <span className="bb-chip bb-chip-gold">Dispatch active</span>
+            <span className="bb-chip bb-chip-blue">Movement tracked</span>
+            <span className="bb-chip bb-chip-amber">Load-by-load</span>
+          </div>
+        </section>
+
+        <section className="bb-command-side">
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Lead parcel</div>
+            <div className="bb-side-value">{parcelId}</div>
+            <div className="bb-side-sub">{loads.length} loads in dispatch set</div>
           </div>
 
-          <div className="kpis">
-            <div className="kpi">
-              <div className="label">Visible loads</div>
-              <div className="value">{visibleTotal}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Released</div>
-              <div className="value">{visibleReleased}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">In transit</div>
-              <div className="value">{visibleInTransit}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Delivered / held</div>
-              <div className="value">{visibleDelivered + visibleHeld}</div>
-            </div>
+          <div className="bb-command-side-divider" />
+
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Lead load</div>
+            <div className="bb-side-state">{leadLoad?.truckRef || "No load"}</div>
           </div>
+        </section>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              flexWrap: "wrap",
-              marginTop: 18,
-              marginBottom: 6,
-            }}
-          >
-            {filters.map((filter) => (
-              <a
-                key={filter}
-                href={
-                  filter === "All"
-                    ? "/dispatch-control"
-                    : `/dispatch-control?filter=${encodeURIComponent(filter)}`
-                }
-                className={filter === activeFilter ? "badge badge-approval" : "badge"}
-              >
-                {filter}
-              </a>
-            ))}
+        <aside className="bb-operator-card">
+          <div className="bb-user-role">Dispatch state</div>
+          <div className="bb-user-name">
+            {heldCount > 0 ? "Review" : movingCount > 0 ? "Moving" : "Ready"}
           </div>
+          <div className="bb-user-org">Movement control</div>
+        </aside>
+      </div>
 
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Dispatch overview</h3>
-            <p className="muted">
-              Total seeded loads: {summary.totalLoads} • Released: {summary.released} • In transit:{" "}
-              {summary.inTransit} • Delivered: {summary.delivered} • Held: {summary.held}
-            </p>
-
-            {filteredItems.length === 0 ? (
-              <div style={{ marginTop: 16 }}>
-                <p className="muted">No dispatch records match the selected filter.</p>
-              </div>
-            ) : (
-              <>
-                <div className="desktop-exception-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Parcel</th>
-                        <th>Dispatch</th>
-                        <th>Truck</th>
-                        <th>Dispatch state</th>
-                        <th>Movement</th>
-                        <th>Delivery</th>
-                        <th>Open</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredItems.map((item) => (
-                        <tr key={item.id}>
-                          <td>
-                            <span className="code">{item.parcelId}</span>
-                          </td>
-                          <td>
-                            <span className="code">{item.dispatchRef}</span>
-                          </td>
-                          <td>{item.truckReg}</td>
-                          <td>
-                            <span className={badgeClass(item.dispatchState)}>{item.dispatchState}</span>
-                          </td>
-                          <td>
-                            <span className={badgeClass(item.movementState)}>{item.movementState}</span>
-                          </td>
-                          <td>
-                            <span className={badgeClass(item.deliveryState)}>{item.deliveryState}</span>
-                          </td>
-                          <td>
-                            <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
-                              View Parcel
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="mobile-exception-list">
-                  {filteredItems.map((item) => (
-                    <div className="mobile-exception-card" key={item.id}>
-                      <strong>{item.dispatchRef}</strong>
-                      <div className="row">
-                        <strong>Parcel:</strong> <span className="code">{item.parcelId}</span>
-                      </div>
-                      <div className="row">
-                        <strong>Truck:</strong> {item.truckReg}
-                      </div>
-                      <div className="row">
-                        <strong>Dispatch:</strong>{" "}
-                        <span className={badgeClass(item.dispatchState)}>{item.dispatchState}</span>
-                      </div>
-                      <div className="row">
-                        <strong>Movement:</strong>{" "}
-                        <span className={badgeClass(item.movementState)}>{item.movementState}</span>
-                      </div>
-                      <div className="row">
-                        <strong>Delivery:</strong>{" "}
-                        <span className={badgeClass(item.deliveryState)}>{item.deliveryState}</span>
-                      </div>
-                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
-                        <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
-                          View Parcel
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Dispatch action queue</h3>
-
-            {filteredItems.length === 0 ? (
-              <p className="muted">No dispatch action items match the selected filter.</p>
-            ) : (
-              <div className="step-list">
-                {filteredItems.map((item) => (
-                  <div className="step" key={item.id}>
-                    <div className="step-top">
-                      <div>
-                        <strong>{item.dispatchRef}</strong>
-                        <div className="muted" style={{ marginTop: 6 }}>
-                          Truck: {item.truckReg} • Driver: {item.driver}
-                        </div>
-                      </div>
-                      <span className={badgeClass(item.dispatchState)}>{item.dispatchState}</span>
-                    </div>
-
-                    <ul className="clean">
-                      <li>
-                        <strong>Parcel:</strong> {item.parcelId}
-                      </li>
-                      <li>
-                        <strong>Origin:</strong> {item.origin}
-                      </li>
-                      <li>
-                        <strong>Destination:</strong> {item.destination}
-                      </li>
-                      <li>
-                        <strong>Document state:</strong> {item.documentState}
-                      </li>
-                      <li>
-                        <strong>Movement state:</strong> {item.movementState}
-                      </li>
-                      <li>
-                        <strong>Delivery state:</strong> {item.deliveryState}
-                      </li>
-                      <li>
-                        <strong>Blocker:</strong> {item.blocker}
-                      </li>
-                      <li>
-                        <strong>Next action:</strong> {item.nextAction}
-                      </li>
-                    </ul>
-
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-                      <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
-                        View Parcel
-                      </a>
-                      <a className="btn" href="/exceptions">
-                        View Exceptions
-                      </a>
-                      <a className="btn" href="/finance-handoff">
-                        View Finance Handoff
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+      <div className="bb-grid bb-grid-kpis">
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Released</div>
+          <div className="bb-kpi-value">{releasedCount}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">In movement</div>
+          <div className="bb-kpi-value">{movingCount}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Delivered</div>
+          <div className="bb-kpi-value">{deliveredCount}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Held / finance blocked</div>
+          <div className="bb-kpi-value">
+            {heldCount} / {financeBlocked}
           </div>
         </div>
-      </section>
-    </>
+      </div>
+
+      <div className="bb-grid bb-grid-main">
+        <section className="bb-panel">
+          <div className="bb-panel-head">
+            <div>
+              <div className="bb-panel-title">Dispatch overview</div>
+              <div className="bb-panel-subtitle">
+                Load release, movement state, and delivery progression by truck
+              </div>
+            </div>
+            <span className="bb-chip bb-chip-gold">{loads.length} loads</span>
+          </div>
+
+          <div className="bb-table-wrap">
+            <table className="bb-table">
+              <thead>
+                <tr>
+                  <th>Truck</th>
+                  <th>Source</th>
+                  <th>Destination</th>
+                  <th>Tons</th>
+                  <th>Release</th>
+                  <th>Movement</th>
+                  <th>Delivery</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {loads.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.truckRef}</td>
+                    <td>{item.source}</td>
+                    <td>{item.destination}</td>
+                    <td>{item.tonnage}</td>
+                    <td>
+                      <span className={`bb-chip ${chipClass(item.releaseState)}`}>
+                        {item.releaseState}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`bb-chip ${chipClass(item.movementState)}`}>
+                        {item.movementState}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`bb-chip ${chipClass(item.deliveryState)}`}>
+                        {item.deliveryState}
+                      </span>
+                    </td>
+                    <td>
+                      <a href="/reconciliation" className="bb-table-action">
+                        Open
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div className="bb-stack">
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Lead dispatch issue</div>
+                <div className="bb-panel-subtitle">
+                  Active movement blocker or next dispatch decision
+                </div>
+              </div>
+              <span className={`bb-chip ${chipClass(leadLoad?.releaseState)}`}>
+                {leadLoad?.releaseState || "pending review"}
+              </span>
+            </div>
+
+            <div className="bb-metric-list">
+              <div className="bb-metric-row">
+                <span>Parcel</span>
+                <strong>{parcelId}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Truck</span>
+                <strong>{leadLoad?.truckRef || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Source</span>
+                <strong>{leadLoad?.source || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Destination</span>
+                <strong>{leadLoad?.destination || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Tonnage</span>
+                <strong>{leadLoad?.tonnage || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Release state</span>
+                <strong>{leadLoad?.releaseState || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Movement state</span>
+                <strong>{leadLoad?.movementState || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Delivery state</span>
+                <strong>{leadLoad?.deliveryState || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Exceptions linked</span>
+                <strong>{relevantExceptions.length}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Finance blocked flags</span>
+                <strong>{financeBlocked}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Next action</span>
+                <strong>{nextAction}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Dispatch notes</div>
+                <div className="bb-panel-subtitle">
+                  Movement interpretation and control guidance
+                </div>
+              </div>
+            </div>
+
+            <div className="bb-notes">
+              <div className="bb-note">
+                <div className="bb-note-dot is-gold" />
+                <div className="bb-note-text">
+                  Loads should only release where execution readiness, approval,
+                  and finance conditions have cleared.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  In-transit loads should remain visible until destination
+                  confirmation and delivery evidence are captured.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Held or blocked loads should stop movement escalation until the
+                  controlling issue is resolved.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Delivered loads should transition into reconciliation rather
+                  than remain open in dispatch control.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </ExecutiveShell>
   );
-                          }
+      }

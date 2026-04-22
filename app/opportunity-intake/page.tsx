@@ -14,8 +14,14 @@ export default function OpportunityIntakePage({
   const activeFilter = (searchParams?.filter || "all").toLowerCase();
 
   const filteredItems: any[] = (opportunityData.items || []).filter((item: any) => {
-    const qualification = String(item?.qualification || "").toLowerCase();
-    return activeFilter === "all" || qualification === activeFilter;
+    const qualification = String(item?.qualificationState || "").toLowerCase();
+    const commercial = String(item?.commercialState || "").toLowerCase();
+
+    return (
+      activeFilter === "all" ||
+      qualification === activeFilter ||
+      commercial === activeFilter
+    );
   });
 
   const leadItem: any = filteredItems[0] || (opportunityData.items || [])[0] || {};
@@ -25,6 +31,7 @@ export default function OpportunityIntakePage({
     if (v.includes("qualified")) return "bb-chip-blue";
     if (v.includes("screen")) return "bb-chip-amber";
     if (v.includes("reject")) return "bb-chip-red";
+    if (v.includes("new")) return "bb-chip-gold";
     return "bb-chip-gold";
   }
 
@@ -54,7 +61,7 @@ export default function OpportunityIntakePage({
         <section className="bb-command-side">
           <div className="bb-command-side-block">
             <div className="bb-side-label">Lead opportunity</div>
-            <div className="bb-side-value">{leadItem.name || "No active lead"}</div>
+            <div className="bb-side-value">{leadItem.opportunityName || "No active lead"}</div>
             <div className="bb-side-sub">
               {leadItem.commodity || "—"} · {leadItem.sourceType || "—"}
             </div>
@@ -64,7 +71,7 @@ export default function OpportunityIntakePage({
 
           <div className="bb-command-side-block">
             <div className="bb-side-label">Qualification</div>
-            <div className="bb-side-state">{leadItem.qualification || "unknown"}</div>
+            <div className="bb-side-state">{leadItem.qualificationState || "unknown"}</div>
           </div>
         </section>
 
@@ -159,19 +166,19 @@ export default function OpportunityIntakePage({
               <tbody>
                 {filteredItems.map((item: any) => (
                   <tr key={item.id}>
-                    <td>{item.name}</td>
+                    <td>{item.opportunityName}</td>
                     <td>{item.commodity}</td>
                     <td>{item.sourceType}</td>
-                    <td>{item.estimatedTons}</td>
+                    <td>{item.indicativeTons}</td>
                     <td>{item.counterparty}</td>
                     <td>
-                      <span className={`bb-chip ${chipClass(item.qualification)}`}>
-                        {item.qualification}
+                      <span className={`bb-chip ${chipClass(item.qualificationState)}`}>
+                        {item.qualificationState}
                       </span>
                     </td>
                     <td>
                       <a
-                        href={`/route-economics?parcelId=${item.parcelId || ""}`}
+                        href="/route-economics"
                         className="bb-table-action"
                       >
                         Open
@@ -193,23 +200,19 @@ export default function OpportunityIntakePage({
                   First-screen operating view for the active intake lead
                 </div>
               </div>
-              <span className={`bb-chip ${chipClass(leadItem.qualification)}`}>
-                {leadItem.qualification || "unknown"}
+              <span className={`bb-chip ${chipClass(leadItem.qualificationState)}`}>
+                {leadItem.qualificationState || "unknown"}
               </span>
             </div>
 
             <div className="bb-metric-list">
               <div className="bb-metric-row">
                 <span>Name</span>
-                <strong>{leadItem.name || "—"}</strong>
+                <strong>{leadItem.opportunityName || "—"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Commodity</span>
                 <strong>{leadItem.commodity || "—"}</strong>
-              </div>
-              <div className="bb-metric-row">
-                <span>Parcel</span>
-                <strong>{leadItem.parcelId || "—"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Source type</span>
@@ -220,8 +223,8 @@ export default function OpportunityIntakePage({
                 <strong>{leadItem.counterparty || "—"}</strong>
               </div>
               <div className="bb-metric-row">
-                <span>Estimated tons</span>
-                <strong>{leadItem.estimatedTons || "—"}</strong>
+                <span>Indicative tons</span>
+                <strong>{leadItem.indicativeTons || "—"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Location</span>
@@ -232,12 +235,16 @@ export default function OpportunityIntakePage({
                 <strong>{leadItem.indicativeGrade || "—"}</strong>
               </div>
               <div className="bb-metric-row">
-                <span>Status</span>
-                <strong>{leadItem.status || "—"}</strong>
+                <span>Commercial state</span>
+                <strong>{leadItem.commercialState || "—"}</strong>
               </div>
               <div className="bb-metric-row">
-                <span>Qualification</span>
-                <strong>{leadItem.qualification || "—"}</strong>
+                <span>Qualification state</span>
+                <strong>{leadItem.qualificationState || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Priority</span>
+                <strong>{leadItem.priority || "—"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Blocker</span>
@@ -291,4 +298,4 @@ export default function OpportunityIntakePage({
       </div>
     </ExecutiveShell>
   );
-      }
+              }

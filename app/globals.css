@@ -307,12 +307,6 @@ th {
   line-height: 1.6;
 }
 
-@media (max-width: 900px) {
-  .grid-2,
-  .kpis {
-    grid-template-columns: 1fr;
-  }
-
   .hero h1 {
     font-size: 28px;
   }

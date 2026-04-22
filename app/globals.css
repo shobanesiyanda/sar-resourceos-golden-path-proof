@@ -336,7 +336,6 @@ th {
   .kpi .value {
     font-size: 24px;
   }
-}
 .bb-shell {
   background:
     radial-gradient(circle at top left, rgba(200, 162, 57, 0.12), transparent 22%),
@@ -758,13 +757,56 @@ th {
 }
 
 @media (max-width: 1200px) {
-  .bb-grid-main,
-  .bb-shell-inner {
+  .bb-grid-main {
     grid-template-columns: 1fr;
   }
 
+  .bb-shell-inner {
+    grid-template-columns: 108px minmax(0, 1fr);
+  }
+
   .bb-sidebar {
-    position: static;
+    position: sticky;
+    top: 12px;
+    padding: 12px;
+  }
+
+  .bb-brand-block {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .bb-brand-mark {
+    font-size: 22px;
+  }
+
+  .bb-brand-title {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .bb-brand-subtitle {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+  }
+
+  .bb-nav-link {
+    min-height: 44px;
+    padding: 8px 10px;
+    align-items: center;
+    font-size: 11px;
+    line-height: 1.15;
+  }
+
+  .bb-nav-arrow {
+    display: none;
+  }
+
+  .bb-topbar-title {
+    font-size: 28px;
   }
 }
 
@@ -781,10 +823,22 @@ th {
   }
 
   .bb-topbar-title {
-    font-size: 30px;
+    font-size: 24px;
+  }
+
+  .bb-topbar-subtitle {
+    font-size: 13px;
   }
 
   .bb-user-card {
     min-width: 0;
+  }
+
+  .bb-panel,
+  .bb-kpi-card,
+  .bb-module-panel,
+  .bb-status-card,
+  .bb-topbar {
+    padding: 14px;
   }
   }

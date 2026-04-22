@@ -1,217 +1,331 @@
-import Header from "../../components/Header";
+import ExecutiveShell from "../../components/ExecutiveShell";
 import { getRouteEconomicsData } from "../../lib/routeEconomics";
+
+type SearchParams = {
+  filter?: string;
+  basis?: string;
+};
 
 export default function RouteEconomicsPage({
   searchParams,
 }: {
-  searchParams?: { filter?: string };
+  searchParams?: SearchParams;
 }) {
   const data = getRouteEconomicsData();
   const summary = data.summary;
-  const activeFilter = searchParams?.filter || "All";
 
-  const filters = ["All", "Pass", "Caution", "Fail", "FOB", "FOT"];
+  const activeFilter = (searchParams?.filter || "all").toLowerCase();
+  const activeBasis = (searchParams?.basis || "all").toLowerCase();
 
-  const filteredItems =
-    activeFilter === "All"
-      ? data.items
-      : activeFilter === "Pass"
-      ? data.items.filter((item) => item.routeState === "pass")
-      : activeFilter === "Caution"
-      ? data.items.filter((item) => item.routeState === "caution")
-      : activeFilter === "Fail"
-      ? data.items.filter((item) => item.routeState === "fail")
-      : activeFilter === "FOB"
-      ? data.items.filter((item) => item.saleBasis === "FOB")
-      : activeFilter === "FOT"
-      ? data.items.filter((item) => item.saleBasis === "FOT")
-      : data.items;
+  const filteredItems = data.items.filter((item: any) => {
+    const filterOk =
+      activeFilter === "all" ||
+      item.state.toLowerCase() === activeFilter;
 
-  function badgeClass(value: string) {
-    if (value === "fail" || value === "outside_target") return "badge badge-blocked";
-    if (value === "caution" || value === "near_limit") return "badge badge-pending";
-    if (value === "pass" || value === "within_target") return "badge badge-approval";
-    return "badge";
+    const basisOk =
+      activeBasis === "all" ||
+      item.saleBasis.toLowerCase() === activeBasis;
+
+    return filterOk && basisOk;
+  });
+
+  const leadItem = filteredItems[0] || data.items[0];
+
+  function chipClass(value: string) {
+    const v = value.toLowerCase();
+    if (v.includes("pass") || v.includes("within")) return "bb-chip-blue";
+    if (v.includes("caution") || v.includes("near")) return "bb-chip-amber";
+    if (v.includes("fail") || v.includes("outside")) return "bb-chip-red";
+    return "bb-chip-gold";
   }
 
-  const visibleTotal = filteredItems.length;
-  const visiblePass = filteredItems.filter((item) => item.routeState === "pass").length;
-  const visibleCaution = filteredItems.filter((item) => item.routeState === "caution").length;
-  const visibleFail = filteredItems.filter((item) => item.routeState === "fail").length;
-  const visibleAvgMargin =
-    filteredItems.length === 0
-      ? 0
-      : filteredItems.reduce((sum, item) => sum + item.grossMarginPct, 0) / filteredItems.length;
-
   return (
-    <>
-      <Header />
+    <ExecutiveShell
+      activeHref="/route-economics"
+      title="Route pricing and margin control."
+      subtitle="Institutional route-economics dashboard for FOT and FOB screening, cost-stack testing, and execution-grade pricing decisions."
+    >
+      <div className="bb-command-grid">
+        <section className="bb-command-panel">
+          <div className="bb-command-eyebrow">Pricing command layer</div>
+          <div className="bb-command-title">Route economics / pricing engine</div>
+          <p className="bb-command-text">
+            This dashboard back-solves commercial route economics from the sell-side
+            price and tests whether feedstock, transport, tolling, and direct cost
+            assumptions still clear the target margin.
+          </p>
 
-      <section className="section">
-        <div className="container">
-          <div className="head">
-            <div>
-              <h2>Route economics / pricing engine</h2>
-              <p className="muted">
-                This dashboard back-solves route economics from the sell-side price and shows
-                whether feedstock, transport, tolling, and direct costs still clear the target margin.
-              </p>
+          <div className="bb-command-tags">
+            <span className="bb-chip bb-chip-gold">Pricing active</span>
+            <span className="bb-chip bb-chip-blue">Target-screened</span>
+            <span className="bb-chip bb-chip-amber">FOT / FOB</span>
+          </div>
+        </section>
+
+        <section className="bb-command-side">
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Lead route</div>
+            <div className="bb-side-value">{leadItem.routeName}</div>
+            <div className="bb-side-sub">
+              {leadItem.saleBasis} · Parcel {leadItem.parcelId}
             </div>
           </div>
 
-          <div className="kpis">
-            <div className="kpi">
-              <div className="label">Visible routes</div>
-              <div className="value">{visibleTotal}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Pass</div>
-              <div className="value">{visiblePass}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Caution</div>
-              <div className="value">{visibleCaution}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Fail / avg margin</div>
-              <div className="value">{visibleFail} / {visibleAvgMargin.toFixed(1)}%</div>
-            </div>
+          <div className="bb-command-side-divider" />
+
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Lead margin</div>
+            <div className="bb-side-state">{leadItem.grossMarginPct}%</div>
           </div>
+        </section>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18, marginBottom: 6 }}>
-            {filters.map((filter) => (
-              <a
-                key={filter}
-                href={
-                  filter === "All"
-                    ? "/route-economics"
-                    : `/route-economics?filter=${encodeURIComponent(filter)}`
-                }
-                className={filter === activeFilter ? "badge badge-approval" : "badge"}
-              >
-                {filter}
-              </a>
-            ))}
-          </div>
+        <aside className="bb-operator-card">
+          <div className="bb-user-role">Screening state</div>
+          <div className="bb-user-name">{filteredItems.length}</div>
+          <div className="bb-user-org">Visible routes</div>
+        </aside>
+      </div>
 
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Route pricing overview</h3>
-            <p className="muted">
-              Total seeded routes: {summary.totalRoutes} • Pass: {summary.pass} • Caution: {summary.caution} •
-              Fail: {summary.fail} • Average margin: {summary.averageMarginPct}%
-            </p>
-
-            {filteredItems.length === 0 ? (
-              <p className="muted" style={{ marginTop: 16 }}>No route-economics records match the selected filter.</p>
-            ) : (
-              <>
-                <div className="desktop-exception-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Route</th>
-                        <th>Basis</th>
-                        <th>Sell/t</th>
-                        <th>Margin</th>
-                        <th>State</th>
-                        <th>Signal</th>
-                        <th>Open</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredItems.map((item) => (
-                        <tr key={item.id}>
-                          <td>{item.routeName}</td>
-                          <td>{item.saleBasis}</td>
-                          <td>R {item.sellPricePerTon.toLocaleString()}</td>
-                          <td>{item.grossMarginPct}%</td>
-                          <td><span className={badgeClass(item.routeState)}>{item.routeState}</span></td>
-                          <td><span className={badgeClass(item.pricingSignal)}>{item.pricingSignal}</span></td>
-                          <td>
-                            <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
-                              View Parcel
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="mobile-exception-list">
-                  {filteredItems.map((item) => (
-                    <div className="mobile-exception-card" key={item.id}>
-                      <strong>{item.routeName}</strong>
-                      <div className="row"><strong>Parcel:</strong> <span className="code">{item.parcelId}</span></div>
-                      <div className="row"><strong>Basis:</strong> {item.saleBasis}</div>
-                      <div className="row"><strong>Sell/t:</strong> R {item.sellPricePerTon.toLocaleString()}</div>
-                      <div className="row"><strong>Margin:</strong> {item.grossMarginPct}%</div>
-                      <div className="row">
-                        <strong>State:</strong> <span className={badgeClass(item.routeState)}>{item.routeState}</span>
-                      </div>
-                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
-                        <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
-                          View Parcel
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Cost stack and target guide</h3>
-
-            {filteredItems.length === 0 ? (
-              <p className="muted">No route pricing items match the selected filter.</p>
-            ) : (
-              <div className="step-list">
-                {filteredItems.map((item) => (
-                  <div className="step" key={item.id}>
-                    <div className="step-top">
-                      <div>
-                        <strong>{item.routeName}</strong>
-                        <div className="muted" style={{ marginTop: 6 }}>
-                          Parcel: <span className="code">{item.parcelId}</span> • Basis: {item.saleBasis}
-                        </div>
-                      </div>
-                      <span className={badgeClass(item.routeState)}>{item.routeState}</span>
-                    </div>
-
-                    <ul className="clean">
-                      <li><strong>Sell price per ton:</strong> R {item.sellPricePerTon.toLocaleString()}</li>
-                      <li><strong>Feedstock per ton:</strong> R {item.feedstockPerTon.toLocaleString()}</li>
-                      <li><strong>Transport per ton:</strong> R {item.transportPerTon.toLocaleString()}</li>
-                      <li><strong>Tolling per ton:</strong> R {item.tollingPerTon.toLocaleString()}</li>
-                      <li><strong>Other direct per ton:</strong> R {item.otherDirectPerTon.toLocaleString()}</li>
-                      <li><strong>Recovery %:</strong> {item.recoveryPct}%</li>
-                      <li><strong>Yield %:</strong> {item.yieldPct}%</li>
-                      <li><strong>Target margin %:</strong> {item.targetMarginPct}%</li>
-                      <li><strong>Gross margin %:</strong> {item.grossMarginPct}%</li>
-                      <li><strong>Max feedstock buy price:</strong> R {item.maxFeedstockBuyPrice.toLocaleString()}</li>
-                      <li><strong>Max transport price:</strong> R {item.maxTransportPrice.toLocaleString()}</li>
-                      <li><strong>Max tolling price:</strong> R {item.maxTollingPrice.toLocaleString()}</li>
-                      <li><strong>Blocker:</strong> {item.blocker}</li>
-                      <li><strong>Next action:</strong> {item.nextAction}</li>
-                    </ul>
-
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-                      <a className="btn" href="/execution-readiness">
-                        Open Execution Readiness
-                      </a>
-                      <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
-                        View Parcel
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+      <div className="bb-grid bb-grid-kpis">
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Visible routes</div>
+          <div className="bb-kpi-value">{filteredItems.length}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Pass</div>
+          <div className="bb-kpi-value">{summary.pass}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Caution</div>
+          <div className="bb-kpi-value">{summary.caution}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Fail / avg margin</div>
+          <div className="bb-kpi-value">
+            {summary.fail} / {summary.averageMarginPct}%
           </div>
         </div>
-      </section>
-    </>
+      </div>
+
+      <div className="bb-grid bb-grid-main">
+        <section className="bb-panel">
+          <div className="bb-panel-head">
+            <div>
+              <div className="bb-panel-title">Route pricing overview</div>
+              <div className="bb-panel-subtitle">
+                Commercial screen by route, basis, margin state, and execution signal
+              </div>
+            </div>
+            <span className="bb-chip bb-chip-gold">
+              {summary.totalRoutes} total routes
+            </span>
+          </div>
+
+          <div className="bb-filter-row">
+            <a
+              href="/route-economics"
+              className={`bb-filter-chip ${activeFilter === "all" ? "is-active" : ""}`}
+            >
+              All
+            </a>
+            <a
+              href="/route-economics?filter=pass"
+              className={`bb-filter-chip ${activeFilter === "pass" ? "is-active" : ""}`}
+            >
+              Pass
+            </a>
+            <a
+              href="/route-economics?filter=caution"
+              className={`bb-filter-chip ${activeFilter === "caution" ? "is-active" : ""}`}
+            >
+              Caution
+            </a>
+            <a
+              href="/route-economics?filter=fail"
+              className={`bb-filter-chip ${activeFilter === "fail" ? "is-active" : ""}`}
+            >
+              Fail
+            </a>
+            <a
+              href="/route-economics?basis=fot"
+              className={`bb-filter-chip ${activeBasis === "fot" ? "is-active" : ""}`}
+            >
+              FOT
+            </a>
+            <a
+              href="/route-economics?basis=fob"
+              className={`bb-filter-chip ${activeBasis === "fob" ? "is-active" : ""}`}
+            >
+              FOB
+            </a>
+          </div>
+
+          <div className="bb-table-wrap">
+            <table className="bb-table">
+              <thead>
+                <tr>
+                  <th>Route</th>
+                  <th>Basis</th>
+                  <th>Sell/t</th>
+                  <th>Margin</th>
+                  <th>State</th>
+                  <th>Signal</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map((item: any) => (
+                  <tr key={item.id}>
+                    <td>{item.routeName}</td>
+                    <td>{item.saleBasis}</td>
+                    <td>R {item.sellPricePerTon.toLocaleString()}</td>
+                    <td>{item.grossMarginPct}%</td>
+                    <td>
+                      <span className={`bb-chip ${chipClass(item.state)}`}>
+                        {item.state}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`bb-chip ${chipClass(item.signal)}`}>
+                        {item.signal}
+                      </span>
+                    </td>
+                    <td>
+                      <a
+                        href={`/execution-readiness?parcelId=${item.parcelId}`}
+                        className="bb-table-action"
+                      >
+                        Open
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div className="bb-stack">
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Lead route cost stack</div>
+                <div className="bb-panel-subtitle">
+                  Cost-stack guide against target pricing logic
+                </div>
+              </div>
+              <span className={`bb-chip ${chipClass(leadItem.state)}`}>
+                {leadItem.state}
+              </span>
+            </div>
+
+            <div className="bb-metric-list">
+              <div className="bb-metric-row">
+                <span>Route</span>
+                <strong>{leadItem.routeName}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Parcel</span>
+                <strong>{leadItem.parcelId}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Basis</span>
+                <strong>{leadItem.saleBasis}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Sell price per ton</span>
+                <strong>R {leadItem.sellPricePerTon.toLocaleString()}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Feedstock per ton</span>
+                <strong>R {leadItem.feedstockPerTon.toLocaleString()}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Transport per ton</span>
+                <strong>R {leadItem.transportPerTon.toLocaleString()}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Tolling per ton</span>
+                <strong>R {leadItem.tollingPerTon.toLocaleString()}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Other direct per ton</span>
+                <strong>R {leadItem.otherDirectPerTon.toLocaleString()}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Recovery %</span>
+                <strong>{leadItem.recoveryPct}%</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Yield %</span>
+                <strong>{leadItem.yieldPct}%</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Target margin %</span>
+                <strong>{leadItem.targetMarginPct}%</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Gross margin %</span>
+                <strong>{leadItem.grossMarginPct}%</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Max feedstock buy price</span>
+                <strong>R {leadItem.maxFeedstockBuyPrice.toLocaleString()}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Max transport price</span>
+                <strong>R {leadItem.maxTransportPrice.toLocaleString()}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Max tolling price</span>
+                <strong>R {leadItem.maxTollingPrice.toLocaleString()}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Blocker</span>
+                <strong>{leadItem.blocker || "None"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Next action</span>
+                <strong>{leadItem.nextAction}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Pricing notes</div>
+                <div className="bb-panel-subtitle">
+                  Screening interpretation and execution cue
+                </div>
+              </div>
+            </div>
+
+            <div className="bb-notes">
+              <div className="bb-note">
+                <div className="bb-note-dot is-gold" />
+                <div className="bb-note-text">
+                  Pass routes clear target margin and remain commercially executable.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Caution routes remain near margin limits and require tighter supplier,
+                  transport, or tolling negotiation.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Fail routes breach the pricing envelope and should not proceed to
+                  execution readiness without commercial correction.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </ExecutiveShell>
   );
 }

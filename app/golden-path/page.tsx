@@ -1,308 +1,281 @@
-import Header from "../../components/Header";
+import ExecutiveShell from "../../components/ExecutiveShell";
 import { getGoldenPathParcel } from "../../lib/goldenPath";
+import { getExceptions } from "../../lib/exceptions";
 
-export default function GoldenPathPage({
-  searchParams,
-}: {
-  searchParams?: { parcelId?: string };
-}) {
-  const data = getGoldenPathParcel();
-  const parcel: any = data.parcel;
-  const timeline: any[] = data.timeline || [];
+function chipClass(value?: string) {
+  const v = String(value || "").toLowerCase();
 
-  const selectedParcelId = searchParams?.parcelId || parcel.parcelId || parcel.id || "N/A";
+  if (
+    v.includes("ready") ||
+    v.includes("approved") ||
+    v.includes("matched") ||
+    v.includes("released") ||
+    v.includes("complete") ||
+    v.includes("delivered")
+  ) {
+    return "bb-chip-blue";
+  }
 
-  const dealId = parcel.dealId || "N/A";
-  const entity = parcel.entityName || parcel.entity || "N/A";
-  const commodity = parcel.commodity || "N/A";
-  const counterparty = parcel.counterparty || "N/A";
-  const documentNumber = parcel.documentNumber || parcel.documentRef || "N/A";
-  const dispatchRef = parcel.dispatchRef || "N/A";
-  const truckReg = parcel.truckReg || parcel.truck || "N/A";
-  const financeState = parcel.financeState || "N/A";
-  const accountingExportState =
-    parcel.accountingExportState || parcel.accountingExport || "N/A";
+  if (
+    v.includes("pending") ||
+    v.includes("review") ||
+    v.includes("awaiting") ||
+    v.includes("hold")
+  ) {
+    return "bb-chip-amber";
+  }
 
-  const grossTons = parcel.grossTons ?? parcel.gross ?? "N/A";
-  const netTons = parcel.netTons ?? parcel.net ?? "N/A";
-  const acceptedTons = parcel.acceptedTons ?? parcel.accepted ?? "N/A";
+  if (
+    v.includes("blocked") ||
+    v.includes("failed") ||
+    v.includes("exception") ||
+    v.includes("stopped")
+  ) {
+    return "bb-chip-red";
+  }
 
-  const grossValueZAR = Number(parcel.grossValueZAR ?? parcel.grossValue ?? 0);
-  const deductionsZAR = Number(parcel.deductionsZAR ?? parcel.deductions ?? 0);
-  const payableReadyZAR = Number(parcel.payableReadyZAR ?? parcel.payableReady ?? 0);
+  return "bb-chip-gold";
+}
 
-  const sourceLocation = parcel.sourceLocation || parcel.source || "N/A";
-  const destinationLocation = parcel.destinationLocation || parcel.destination || "N/A";
-  const deliveryDate = parcel.deliveryDate || "N/A";
-  const lastUpdatedAt = parcel.lastUpdatedAt || parcel.updatedAt || "N/A";
+export default function GoldenPathPage() {
+  const data: any = getGoldenPathParcel();
+  const exceptionsData: any = getExceptions();
+
+  const parcel: any = data?.parcel || {};
+  const parcelId = String(parcel?.parcelId || "PAR-CHR-2026-0001");
+  const acceptedTons = parcel?.acceptedTons ?? "33.9";
+  const financeState = String(parcel?.financeState || "finance_handoff_ready");
+  const exportState = String(parcel?.accountingExportState || "ready_for_export");
+  const exceptions = exceptionsData?.exceptions || [];
+  const financeBlocked = exceptions.filter(
+    (item: any) => String(item?.financeAllowed || "").toLowerCase() === "no"
+  ).length;
+
+  const stages = [
+    {
+      title: "Opportunity Intake",
+      sub: "Captured and qualified",
+      state: "complete",
+      href: "/opportunity-intake",
+    },
+    {
+      title: "Route Economics",
+      sub: "Commercial route passed",
+      state: "complete",
+      href: "/route-economics",
+    },
+    {
+      title: "Execution Readiness",
+      sub: "Release gate active",
+      state: "pending review",
+      href: "/execution-readiness",
+    },
+    {
+      title: "Dispatch Control",
+      sub: "Loads in motion",
+      state: "in transit",
+      href: "/dispatch-control",
+    },
+    {
+      title: "Reconciliation",
+      sub: "Awaiting final match",
+      state: "pending review",
+      href: "/reconciliation",
+    },
+    {
+      title: "Finance Handoff",
+      sub: "Downstream release state",
+      state: financeState,
+      href: "/finance-handoff",
+    },
+  ];
 
   return (
-    <>
-      <Header />
+    <ExecutiveShell
+      activeHref="/golden-path"
+      title="Golden path parcel control."
+      subtitle="Institutional parcel view linking intake, pricing, release, dispatch, reconciliation, and finance handoff across one controlled operating flow."
+    >
+      <div className="bb-command-grid">
+        <section className="bb-command-panel">
+          <div className="bb-command-eyebrow">Golden path command layer</div>
+          <div className="bb-command-title">Controlled parcel / end-to-end view</div>
+          <p className="bb-command-text">
+            This page shows the connected control path for the lead parcel from
+            intake through pricing, release, dispatch, reconciliation, and finance
+            readiness.
+          </p>
 
-      <section className="section">
-        <div className="container">
-          <div className="head">
-            <div>
-              <h2>Golden-path parcel proof</h2>
-              <p className="muted">
-                This page demonstrates one controlled parcel lifecycle from document
-                issuance through dispatch, delivery, reconciliation, and finance handoff
-                readiness.
-              </p>
-            </div>
+          <div className="bb-command-tags">
+            <span className="bb-chip bb-chip-gold">Parcel active</span>
+            <span className="bb-chip bb-chip-blue">Chain connected</span>
+            <span className="bb-chip bb-chip-amber">Operator view</span>
+          </div>
+        </section>
+
+        <section className="bb-command-side">
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Lead parcel</div>
+            <div className="bb-side-value">{parcelId}</div>
+            <div className="bb-side-sub">Accepted tons {acceptedTons}</div>
           </div>
 
-          <div className="kpis">
-            <div className="kpi">
-              <div className="label">Parcel ID</div>
-              <div className="value" style={{ fontSize: 18 }}>{selectedParcelId}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Accepted tons</div>
-              <div className="value">{acceptedTons}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Finance state</div>
-              <div className="value" style={{ fontSize: 16 }}>{financeState}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Accounting export</div>
-              <div className="value" style={{ fontSize: 16 }}>
-                {accountingExportState}
-              </div>
-            </div>
+          <div className="bb-command-side-divider" />
+
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Finance state</div>
+            <div className="bb-side-state">{financeState}</div>
           </div>
+        </section>
 
-          <div className="grid grid-2" style={{ marginTop: 22 }}>
-            <div className="card">
-              <h3>Parcel summary</h3>
+        <aside className="bb-operator-card">
+          <div className="bb-user-role">Chain status</div>
+          <div className="bb-user-name">Live</div>
+          <div className="bb-user-org">Golden path</div>
+        </aside>
+      </div>
 
-              <table>
-                <tbody>
-                  <tr>
-                    <th>Parcel ID</th>
-                    <td><span className="code">{selectedParcelId}</span></td>
-                  </tr>
-                  <tr>
-                    <th>Deal ID</th>
-                    <td><span className="code">{dealId}</span></td>
-                  </tr>
-                  <tr>
-                    <th>Entity</th>
-                    <td>{entity}</td>
-                  </tr>
-                  <tr>
-                    <th>Commodity</th>
-                    <td>{commodity}</td>
-                  </tr>
-                  <tr>
-                    <th>Counterparty</th>
-                    <td>{counterparty}</td>
-                  </tr>
-                  <tr>
-                    <th>Document</th>
-                    <td><span className="code">{documentNumber}</span></td>
-                  </tr>
-                  <tr>
-                    <th>Dispatch ref</th>
-                    <td><span className="code">{dispatchRef}</span></td>
-                  </tr>
-                  <tr>
-                    <th>Truck</th>
-                    <td>{truckReg}</td>
-                  </tr>
-                  <tr>
-                    <th>Finance state</th>
-                    <td>{financeState}</td>
-                  </tr>
-                  <tr>
-                    <th>Accounting export</th>
-                    <td>{accountingExportState}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="card">
-              <h3>Commercial summary</h3>
-
-              <table>
-                <tbody>
-                  <tr>
-                    <th>Gross tons</th>
-                    <td>{grossTons}</td>
-                  </tr>
-                  <tr>
-                    <th>Net tons</th>
-                    <td>{netTons}</td>
-                  </tr>
-                  <tr>
-                    <th>Accepted tons</th>
-                    <td>{acceptedTons}</td>
-                  </tr>
-                  <tr>
-                    <th>Gross value</th>
-                    <td>R {grossValueZAR.toLocaleString()}</td>
-                  </tr>
-                  <tr>
-                    <th>Deductions</th>
-                    <td>R {deductionsZAR.toLocaleString()}</td>
-                  </tr>
-                  <tr>
-                    <th>Payable-ready</th>
-                    <td>R {payableReadyZAR.toLocaleString()}</td>
-                  </tr>
-                  <tr>
-                    <th>Source mine / yard</th>
-                    <td>{sourceLocation}</td>
-                  </tr>
-                  <tr>
-                    <th>Destination</th>
-                    <td>{destinationLocation}</td>
-                  </tr>
-                  <tr>
-                    <th>Delivery date</th>
-                    <td>{deliveryDate}</td>
-                  </tr>
-                  <tr>
-                    <th>Last control update</th>
-                    <td>{lastUpdatedAt}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Related exceptions</h3>
-            <p className="muted">
-              Exceptions linked to this parcel that may block or impact finance readiness.
-            </p>
-
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-              <a className="btn" href="/exceptions">
-                View All Exceptions
-              </a>
-            </div>
-          </div>
-
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Control checkpoints</h3>
-
-            <div className="grid grid-2" style={{ marginTop: 14 }}>
-              <div className="step">
-                <div className="step-top">
-                  <strong>Document control</strong>
-                  <span className="badge badge-approval">verified</span>
-                </div>
-                <ul className="clean">
-                  <li>Controlled parcel identifier assigned</li>
-                  <li>Commercial document issued against one parcel</li>
-                  <li>Dispatch reference linked back to source document</li>
-                </ul>
-              </div>
-
-              <div className="step">
-                <div className="step-top">
-                  <strong>Movement and delivery</strong>
-                  <span className="badge badge-pending">captured</span>
-                </div>
-                <ul className="clean">
-                  <li>Truck released against approved dispatch reference</li>
-                  <li>Movement captured from source to destination</li>
-                  <li>Delivery confirmation and received tons recorded</li>
-                </ul>
-              </div>
-
-              <div className="step">
-                <div className="step-top">
-                  <strong>Reconciliation</strong>
-                  <span className="badge badge-held">closed</span>
-                </div>
-                <ul className="clean">
-                  <li>Delivered tons reconciled to accepted tons</li>
-                  <li>Deductions applied to net payable position</li>
-                  <li>Final payable-ready value calculated</li>
-                </ul>
-              </div>
-
-              <div className="step">
-                <div className="step-top">
-                  <strong>Finance handoff</strong>
-                  <span className="badge badge-approval">ready</span>
-                </div>
-                <ul className="clean">
-                  <li>Finance state reflects handoff readiness</li>
-                  <li>Accounting export state available for downstream posting</li>
-                  <li>Parcel controls remain traceable to source and settlement state</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-2" style={{ marginTop: 22 }}>
-            <div className="card">
-              <h3>Parcel timeline</h3>
-
-              {timeline.length === 0 ? (
-                <p className="muted">No timeline events available.</p>
-              ) : (
-                <div className="step-list" style={{ marginTop: 14 }}>
-                  {timeline.map((item, index) => (
-                    <div className="step" key={item.id || `${item.stage || "stage"}-${index}`}>
-                      <div className="step-top">
-                        <div>
-                          <strong>{item.stage || "Stage"}</strong>
-                          <div className="muted" style={{ marginTop: 6 }}>
-                            {item.timestamp || item.time || "No timestamp"}
-                          </div>
-                        </div>
-                        <span className="badge">{item.status || "logged"}</span>
-                      </div>
-                      <div className="muted">
-                        {item.note || item.description || "No note available."}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="card">
-              <h3>Proof notes</h3>
-              <ul className="clean">
-                <li>This proof uses seeded demonstration data for one parcel lifecycle.</li>
-                <li>
-                  Document, dispatch, delivery, reconciliation, and finance states are
-                  linked in one control path.
-                </li>
-                <li>
-                  The purpose is to show operational traceability, not a full production
-                  workflow engine.
-                </li>
-                <li>
-                  The parcel can be paired with the exceptions dashboard to demonstrate
-                  non-golden-path states.
-                </li>
-                <li>
-                  This module is intended as the baseline execution proof for broader
-                  ResourceOS control screens.
-                </li>
-              </ul>
-
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
-                <a className="btn btn-primary" href="/exceptions">
-                  View Exception Dashboard
-                </a>
-                <a className="btn" href="/">
-                  Back to Overview
-                </a>
-              </div>
-            </div>
-          </div>
+      <div className="bb-grid bb-grid-kpis">
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Accepted tons</div>
+          <div className="bb-kpi-value">{acceptedTons}</div>
         </div>
-      </section>
-    </>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Exceptions</div>
+          <div className="bb-kpi-value">{exceptions.length}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Finance blocked</div>
+          <div className="bb-kpi-value">{financeBlocked}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Export state</div>
+          <div className="bb-kpi-value" style={{ fontSize: 18 }}>{exportState}</div>
+        </div>
+      </div>
+
+      <div className="bb-grid bb-grid-main">
+        <section className="bb-panel">
+          <div className="bb-panel-head">
+            <div>
+              <div className="bb-panel-title">Parcel chain overview</div>
+              <div className="bb-panel-subtitle">
+                Connected operating stages across the live parcel lifecycle
+              </div>
+            </div>
+            <span className="bb-chip bb-chip-gold">{stages.length} live stages</span>
+          </div>
+
+          <div className="bb-table-wrap">
+            <table className="bb-table">
+              <thead>
+                <tr>
+                  <th>Stage</th>
+                  <th>State</th>
+                  <th>Control meaning</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {stages.map((item) => (
+                  <tr key={item.title}>
+                    <td>{item.title}</td>
+                    <td>
+                      <span className={`bb-chip ${chipClass(item.state)}`}>
+                        {item.state}
+                      </span>
+                    </td>
+                    <td>{item.sub}</td>
+                    <td>
+                      <a href={item.href} className="bb-table-action">
+                        Open
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div className="bb-stack">
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Lead parcel detail</div>
+                <div className="bb-panel-subtitle">
+                  Operating status for the controlled parcel
+                </div>
+              </div>
+              <span className={`bb-chip ${chipClass(financeState)}`}>
+                {financeState}
+              </span>
+            </div>
+
+            <div className="bb-metric-list">
+              <div className="bb-metric-row">
+                <span>Parcel ID</span>
+                <strong>{parcelId}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Accepted tons</span>
+                <strong>{acceptedTons}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Finance state</span>
+                <strong>{financeState}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Accounting export state</span>
+                <strong>{exportState}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Exceptions linked</span>
+                <strong>{exceptions.length}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Finance blocked flags</span>
+                <strong>{financeBlocked}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Golden path notes</div>
+                <div className="bb-panel-subtitle">
+                  Cross-stage control interpretation
+                </div>
+              </div>
+            </div>
+
+            <div className="bb-notes">
+              <div className="bb-note">
+                <div className="bb-note-dot is-gold" />
+                <div className="bb-note-text">
+                  The golden path should remain visible as one joined operational
+                  thread rather than separate disconnected pages.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Exceptions and finance-blocked flags must be visible across all
+                  downstream stages.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Reconciliation and finance handoff should only follow completed
+                  movement and delivery evidence.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </ExecutiveShell>
   );
-    }
+}

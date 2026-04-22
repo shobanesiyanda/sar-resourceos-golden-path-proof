@@ -103,32 +103,44 @@ export default function HomePage() {
     <ExecutiveShell
       activeHref="/"
       title="Transaction control from opportunity to finance handoff."
-      subtitle="Institutional control shell for upstream screening, route pricing, release gating, parcel execution, and finance readiness."
+      subtitle="Institutional control shell for intake, route pricing, release gating, parcel execution, and finance readiness."
     >
-      <div className="bb-hero-grid">
-        <section className="bb-hero-panel">
-          <div className="bb-hero-meta">Operating overview</div>
-          <h2 className="bb-hero-title">Chrome transaction operating shell</h2>
-          <p className="bb-hero-text">
-            This control environment links intake, route pricing, execution readiness,
-            parcel control, reconciliation, exception routing, approval gating, and
-            finance handoff across one operating model.
+      <div className="bb-command-grid">
+        <section className="bb-command-panel">
+          <div className="bb-command-eyebrow">Control command layer</div>
+          <div className="bb-command-title">Chrome operating shell</div>
+          <p className="bb-command-text">
+            Live operating environment linking intake, route pricing, execution
+            readiness, parcel control, reconciliation, approval routing, and
+            finance handoff across one transaction chain.
           </p>
 
-          <div className="bb-hero-tags">
+          <div className="bb-command-tags">
             <span className="bb-chip bb-chip-gold">Chrome</span>
             <span className="bb-chip bb-chip-blue">Control active</span>
             <span className="bb-chip bb-chip-amber">Route-screened</span>
           </div>
         </section>
 
-        <aside className="bb-hero-side">
-          <div className="bb-side-label">Lead parcel</div>
-          <div className="bb-side-value">{data.parcel.parcelId}</div>
-          <div className="bb-side-sub">Accepted tons {data.parcel.acceptedTons}</div>
-          <div className="bb-side-divider" />
-          <div className="bb-side-label">Finance state</div>
-          <div className="bb-side-state">{data.parcel.financeState}</div>
+        <section className="bb-command-side">
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Lead parcel</div>
+            <div className="bb-side-value">{data.parcel.parcelId}</div>
+            <div className="bb-side-sub">Accepted tons {data.parcel.acceptedTons}</div>
+          </div>
+
+          <div className="bb-command-side-divider" />
+
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Finance state</div>
+            <div className="bb-side-state">{data.parcel.financeState}</div>
+          </div>
+        </section>
+
+        <aside className="bb-operator-card">
+          <div className="bb-user-role">Operator Profile</div>
+          <div className="bb-user-name">Siyanda Luthuli</div>
+          <div className="bb-user-org">Shobane African Resources</div>
         </aside>
       </div>
 
@@ -242,4 +254,4 @@ export default function HomePage() {
       </div>
     </ExecutiveShell>
   );
-            }
+                                               }

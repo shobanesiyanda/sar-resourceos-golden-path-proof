@@ -445,13 +445,9 @@ th {
   border-color: #c8a239;
 }
 
-.bb-nav-label-mobile {
-  display: none;
-  white-space: pre-line;
-}
-
-.bb-nav-label-desktop {
-  display: inline;
+.bb-nav-label {
+  display: inline-block;
+  line-height: 1.15;
 }
 
 .bb-nav-arrow {
@@ -899,14 +895,11 @@ th {
     line-height: 1.1;
   }
 
-  .bb-nav-label-desktop {
-    display: none;
+  .bb-nav-label {
+  font-size: 10px;
+  line-height: 1.1;
   }
-
-  .bb-nav-label-mobile {
-    display: inline;
-  }
-
+  
   .bb-nav-arrow {
     display: none;
   }

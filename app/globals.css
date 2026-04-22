@@ -1056,4 +1056,47 @@ th {
   .bb-metric-row {
     align-items: flex-start;
   }
-    }
+}
+
+.bb-main,
+.bb-panel,
+.bb-command-panel,
+.bb-command-side,
+.bb-operator-card,
+.bb-kpi-card,
+.bb-table-wrap,
+.bb-metric-list,
+.bb-grid,
+.bb-grid-main,
+.bb-grid-kpis,
+.bb-grid-modules,
+.bb-stack {
+  min-width: 0;
+  }
+
+.bb-table-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.bb-panel,
+.bb-command-panel,
+.bb-command-side,
+.bb-operator-card,
+.bb-kpi-card {
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .bb-shell {
+    overflow-x: hidden;
+  }
+
+  .bb-shell-inner {
+    overflow-x: hidden;
+  }
+
+  .bb-main {
+    overflow-x: hidden;
+  }
+  }

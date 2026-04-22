@@ -17,7 +17,7 @@ export default function RouteEconomicsPage({
   const activeFilter = (searchParams?.filter || "all").toLowerCase();
   const activeBasis = (searchParams?.basis || "all").toLowerCase();
 
-  const filteredItems = data.items.filter((item: any) => {
+  const filteredItems: any[] = data.items.filter((item: any) => {
     const filterOk =
       activeFilter === "all" ||
       item.state.toLowerCase() === activeFilter;
@@ -29,7 +29,7 @@ export default function RouteEconomicsPage({
     return filterOk && basisOk;
   });
 
-  const leadItem = filteredItems[0] || data.items[0];
+  const leadItem: any = filteredItems[0] || data.items[0];
 
   function chipClass(value: string) {
     const v = value.toLowerCase();

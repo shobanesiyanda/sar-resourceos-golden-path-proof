@@ -1,284 +1,303 @@
-import Header from "../../components/Header";
-import { getApprovalQueueData } from "../../lib/approvalQueue";
+import ExecutiveShell from "../../components/ExecutiveShell";
+import { getExceptions } from "../../lib/exceptions";
+import { getGoldenPathParcel } from "../../lib/goldenPath";
 
 type ApprovalItem = {
   id: string;
-  parcelId: string;
-  module: string;
-  requestType: string;
+  subject: string;
+  queue: string;
+  decisionState: string;
   owner: string;
-  approvalState: string;
-  priority: string;
-  submittedAt: string;
-  blocker: string;
-  nextAction: string;
-  linkedRoute: string;
+  note: string;
 };
 
-export default function ApprovalQueuePage({
-  searchParams,
-}: {
-  searchParams?: { filter?: string };
-}) {
-  const data = getApprovalQueueData();
-  const summary = data.summary;
-  const activeFilter = searchParams?.filter || "All";
+function chipClass(value?: string) {
+  const v = String(value || "").toLowerCase();
 
-  const filters = ["All", "Pending", "Approved", "Rejected", "High priority"];
+  if (v.includes("approved") || v.includes("cleared")) return "bb-chip-blue";
+  if (v.includes("pending") || v.includes("review")) return "bb-chip-amber";
+  if (v.includes("rejected") || v.includes("blocked")) return "bb-chip-red";
+  return "bb-chip-gold";
+}
 
-  const filteredItems =
-    activeFilter === "All"
-      ? data.items
-      : activeFilter === "Pending"
-      ? data.items.filter((item) => item.approvalState === "pending")
-      : activeFilter === "Approved"
-      ? data.items.filter((item) => item.approvalState === "approved")
-      : activeFilter === "Rejected"
-      ? data.items.filter((item) => item.approvalState === "rejected")
-      : activeFilter === "High priority"
-      ? data.items.filter((item) => item.priority === "High")
-      : data.items;
+function buildApprovalItems(parcel: any, exceptions: any[]): ApprovalItem[] {
+  const parcelId = String(parcel?.parcelId || "PAR-CHR-2026-0001");
 
-  function badgeClass(value: string) {
-    if (value === "rejected") return "badge badge-blocked";
-    if (value === "pending") return "badge badge-pending";
-    if (value === "approved") return "badge badge-approval";
-    return "badge";
+  const seededFromExceptions = (exceptions || []).map((item: any, index: number) => ({
+    id: String(item?.exceptionId || `APR-EX-${index + 1}`),
+    subject: String(item?.title || item?.reason || "Exception approval item"),
+    queue: "Exception",
+    decisionState: String(item?.status || "pending review"),
+    owner: String(item?.owner || item?.assignedTo || "Operations"),
+    note: `Linked to parcel ${parcelId}`,
+  }));
+
+  if (seededFromExceptions.length > 0) {
+    return [
+      {
+        id: "APR-001",
+        subject: `Parcel release gate for ${parcelId}`,
+        queue: "Release",
+        decisionState: "pending review",
+        owner: "Management",
+        note: "Final release decision still required before full execution.",
+      },
+      {
+        id: "APR-002",
+        subject: "Finance-sensitive exception review",
+        queue: "Finance",
+        decisionState: "blocked",
+        owner: "Finance Control",
+        note: "Finance-blocked alerts still need sign-off or resolution.",
+      },
+      ...seededFromExceptions,
+    ];
   }
 
-  function moduleHref(item: ApprovalItem) {
-    if (item.linkedRoute === "/finance-handoff") {
-      return item.approvalState === "approved"
-        ? "/finance-handoff?filter=Ready%20for%20finance"
-        : "/finance-handoff?filter=Pending%20approval";
-    }
+  return [
+    {
+      id: "APR-001",
+      subject: `Parcel release gate for ${parcelId}`,
+      queue: "Release",
+      decisionState: "pending review",
+      owner: "Management",
+      note: "Final release decision still required before full execution.",
+    },
+    {
+      id: "APR-002",
+      subject: "Finance-sensitive exception review",
+      queue: "Finance",
+      decisionState: "blocked",
+      owner: "Finance Control",
+      note: "Finance-blocked alerts still need sign-off or resolution.",
+    },
+    {
+      id: "APR-003",
+      subject: "Dispatch escalation hold",
+      queue: "Dispatch",
+      decisionState: "pending review",
+      owner: "Operations",
+      note: "Movement escalation requires approval release.",
+    },
+  ];
+}
 
-    if (item.linkedRoute === "/reconciliation") {
-      return "/reconciliation?filter=Pending%20review";
-    }
+export default function ApprovalQueuePage() {
+  const exceptionsData: any = getExceptions();
+  const goldenPathData: any = getGoldenPathParcel();
 
-    if (item.linkedRoute === "/exceptions") {
-      return "/exceptions?filter=Pending%20review";
-    }
+  const parcel: any = goldenPathData?.parcel || {};
+  const exceptions: any[] = exceptionsData?.exceptions || [];
+  const approvalItems = buildApprovalItems(parcel, exceptions);
 
-    if (item.linkedRoute === "/dispatch-control") {
-      return item.approvalState === "rejected"
-        ? "/dispatch-control?filter=Held"
-        : "/dispatch-control";
-    }
+  const pending = approvalItems.filter((item) =>
+    String(item.decisionState).toLowerCase().includes("pending")
+  ).length;
 
-    return item.linkedRoute;
-  }
+  const blocked = approvalItems.filter((item) =>
+    String(item.decisionState).toLowerCase().includes("blocked")
+  ).length;
 
-  function moduleLabel(item: ApprovalItem) {
-    if (item.linkedRoute === "/finance-handoff") return "Open Finance Handoff";
-    if (item.linkedRoute === "/reconciliation") return "Open Reconciliation";
-    if (item.linkedRoute === "/exceptions") return "Open Exceptions";
-    if (item.linkedRoute === "/dispatch-control") return "Open Dispatch Control";
-    return "Open Module";
-  }
+  const approved = approvalItems.filter((item) =>
+    String(item.decisionState).toLowerCase().includes("approved")
+  ).length;
 
-  const visibleTotal = filteredItems.length;
-  const visiblePending = filteredItems.filter((item) => item.approvalState === "pending").length;
-  const visibleApproved = filteredItems.filter((item) => item.approvalState === "approved").length;
-  const visibleRejected = filteredItems.filter((item) => item.approvalState === "rejected").length;
-  const visibleHighPriority = filteredItems.filter((item) => item.priority === "High").length;
+  const leadItem =
+    approvalItems.find((item) =>
+      ["blocked", "pending review"].includes(
+        String(item.decisionState).toLowerCase()
+      )
+    ) || approvalItems[0];
 
   return (
-    <>
-      <Header />
+    <ExecutiveShell
+      activeHref="/approval-queue"
+      title="Approval queue and decision routing."
+      subtitle="Institutional approval dashboard for release decisions, exception routing, and finance-sensitive control approvals."
+    >
+      <div className="bb-command-grid">
+        <section className="bb-command-panel">
+          <div className="bb-command-eyebrow">Approval command layer</div>
+          <div className="bb-command-title">Approval queue / decision desk</div>
+          <p className="bb-command-text">
+            This dashboard centralizes decisions still awaiting approval across
+            release control, exception handling, dispatch progression, and finance.
+          </p>
 
-      <section className="section">
-        <div className="container">
-          <div className="head">
-            <div>
-              <h2>Approval queue dashboard</h2>
-              <p className="muted">
-                This dashboard shows approval-dependent control items across dispatch,
-                reconciliation, exceptions, and finance handoff before parcels can continue
-                through the operating chain.
-              </p>
-            </div>
+          <div className="bb-command-tags">
+            <span className="bb-chip bb-chip-gold">Approvals active</span>
+            <span className="bb-chip bb-chip-blue">Decision routed</span>
+            <span className="bb-chip bb-chip-amber">Control queue</span>
+          </div>
+        </section>
+
+        <section className="bb-command-side">
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Lead approval</div>
+            <div className="bb-side-value">{leadItem?.id || "No item"}</div>
+            <div className="bb-side-sub">{leadItem?.subject || "—"}</div>
           </div>
 
-          <div className="kpis">
-            <div className="kpi">
-              <div className="label">Visible items</div>
-              <div className="value">{visibleTotal}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Pending</div>
-              <div className="value">{visiblePending}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Approved</div>
-              <div className="value">{visibleApproved}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">Rejected / high priority</div>
-              <div className="value">{visibleRejected + visibleHighPriority}</div>
-            </div>
+          <div className="bb-command-side-divider" />
+
+          <div className="bb-command-side-block">
+            <div className="bb-side-label">Decision state</div>
+            <div className="bb-side-state">{leadItem?.decisionState || "clear"}</div>
           </div>
+        </section>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              flexWrap: "wrap",
-              marginTop: 18,
-              marginBottom: 6,
-            }}
-          >
-            {filters.map((filter) => (
-              <a
-                key={filter}
-                href={
-                  filter === "All"
-                    ? "/approval-queue"
-                    : `/approval-queue?filter=${encodeURIComponent(filter)}`
-                }
-                className={filter === activeFilter ? "badge badge-approval" : "badge"}
-              >
-                {filter}
-              </a>
-            ))}
-          </div>
+        <aside className="bb-operator-card">
+          <div className="bb-user-role">Queue size</div>
+          <div className="bb-user-name">{approvalItems.length}</div>
+          <div className="bb-user-org">Approval items</div>
+        </aside>
+      </div>
 
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Approval overview</h3>
-            <p className="muted">
-              Total seeded items: {summary.totalItems} • Pending: {summary.pendingApproval} •
-              Approved: {summary.approved} • Rejected: {summary.rejected} • Finance ready:{" "}
-              {summary.financeReady}
-            </p>
-
-            {filteredItems.length === 0 ? (
-              <div style={{ marginTop: 16 }}>
-                <p className="muted">No approval records match the selected filter.</p>
-              </div>
-            ) : (
-              <>
-                <div className="desktop-exception-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Parcel</th>
-                        <th>Module</th>
-                        <th>Request</th>
-                        <th>Owner</th>
-                        <th>Approval</th>
-                        <th>Priority</th>
-                        <th>Open</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredItems.map((item) => (
-                        <tr key={item.id}>
-                          <td>
-                            <span className="code">{item.parcelId}</span>
-                          </td>
-                          <td>{item.module}</td>
-                          <td>{item.requestType}</td>
-                          <td>{item.owner}</td>
-                          <td>
-                            <span className={badgeClass(item.approvalState)}>{item.approvalState}</span>
-                          </td>
-                          <td>{item.priority}</td>
-                          <td>
-                            <a className="btn" href={moduleHref(item)}>
-                              {moduleLabel(item)}
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="mobile-exception-list">
-                  {filteredItems.map((item) => (
-                    <div className="mobile-exception-card" key={item.id}>
-                      <strong>{item.requestType}</strong>
-                      <div className="row">
-                        <strong>Parcel:</strong> <span className="code">{item.parcelId}</span>
-                      </div>
-                      <div className="row">
-                        <strong>Module:</strong> {item.module}
-                      </div>
-                      <div className="row">
-                        <strong>Owner:</strong> {item.owner}
-                      </div>
-                      <div className="row">
-                        <strong>Approval:</strong>{" "}
-                        <span className={badgeClass(item.approvalState)}>{item.approvalState}</span>
-                      </div>
-                      <div className="row">
-                        <strong>Priority:</strong> {item.priority}
-                      </div>
-                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
-                        <a className="btn" href={moduleHref(item)}>
-                          {moduleLabel(item)}
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="card" style={{ marginTop: 22 }}>
-            <h3>Approval action queue</h3>
-
-            {filteredItems.length === 0 ? (
-              <p className="muted">No approval action items match the selected filter.</p>
-            ) : (
-              <div className="step-list">
-                {filteredItems.map((item) => (
-                  <div className="step" key={item.id}>
-                    <div className="step-top">
-                      <div>
-                        <strong>{item.requestType}</strong>
-                        <div className="muted" style={{ marginTop: 6 }}>
-                          Parcel: <span className="code">{item.parcelId}</span> • Module: {item.module}
-                        </div>
-                      </div>
-                      <span className={badgeClass(item.approvalState)}>{item.approvalState}</span>
-                    </div>
-
-                    <ul className="clean">
-                      <li>
-                        <strong>Owner:</strong> {item.owner}
-                      </li>
-                      <li>
-                        <strong>Priority:</strong> {item.priority}
-                      </li>
-                      <li>
-                        <strong>Submitted at:</strong> {item.submittedAt}
-                      </li>
-                      <li>
-                        <strong>Blocker:</strong> {item.blocker}
-                      </li>
-                      <li>
-                        <strong>Next action:</strong> {item.nextAction}
-                      </li>
-                    </ul>
-
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-                      <a className="btn" href={`/golden-path?parcelId=${encodeURIComponent(item.parcelId)}`}>
-                        View Parcel
-                      </a>
-                      <a className="btn" href={moduleHref(item)}>
-                        {moduleLabel(item)}
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+      <div className="bb-grid bb-grid-kpis">
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Pending</div>
+          <div className="bb-kpi-value">{pending}</div>
         </div>
-      </section>
-    </>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Blocked</div>
+          <div className="bb-kpi-value">{blocked}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Approved</div>
+          <div className="bb-kpi-value">{approved}</div>
+        </div>
+        <div className="bb-kpi-card">
+          <div className="bb-kpi-label">Exception-linked</div>
+          <div className="bb-kpi-value">{exceptions.length}</div>
+        </div>
+      </div>
+
+      <div className="bb-grid bb-grid-main">
+        <section className="bb-panel">
+          <div className="bb-panel-head">
+            <div>
+              <div className="bb-panel-title">Approval overview</div>
+              <div className="bb-panel-subtitle">
+                Decision queue by approval subject, owner, and control state
+              </div>
+            </div>
+            <span className="bb-chip bb-chip-gold">{approvalItems.length} items</span>
+          </div>
+
+          <div className="bb-table-wrap">
+            <table className="bb-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Subject</th>
+                  <th>Queue</th>
+                  <th>State</th>
+                  <th>Owner</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {approvalItems.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.id}</td>
+                    <td>{item.subject}</td>
+                    <td>{item.queue}</td>
+                    <td>
+                      <span className={`bb-chip ${chipClass(item.decisionState)}`}>
+                        {item.decisionState}
+                      </span>
+                    </td>
+                    <td>{item.owner}</td>
+                    <td>
+                      <a href="/finance-handoff" className="bb-table-action">
+                        Open
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div className="bb-stack">
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Lead approval detail</div>
+                <div className="bb-panel-subtitle">
+                  Active decision item and next queue action
+                </div>
+              </div>
+              <span className={`bb-chip ${chipClass(leadItem?.decisionState)}`}>
+                {leadItem?.decisionState || "pending review"}
+              </span>
+            </div>
+
+            <div className="bb-metric-list">
+              <div className="bb-metric-row">
+                <span>ID</span>
+                <strong>{leadItem?.id || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Subject</span>
+                <strong>{leadItem?.subject || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Queue</span>
+                <strong>{leadItem?.queue || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Decision state</span>
+                <strong>{leadItem?.decisionState || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Owner</span>
+                <strong>{leadItem?.owner || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Note</span>
+                <strong>{leadItem?.note || "—"}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="bb-panel">
+            <div className="bb-panel-head">
+              <div>
+                <div className="bb-panel-title">Approval notes</div>
+                <div className="bb-panel-subtitle">
+                  Decision-routing interpretation
+                </div>
+              </div>
+            </div>
+
+            <div className="bb-notes">
+              <div className="bb-note">
+                <div className="bb-note-dot is-gold" />
+                <div className="bb-note-text">
+                  Approval items should remain visible until a decision is taken
+                  and propagated into downstream control pages.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Blocked approval items should stop operational progression where
+                  control or finance risk remains open.
+                </div>
+              </div>
+              <div className="bb-note">
+                <div className="bb-note-dot" />
+                <div className="bb-note-text">
+                  Approved items should push the parcel forward into finance
+                  readiness or cleared execution.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </ExecutiveShell>
   );
-    }
+}

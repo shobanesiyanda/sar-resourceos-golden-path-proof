@@ -15,9 +15,9 @@ export default function HomePage() {
   const modules = [
     {
       title: "Opportunity Intake",
-      leftLabel: "Seeded opportunities",
+      leftLabel: "Seeded",
       leftValue: "5",
-      rightLabel: "New / live intake",
+      rightLabel: "New / live",
       rightValue: "2",
       highlight: "Front-door deal flow",
       footer: "Capture → screen → route",
@@ -26,9 +26,9 @@ export default function HomePage() {
     },
     {
       title: "Route Economics",
-      leftLabel: "Average margin",
+      leftLabel: "Avg margin",
       leftValue: "18.9%",
-      rightLabel: "Routes passing target",
+      rightLabel: "Passing",
       rightValue: "2",
       highlight: "Pricing engine live",
       footer: "FOT / FOB back-solving",
@@ -37,9 +37,9 @@ export default function HomePage() {
     },
     {
       title: "Execution Readiness",
-      leftLabel: "Ready to release",
+      leftLabel: "Ready",
       leftValue: "2",
-      rightLabel: "Blocked parcels",
+      rightLabel: "Blocked",
       rightValue: "1",
       highlight: "Release gate active",
       footer: "Docs / quality / approval / funding",
@@ -103,8 +103,35 @@ export default function HomePage() {
     <ExecutiveShell
       activeHref="/"
       title="Transaction control from opportunity to finance handoff."
-      subtitle="Bloomberg-style operating shell for upstream screening, parcel control, exception routing, approval gating, and finance readiness."
+      subtitle="Institutional control shell for upstream screening, route pricing, release gating, parcel execution, and finance readiness."
     >
+      <div className="bb-hero-grid">
+        <section className="bb-hero-panel">
+          <div className="bb-hero-meta">Operating overview</div>
+          <h2 className="bb-hero-title">Chrome transaction operating shell</h2>
+          <p className="bb-hero-text">
+            This control environment links intake, route pricing, execution readiness,
+            parcel control, reconciliation, exception routing, approval gating, and
+            finance handoff across one operating model.
+          </p>
+
+          <div className="bb-hero-tags">
+            <span className="bb-chip bb-chip-gold">Chrome</span>
+            <span className="bb-chip bb-chip-blue">Control active</span>
+            <span className="bb-chip bb-chip-amber">Route-screened</span>
+          </div>
+        </section>
+
+        <aside className="bb-hero-side">
+          <div className="bb-side-label">Lead parcel</div>
+          <div className="bb-side-value">{data.parcel.parcelId}</div>
+          <div className="bb-side-sub">Accepted tons {data.parcel.acceptedTons}</div>
+          <div className="bb-side-divider" />
+          <div className="bb-side-label">Finance state</div>
+          <div className="bb-side-state">{data.parcel.financeState}</div>
+        </aside>
+      </div>
+
       <div className="bb-grid bb-grid-kpis">
         <div className="bb-kpi-card">
           <div className="bb-kpi-label">Accepted tons</div>
@@ -180,7 +207,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="bb-stack">
+            <div className="bb-stack bb-stack-tight">
               {controlCards.map((card) => (
                 <a key={card.href} href={card.href} className="bb-status-card">
                   <div className="bb-status-top">
@@ -215,4 +242,4 @@ export default function HomePage() {
       </div>
     </ExecutiveShell>
   );
-    }
+            }

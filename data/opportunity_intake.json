@@ -21,6 +21,66 @@
       "priority": "High",
       "blocker": "Awaiting supplier commercial pack",
       "nextAction": "Complete intake call and request supporting documents"
+    },
+    {
+      "id": "OPP-002",
+      "opportunityName": "Mvela Bulk Parcel",
+      "commodity": "Chrome",
+      "sourceType": "ROM",
+      "location": "Limpopo",
+      "counterparty": "Mvela Commodities",
+      "indicativeTons": 700,
+      "indicativeGrade": "32-36%",
+      "commercialState": "screening",
+      "qualificationState": "screening",
+      "priority": "Medium",
+      "blocker": "Assay and logistics assumptions incomplete",
+      "nextAction": "Request assay and transport assumptions"
+    },
+    {
+      "id": "OPP-003",
+      "opportunityName": "Orelink Qualified Parcel",
+      "commodity": "Chrome",
+      "sourceType": "LG6 stockpile",
+      "location": "North West",
+      "counterparty": "Orelink",
+      "indicativeTons": 450,
+      "indicativeGrade": "40-42%",
+      "commercialState": "qualified",
+      "qualificationState": "qualified",
+      "priority": "High",
+      "blocker": "",
+      "nextAction": "Move to Route Economics"
+    },
+    {
+      "id": "OPP-004",
+      "opportunityName": "Delta Reject Opportunity",
+      "commodity": "Chrome",
+      "sourceType": "Tailings",
+      "location": "Mpumalanga",
+      "counterparty": "Delta Resources",
+      "indicativeTons": 900,
+      "indicativeGrade": "18-22%",
+      "commercialState": "rejected",
+      "qualificationState": "rejected",
+      "priority": "Low",
+      "blocker": "Grade below commercial threshold",
+      "nextAction": "Archive unless upgraded data received"
+    },
+    {
+      "id": "OPP-005",
+      "opportunityName": "Brits New Feed Lead",
+      "commodity": "Chrome",
+      "sourceType": "Crusher feed",
+      "location": "Brits",
+      "counterparty": "Brits Feed Co",
+      "indicativeTons": 600,
+      "indicativeGrade": "34-38%",
+      "commercialState": "new",
+      "qualificationState": "new",
+      "priority": "Medium",
+      "blocker": "Counterparty KYC outstanding",
+      "nextAction": "Start intake and collect KYC"
     }
   ]
-}
+    }

@@ -17,26 +17,23 @@ export default function RouteEconomicsPage({
   const activeFilter = (searchParams?.filter || "all").toLowerCase();
   const activeBasis = (searchParams?.basis || "all").toLowerCase();
 
-  const filteredItems: any[] = data.items.filter((item: any) => {
-    const filterOk =
-      activeFilter === "all" ||
-      item.state.toLowerCase() === activeFilter;
+const filteredItems: any[] = (data.items || []).filter((item: any) => {
+  const state = String(item?.state || "").toLowerCase();
+  const basis = String(item?.saleBasis || "").toLowerCase();
 
-    const basisOk =
-      activeBasis === "all" ||
-      item.saleBasis.toLowerCase() === activeBasis;
+  const filterOk = activeFilter === "all" || state === activeFilter;
+  const basisOk = activeBasis === "all" || basis === activeBasis;
 
-    return filterOk && basisOk;
-  });
+  return filterOk && basisOk;
+});
 
-  const leadItem: any = filteredItems[0] || data.items[0];
-
-  function chipClass(value: string) {
-    const v = value.toLowerCase();
-    if (v.includes("pass") || v.includes("within")) return "bb-chip-blue";
-    if (v.includes("caution") || v.includes("near")) return "bb-chip-amber";
-    if (v.includes("fail") || v.includes("outside")) return "bb-chip-red";
-    return "bb-chip-gold";
+  const leadItem: any = filteredItems[0] || (data.items || [])[0] || {};
+  function chipClass(value?: string) {
+  const v = String(value || "").toLowerCase();
+  if (v.includes("pass") || v.includes("within")) return "bb-chip-blue";
+  if (v.includes("caution") || v.includes("near")) return "bb-chip-amber";
+  if (v.includes("fail") || v.includes("outside")) return "bb-chip-red";
+  return "bb-chip-gold";
   }
 
   return (

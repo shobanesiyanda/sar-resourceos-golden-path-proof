@@ -9,8 +9,7 @@ export function lower(value: unknown, fallback = ""): string {
 }
 
 export function yn(value: unknown): "yes" | "no" {
-  const v = lower(value);
-  return v === "yes" ? "yes" : "no";
+  return lower(value) === "yes" ? "yes" : "no";
 }
 
 export function normalizeExceptionStatus(value: unknown): string {
@@ -22,7 +21,7 @@ export function normalizeExceptionStatus(value: unknown): string {
   if (v.includes("held") || v.includes("hold")) return "held";
   if (v.includes("pending")) return "pending review";
   if (v.includes("review")) return "pending review";
-  if (v.includes("exception")) return "exception";
+  if (v.includes("exception")) return "pending review";
   return "pending review";
 }
 
@@ -31,6 +30,7 @@ export function normalizeDecisionStatus(value: unknown): string {
 
   if (v.includes("approved") || v.includes("cleared")) return "approved";
   if (v.includes("blocked")) return "blocked";
+  if (v.includes("held")) return "held";
   if (v.includes("rejected")) return "rejected";
   if (v.includes("pending")) return "pending review";
   if (v.includes("review")) return "pending review";
@@ -38,15 +38,34 @@ export function normalizeDecisionStatus(value: unknown): string {
 }
 
 export function normalizeFinanceState(value: unknown): string {
-  const v = lower(value, "pending review");
+  const raw = s(value, "pending review");
+  const v = raw.toLowerCase();
 
   if (v.includes("finance_handoff_ready")) return "finance_handoff_ready";
   if (v.includes("ready_for_export")) return "ready_for_export";
   if (v.includes("approved")) return "approved";
   if (v.includes("blocked")) return "blocked";
+  if (v.includes("held")) return "held";
   if (v.includes("pending")) return "pending review";
   if (v.includes("review")) return "pending review";
-  return s(value, "pending review");
+  return raw;
+}
+
+export function exceptionToApprovalState(
+  status: unknown,
+  financeAllowed: unknown
+): string {
+  const normalized = normalizeExceptionStatus(status);
+  const finance = yn(financeAllowed);
+
+  if (normalized === "resolved" || normalized === "approved") return "approved";
+  if (normalized === "blocked") return "blocked";
+  if (normalized === "held") return "held";
+
+  // Pending-review items stay pending unless finance is explicitly blocked.
+  if (normalized === "pending review" && finance === "no") return "pending review";
+
+  return "pending review";
 }
 
 export function chipClass(value?: string): string {

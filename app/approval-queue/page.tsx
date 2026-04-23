@@ -1,6 +1,14 @@
 import ExecutiveShell from "../../components/ExecutiveShell";
 import { getExceptions } from "../../lib/exceptions";
 import { getGoldenPathParcel } from "../../lib/goldenPath";
+import {
+  chipClass,
+  firstMeaningful,
+  normalizeDecisionStatus,
+  normalizeExceptionStatus,
+  s,
+  yn,
+} from "../../lib/dashboardLogic";
 
 type ApprovalItem = {
   id: string;
@@ -11,48 +19,25 @@ type ApprovalItem = {
   note: string;
 };
 
-function chipClass(value?: string) {
-  const v = String(value || "").toLowerCase();
+function buildApprovalItems(parcel: any, rawExceptions: any[]): ApprovalItem[] {
+  const parcelId = s(parcel?.parcelId, "PAR-CHR-2026-0001");
 
-  if (v.includes("approved") || v.includes("cleared")) return "bb-chip-blue";
-  if (v.includes("pending") || v.includes("review")) return "bb-chip-amber";
-  if (v.includes("rejected") || v.includes("blocked")) return "bb-chip-red";
-  return "bb-chip-gold";
-}
-
-function buildApprovalItems(parcel: any, exceptions: any[]): ApprovalItem[] {
-  const parcelId = String(parcel?.parcelId || "PAR-CHR-2026-0001");
-
-  const seededFromExceptions = (exceptions || []).map((item: any, index: number) => ({
-    id: String(item?.exceptionId || `APR-EX-${index + 1}`),
-    subject: String(item?.title || item?.reason || "Exception approval item"),
-    queue: "Exception",
-    decisionState: String(item?.status || "pending review"),
-    owner: String(item?.owner || item?.assignedTo || "Operations"),
-    note: `Linked to parcel ${parcelId}`,
-  }));
-
-  if (seededFromExceptions.length > 0) {
-    return [
-      {
-        id: "APR-001",
-        subject: `Parcel release gate for ${parcelId}`,
-        queue: "Release",
-        decisionState: "pending review",
-        owner: "Management",
-        note: "Final release decision still required before full execution.",
-      },
-      {
-        id: "APR-002",
-        subject: "Finance-sensitive exception review",
-        queue: "Finance",
-        decisionState: "blocked",
-        owner: "Finance Control",
-        note: "Finance-blocked alerts still need sign-off or resolution.",
-      },
-      ...seededFromExceptions,
-    ];
-  }
+  const seededFromExceptions = (rawExceptions || []).map((item: any, index: number) => {
+    const status = normalizeExceptionStatus(item?.status);
+    return {
+      id: s(item?.exceptionId, `APR-EX-${index + 1}`),
+      subject: s(item?.title || item?.reason, `Exception item ${index + 1}`),
+      queue: "Exception",
+      decisionState:
+        yn(item?.financeAllowed) === "no"
+          ? "blocked"
+          : status === "resolved"
+            ? "approved"
+            : status,
+      owner: s(item?.owner || item?.assignedTo, "Operations"),
+      note: `Linked to parcel ${parcelId}`,
+    };
+  });
 
   return [
     {
@@ -67,19 +52,17 @@ function buildApprovalItems(parcel: any, exceptions: any[]): ApprovalItem[] {
       id: "APR-002",
       subject: "Finance-sensitive exception review",
       queue: "Finance",
-      decisionState: "blocked",
+      decisionState: seededFromExceptions.some((x) => x.decisionState === "blocked")
+        ? "blocked"
+        : "pending review",
       owner: "Finance Control",
       note: "Finance-blocked alerts still need sign-off or resolution.",
     },
-    {
-      id: "APR-003",
-      subject: "Dispatch escalation hold",
-      queue: "Dispatch",
-      decisionState: "pending review",
-      owner: "Operations",
-      note: "Movement escalation requires approval release.",
-    },
-  ];
+    ...seededFromExceptions,
+  ].map((item) => ({
+    ...item,
+    decisionState: normalizeDecisionStatus(item.decisionState),
+  }));
 }
 
 export default function ApprovalQueuePage() {
@@ -87,27 +70,18 @@ export default function ApprovalQueuePage() {
   const goldenPathData: any = getGoldenPathParcel();
 
   const parcel: any = goldenPathData?.parcel || {};
-  const exceptions: any[] = exceptionsData?.exceptions || [];
-  const approvalItems = buildApprovalItems(parcel, exceptions);
+  const rawExceptions: any[] = exceptionsData?.exceptions || [];
+  const approvalItems = buildApprovalItems(parcel, rawExceptions);
 
-  const pending = approvalItems.filter((item) =>
-    String(item.decisionState).toLowerCase().includes("pending")
-  ).length;
-
-  const blocked = approvalItems.filter((item) =>
-    String(item.decisionState).toLowerCase().includes("blocked")
-  ).length;
-
-  const approved = approvalItems.filter((item) =>
-    String(item.decisionState).toLowerCase().includes("approved")
-  ).length;
+  const pending = approvalItems.filter((item) => item.decisionState === "pending review").length;
+  const blocked = approvalItems.filter((item) => item.decisionState === "blocked").length;
+  const approved = approvalItems.filter((item) => item.decisionState === "approved").length;
 
   const leadItem =
-    approvalItems.find((item) =>
-      ["blocked", "pending review"].includes(
-        String(item.decisionState).toLowerCase()
-      )
-    ) || approvalItems[0];
+    firstMeaningful(
+      approvalItems,
+      (item) => item.decisionState === "blocked" || item.decisionState === "pending review"
+    ) || null;
 
   return (
     <ExecutiveShell
@@ -135,7 +109,7 @@ export default function ApprovalQueuePage() {
           <div className="bb-command-side-block">
             <div className="bb-side-label">Lead approval</div>
             <div className="bb-side-value">{leadItem?.id || "No item"}</div>
-            <div className="bb-side-sub">{leadItem?.subject || "—"}</div>
+            <div className="bb-side-sub">{leadItem?.subject || "Queue currently clear"}</div>
           </div>
 
           <div className="bb-command-side-divider" />
@@ -168,7 +142,7 @@ export default function ApprovalQueuePage() {
         </div>
         <div className="bb-kpi-card">
           <div className="bb-kpi-label">Exception-linked</div>
-          <div className="bb-kpi-value">{exceptions.length}</div>
+          <div className="bb-kpi-value">{rawExceptions.length}</div>
         </div>
       </div>
 
@@ -229,8 +203,8 @@ export default function ApprovalQueuePage() {
                   Active decision item and next queue action
                 </div>
               </div>
-              <span className={`bb-chip ${chipClass(leadItem?.decisionState)}`}>
-                {leadItem?.decisionState || "pending review"}
+              <span className={`bb-chip ${chipClass(leadItem?.decisionState || "clear")}`}>
+                {leadItem?.decisionState || "clear"}
               </span>
             </div>
 
@@ -241,7 +215,7 @@ export default function ApprovalQueuePage() {
               </div>
               <div className="bb-metric-row">
                 <span>Subject</span>
-                <strong>{leadItem?.subject || "—"}</strong>
+                <strong>{leadItem?.subject || "Queue currently clear"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Queue</span>
@@ -249,7 +223,7 @@ export default function ApprovalQueuePage() {
               </div>
               <div className="bb-metric-row">
                 <span>Decision state</span>
-                <strong>{leadItem?.decisionState || "—"}</strong>
+                <strong>{leadItem?.decisionState || "clear"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Owner</span>
@@ -257,7 +231,7 @@ export default function ApprovalQueuePage() {
               </div>
               <div className="bb-metric-row">
                 <span>Note</span>
-                <strong>{leadItem?.note || "—"}</strong>
+                <strong>{leadItem?.note || "No note"}</strong>
               </div>
             </div>
           </section>
@@ -300,4 +274,4 @@ export default function ApprovalQueuePage() {
       </div>
     </ExecutiveShell>
   );
-}
+                            }

@@ -1,62 +1,53 @@
 import ExecutiveShell from "../../components/ExecutiveShell";
 import { getExceptions } from "../../lib/exceptions";
+import {
+  chipClass,
+  firstMeaningful,
+  normalizeExceptionStatus,
+  s,
+  yn,
+} from "../../lib/dashboardLogic";
 
-function chipClass(value?: string) {
-  const v = String(value || "").toLowerCase();
+type ExceptionRow = {
+  exceptionId: string;
+  title: string;
+  status: string;
+  owner: string;
+  financeAllowed: "yes" | "no";
+  parcelId: string;
+  note: string;
+};
 
-  if (
-    v.includes("resolved") ||
-    v.includes("approved") ||
-    v.includes("cleared")
-  ) {
-    return "bb-chip-blue";
-  }
-
-  if (
-    v.includes("pending") ||
-    v.includes("review") ||
-    v.includes("held")
-  ) {
-    return "bb-chip-amber";
-  }
-
-  if (
-    v.includes("blocked") ||
-    v.includes("finance") ||
-    v.includes("exception")
-  ) {
-    return "bb-chip-red";
-  }
-
-  return "bb-chip-gold";
+function buildExceptionRows(raw: any[]): ExceptionRow[] {
+  return (raw || []).map((item: any, index: number) => ({
+    exceptionId: s(item?.exceptionId, `EX-${index + 1}`),
+    title: s(item?.title || item?.reason, `Operational exception ${index + 1}`),
+    status: normalizeExceptionStatus(item?.status),
+    owner: s(item?.owner || item?.assignedTo, "Operations"),
+    financeAllowed: yn(item?.financeAllowed),
+    parcelId: s(item?.parcelId, "PAR-CHR-2026-0001"),
+    note: s(item?.note || item?.comment || item?.detail, "No additional note"),
+  }));
 }
 
 export default function ExceptionsPage() {
   const data: any = getExceptions();
-  const exceptions: any[] = data?.exceptions || [];
+  const rows = buildExceptionRows(data?.exceptions || []);
 
-  const blocked = exceptions.filter((item) =>
-    String(item?.status || "").toLowerCase().includes("blocked")
-  ).length;
-
-  const pending = exceptions.filter((item) =>
-    String(item?.status || "").toLowerCase().includes("pending")
-  ).length;
-
-  const held = exceptions.filter((item) =>
-    String(item?.status || "").toLowerCase().includes("held")
-  ).length;
-
-  const financeBlocked = exceptions.filter(
-    (item) => String(item?.financeAllowed || "").toLowerCase() === "no"
-  ).length;
+  const blocked = rows.filter((x) => x.status === "blocked").length;
+  const pending = rows.filter((x) => x.status === "pending review").length;
+  const held = rows.filter((x) => x.status === "held").length;
+  const financeBlocked = rows.filter((x) => x.financeAllowed === "no").length;
 
   const leadItem =
-    exceptions.find((item) =>
-      ["blocked", "pending review", "held"].includes(
-        String(item?.status || "").toLowerCase()
-      )
-    ) || exceptions[0] || {};
+    firstMeaningful(
+      rows,
+      (x) =>
+        x.financeAllowed === "no" ||
+        x.status === "blocked" ||
+        x.status === "held" ||
+        x.status === "pending review"
+    ) || null;
 
   return (
     <ExecutiveShell
@@ -83,21 +74,27 @@ export default function ExceptionsPage() {
         <section className="bb-command-side">
           <div className="bb-command-side-block">
             <div className="bb-side-label">Lead exception</div>
-            <div className="bb-side-value">{leadItem?.exceptionId || "No exception"}</div>
-            <div className="bb-side-sub">{leadItem?.title || "—"}</div>
+            <div className="bb-side-value">
+              {leadItem ? leadItem.exceptionId : "No live exceptions"}
+            </div>
+            <div className="bb-side-sub">
+              {leadItem ? leadItem.title : "Queue currently clear"}
+            </div>
           </div>
 
           <div className="bb-command-side-divider" />
 
           <div className="bb-command-side-block">
             <div className="bb-side-label">State</div>
-            <div className="bb-side-state">{leadItem?.status || "clear"}</div>
+            <div className="bb-side-state">
+              {leadItem ? leadItem.status : "clear"}
+            </div>
           </div>
         </section>
 
         <aside className="bb-operator-card">
           <div className="bb-user-role">Queue size</div>
-          <div className="bb-user-name">{exceptions.length}</div>
+          <div className="bb-user-name">{rows.length}</div>
           <div className="bb-user-org">Live exceptions</div>
         </aside>
       </div>
@@ -130,7 +127,7 @@ export default function ExceptionsPage() {
                 Control exceptions by owner, state, and finance sensitivity
               </div>
             </div>
-            <span className="bb-chip bb-chip-gold">{exceptions.length} live items</span>
+            <span className="bb-chip bb-chip-gold">{rows.length} live items</span>
           </div>
 
           <div className="bb-table-wrap">
@@ -146,27 +143,25 @@ export default function ExceptionsPage() {
                 </tr>
               </thead>
               <tbody>
-                {exceptions.map((item: any, index: number) => (
-                  <tr key={item?.exceptionId || `EX-${index + 1}`}>
-                    <td>{item?.exceptionId || `EX-${index + 1}`}</td>
-                    <td>{item?.title || item?.reason || "Exception item"}</td>
+                {rows.map((item) => (
+                  <tr key={item.exceptionId}>
+                    <td>{item.exceptionId}</td>
+                    <td>{item.title}</td>
                     <td>
-                      <span className={`bb-chip ${chipClass(item?.status)}`}>
-                        {item?.status || "pending review"}
+                      <span className={`bb-chip ${chipClass(item.status)}`}>
+                        {item.status}
                       </span>
                     </td>
-                    <td>{item?.owner || item?.assignedTo || "Operations"}</td>
+                    <td>{item.owner}</td>
                     <td>
                       <span
                         className={`bb-chip ${
-                          String(item?.financeAllowed || "").toLowerCase() === "no"
+                          item.financeAllowed === "no"
                             ? "bb-chip-red"
                             : "bb-chip-blue"
                         }`}
                       >
-                        {String(item?.financeAllowed || "").toLowerCase() === "no"
-                          ? "no"
-                          : "yes"}
+                        {item.financeAllowed}
                       </span>
                     </td>
                     <td>
@@ -190,8 +185,8 @@ export default function ExceptionsPage() {
                   Active exception and next control action
                 </div>
               </div>
-              <span className={`bb-chip ${chipClass(leadItem?.status)}`}>
-                {leadItem?.status || "pending review"}
+              <span className={`bb-chip ${chipClass(leadItem?.status || "clear")}`}>
+                {leadItem?.status || "clear"}
               </span>
             </div>
 
@@ -202,26 +197,36 @@ export default function ExceptionsPage() {
               </div>
               <div className="bb-metric-row">
                 <span>Title</span>
-                <strong>{leadItem?.title || leadItem?.reason || "—"}</strong>
+                <strong>{leadItem?.title || "No live exception selected"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Status</span>
-                <strong>{leadItem?.status || "—"}</strong>
+                <strong>{leadItem?.status || "clear"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Owner</span>
-                <strong>{leadItem?.owner || leadItem?.assignedTo || "—"}</strong>
+                <strong>{leadItem?.owner || "—"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Parcel</span>
+                <strong>{leadItem?.parcelId || "—"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Finance allowed</span>
-                <strong>{leadItem?.financeAllowed || "—"}</strong>
+                <strong>{leadItem?.financeAllowed || "yes"}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Note</span>
+                <strong>{leadItem?.note || "No additional note"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Next action</span>
                 <strong>
-                  {String(leadItem?.financeAllowed || "").toLowerCase() === "no"
-                    ? "Resolve finance-sensitive blocker before release"
-                    : "Route for approval decision"}
+                  {!leadItem
+                    ? "Queue currently clear"
+                    : leadItem.financeAllowed === "no"
+                      ? "Resolve finance-sensitive blocker before release"
+                      : "Route for approval decision"}
                 </strong>
               </div>
             </div>
@@ -265,4 +270,4 @@ export default function ExceptionsPage() {
       </div>
     </ExecutiveShell>
   );
-    }
+}

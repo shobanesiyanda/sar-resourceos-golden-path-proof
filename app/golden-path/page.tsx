@@ -17,8 +17,10 @@ export default function GoldenPathPage() {
     (item: any) => !item?.parcelId || s(item.parcelId) === parcelId
   );
 
-  const financeBlocked = exceptions.filter(
-    (item: any) => yn(item?.financeAllowed) === "no"
+  const hardStopFinanceBlocked = exceptions.filter(
+    (item: any) =>
+      yn(item?.financeAllowed) === "no" &&
+      ["blocked", "held"].includes(String(item?.status || "").toLowerCase())
   ).length;
 
   const stages = [
@@ -36,8 +38,11 @@ export default function GoldenPathPage() {
     },
     {
       title: "Execution Readiness",
-      sub: financeBlocked > 0 ? "Blocked by finance-sensitive control" : "Release gate active",
-      state: financeBlocked > 0 ? "blocked" : "pending review",
+      sub:
+        hardStopFinanceBlocked > 0
+          ? "Blocked by finance-sensitive hard stop"
+          : "Release gate active",
+      state: hardStopFinanceBlocked > 0 ? "blocked" : "pending review",
       href: "/execution-readiness",
     },
     {
@@ -115,8 +120,8 @@ export default function GoldenPathPage() {
           <div className="bb-kpi-value">{exceptions.length}</div>
         </div>
         <div className="bb-kpi-card">
-          <div className="bb-kpi-label">Finance blocked</div>
-          <div className="bb-kpi-value">{financeBlocked}</div>
+          <div className="bb-kpi-label">Hard-stop finance blocked</div>
+          <div className="bb-kpi-value">{hardStopFinanceBlocked}</div>
         </div>
         <div className="bb-kpi-card">
           <div className="bb-kpi-label">Export state</div>
@@ -204,8 +209,8 @@ export default function GoldenPathPage() {
                 <strong>{exceptions.length}</strong>
               </div>
               <div className="bb-metric-row">
-                <span>Finance blocked flags</span>
-                <strong>{financeBlocked}</strong>
+                <span>Hard-stop finance blocked</span>
+                <strong>{hardStopFinanceBlocked}</strong>
               </div>
             </div>
           </section>
@@ -231,8 +236,8 @@ export default function GoldenPathPage() {
               <div className="bb-note">
                 <div className="bb-note-dot" />
                 <div className="bb-note-text">
-                  Exceptions and finance-blocked flags must be visible across all
-                  downstream stages.
+                  Hard-stop finance blockers should be counted separately from
+                  general pending-review finance-sensitive items.
                 </div>
               </div>
               <div className="bb-note">
@@ -248,4 +253,4 @@ export default function GoldenPathPage() {
       </div>
     </ExecutiveShell>
   );
-}
+                                                      }

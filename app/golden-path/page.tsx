@@ -1,54 +1,24 @@
 import ExecutiveShell from "../../components/ExecutiveShell";
 import { getGoldenPathParcel } from "../../lib/goldenPath";
 import { getExceptions } from "../../lib/exceptions";
-
-function chipClass(value?: string) {
-  const v = String(value || "").toLowerCase();
-
-  if (
-    v.includes("ready") ||
-    v.includes("approved") ||
-    v.includes("matched") ||
-    v.includes("released") ||
-    v.includes("complete") ||
-    v.includes("delivered")
-  ) {
-    return "bb-chip-blue";
-  }
-
-  if (
-    v.includes("pending") ||
-    v.includes("review") ||
-    v.includes("awaiting") ||
-    v.includes("hold")
-  ) {
-    return "bb-chip-amber";
-  }
-
-  if (
-    v.includes("blocked") ||
-    v.includes("failed") ||
-    v.includes("exception") ||
-    v.includes("stopped")
-  ) {
-    return "bb-chip-red";
-  }
-
-  return "bb-chip-gold";
-}
+import { chipClass, s, yn } from "../../lib/dashboardLogic";
 
 export default function GoldenPathPage() {
   const data: any = getGoldenPathParcel();
   const exceptionsData: any = getExceptions();
 
   const parcel: any = data?.parcel || {};
-  const parcelId = String(parcel?.parcelId || "PAR-CHR-2026-0001");
-  const acceptedTons = parcel?.acceptedTons ?? "33.9";
-  const financeState = String(parcel?.financeState || "finance_handoff_ready");
-  const exportState = String(parcel?.accountingExportState || "ready_for_export");
-  const exceptions = exceptionsData?.exceptions || [];
+  const parcelId = s(parcel?.parcelId, "PAR-CHR-2026-0001");
+  const acceptedTons = s(parcel?.acceptedTons, "33.9");
+  const financeState = s(parcel?.financeState, "finance_handoff_ready");
+  const exportState = s(parcel?.accountingExportState, "ready_for_export");
+
+  const exceptions = (exceptionsData?.exceptions || []).filter(
+    (item: any) => !item?.parcelId || s(item.parcelId) === parcelId
+  );
+
   const financeBlocked = exceptions.filter(
-    (item: any) => String(item?.financeAllowed || "").toLowerCase() === "no"
+    (item: any) => yn(item?.financeAllowed) === "no"
   ).length;
 
   const stages = [
@@ -66,8 +36,8 @@ export default function GoldenPathPage() {
     },
     {
       title: "Execution Readiness",
-      sub: "Release gate active",
-      state: "pending review",
+      sub: financeBlocked > 0 ? "Blocked by finance-sensitive control" : "Release gate active",
+      state: financeBlocked > 0 ? "blocked" : "pending review",
       href: "/execution-readiness",
     },
     {

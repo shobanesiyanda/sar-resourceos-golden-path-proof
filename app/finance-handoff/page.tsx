@@ -4,7 +4,6 @@ import { getExceptions } from "../../lib/exceptions";
 import {
   chipClass,
   firstMeaningful,
-  normalizeExceptionStatus,
   normalizeFinanceState,
   s,
   yn,
@@ -24,8 +23,10 @@ function buildFinanceItems(parcel: any, rawExceptions: any[]): FinanceItem[] {
     parcel?.accountingExportState || "ready_for_export"
   );
 
-  const financeBlocked = (rawExceptions || []).filter(
-    (item: any) => yn(item?.financeAllowed) === "no"
+  const blockedCount = (rawExceptions || []).filter(
+    (item: any) =>
+      yn(item?.financeAllowed) === "no" &&
+      ["blocked", "held"].includes(String(item?.status || "").toLowerCase())
   ).length;
 
   return [
@@ -53,12 +54,12 @@ function buildFinanceItems(parcel: any, rawExceptions: any[]): FinanceItem[] {
     {
       id: "FIN-004",
       item: "Finance-blocked exception review",
-      state: financeBlocked > 0 ? "blocked" : "approved",
+      state: blockedCount > 0 ? "blocked" : "approved",
       owner: "Finance Control",
       note:
-        financeBlocked > 0
-          ? "Finance-blocked exceptions still prevent full handoff."
-          : "No finance-blocked exceptions remain.",
+        blockedCount > 0
+          ? "One or more finance-sensitive exceptions are still in blocked or held state."
+          : "No finance-sensitive hard-stop exceptions remain.",
     },
   ];
 }
@@ -76,7 +77,9 @@ export default function FinanceHandoffPage() {
   );
 
   const financeBlocked = relevantExceptions.filter(
-    (item: any) => yn(item?.financeAllowed) === "no"
+    (item: any) =>
+      yn(item?.financeAllowed) === "no" &&
+      ["blocked", "held"].includes(String(item?.status || "").toLowerCase())
   ).length;
 
   const financeState = normalizeFinanceState(parcel?.financeState || "finance_handoff_ready");
@@ -92,13 +95,16 @@ export default function FinanceHandoffPage() {
     )
   ).length;
 
-  const blockedCount = financeItems.filter((item) => s(item.state).toLowerCase() === "blocked").length;
+  const blockedCount = financeItems.filter(
+    (item) => s(item.state).toLowerCase() === "blocked"
+  ).length;
 
   const leadItem =
     firstMeaningful(
       financeItems,
       (item) =>
         s(item.state).toLowerCase() === "blocked" ||
+        s(item.state).toLowerCase() === "held" ||
         s(item.state).toLowerCase() === "pending review"
     ) || null;
 
@@ -160,7 +166,7 @@ export default function FinanceHandoffPage() {
           <div className="bb-kpi-value">{relevantExceptions.length}</div>
         </div>
         <div className="bb-kpi-card">
-          <div className="bb-kpi-label">No-finance flags</div>
+          <div className="bb-kpi-label">Hard-stop no-finance flags</div>
           <div className="bb-kpi-value">{financeBlocked}</div>
         </div>
       </div>
@@ -243,14 +249,14 @@ export default function FinanceHandoffPage() {
                 <strong>{leadItem?.state || "clear"}</strong>
               </div>
               <div className="bb-metric-row">
-                <span>Finance blocked flags</span>
+                <span>Hard-stop no-finance flags</span>
                 <strong>{financeBlocked}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Next action</span>
                 <strong>
                   {financeBlocked > 0
-                    ? "Resolve finance-blocked exceptions before full handoff"
+                    ? "Resolve blocked or held finance-sensitive exceptions before full handoff"
                     : "Proceed to settlement and export preparation"}
                 </strong>
               </div>
@@ -278,14 +284,14 @@ export default function FinanceHandoffPage() {
               <div className="bb-note">
                 <div className="bb-note-dot" />
                 <div className="bb-note-text">
-                  Finance-blocked exceptions should override normal settlement
-                  progression until explicitly resolved.
+                  Hard-stop finance blockers should be counted separately from general
+                  finance-sensitive pending-review items.
                 </div>
               </div>
               <div className="bb-note">
                 <div className="bb-note-dot" />
                 <div className="bb-note-text">
-                  Accounting export state should be visible as part of the same
+                  Accounting export state should remain visible as part of the same
                   operating chain rather than as a separate isolated finance step.
                 </div>
               </div>

@@ -1,6 +1,14 @@
 import ExecutiveShell from "../../components/ExecutiveShell";
 import { getGoldenPathParcel } from "../../lib/goldenPath";
 import { getExceptions } from "../../lib/exceptions";
+import {
+  chipClass,
+  firstMeaningful,
+  normalizeExceptionStatus,
+  normalizeFinanceState,
+  s,
+  yn,
+} from "../../lib/dashboardLogic";
 
 type FinanceItem = {
   id: string;
@@ -10,40 +18,15 @@ type FinanceItem = {
   note: string;
 };
 
-function chipClass(value?: string) {
-  const v = String(value || "").toLowerCase();
+function buildFinanceItems(parcel: any, rawExceptions: any[]): FinanceItem[] {
+  const financeState = normalizeFinanceState(parcel?.financeState || "finance_handoff_ready");
+  const exportState = normalizeFinanceState(
+    parcel?.accountingExportState || "ready_for_export"
+  );
 
-  if (
-    v.includes("ready") ||
-    v.includes("approved") ||
-    v.includes("export") ||
-    v.includes("clear")
-  ) {
-    return "bb-chip-blue";
-  }
-
-  if (
-    v.includes("pending") ||
-    v.includes("review") ||
-    v.includes("awaiting")
-  ) {
-    return "bb-chip-amber";
-  }
-
-  if (
-    v.includes("blocked") ||
-    v.includes("hold") ||
-    v.includes("exception")
-  ) {
-    return "bb-chip-red";
-  }
-
-  return "bb-chip-gold";
-}
-
-function buildFinanceItems(parcel: any, financeBlocked: number): FinanceItem[] {
-  const financeState = String(parcel?.financeState || "finance_handoff_ready");
-  const exportState = String(parcel?.accountingExportState || "ready_for_export");
+  const financeBlocked = (rawExceptions || []).filter(
+    (item: any) => yn(item?.financeAllowed) === "no"
+  ).length;
 
   return [
     {
@@ -85,37 +68,39 @@ export default function FinanceHandoffPage() {
   const exceptionsData: any = getExceptions();
 
   const parcel: any = data?.parcel || {};
-  const parcelId = String(parcel?.parcelId || "PAR-CHR-2026-0001");
-  const financeState = String(parcel?.financeState || "finance_handoff_ready");
-  const exportState = String(parcel?.accountingExportState || "ready_for_export");
+  const parcelId = s(parcel?.parcelId, "PAR-CHR-2026-0001");
+  const rawExceptions: any[] = exceptionsData?.exceptions || [];
 
-  const relevantExceptions: any[] = (exceptionsData?.exceptions || []).filter(
-    (item: any) =>
-      !item?.parcelId || String(item.parcelId) === String(parcelId)
+  const relevantExceptions = rawExceptions.filter(
+    (item: any) => !item?.parcelId || s(item.parcelId) === parcelId
   );
 
   const financeBlocked = relevantExceptions.filter(
-    (item: any) => String(item?.financeAllowed || "").toLowerCase() === "no"
+    (item: any) => yn(item?.financeAllowed) === "no"
   ).length;
 
-  const financeItems = buildFinanceItems(parcel, financeBlocked);
+  const financeState = normalizeFinanceState(parcel?.financeState || "finance_handoff_ready");
+  const exportState = normalizeFinanceState(
+    parcel?.accountingExportState || "ready_for_export"
+  );
+
+  const financeItems = buildFinanceItems(parcel, relevantExceptions);
 
   const readyCount = financeItems.filter((item) =>
-    ["approved", "ready_for_export", "finance_handoff_ready"].includes(
-      String(item.state).toLowerCase()
+    ["approved", "finance_handoff_ready", "ready_for_export"].includes(
+      s(item.state).toLowerCase()
     )
   ).length;
 
-  const blockedCount = financeItems.filter((item) =>
-    String(item.state).toLowerCase().includes("blocked")
-  ).length;
+  const blockedCount = financeItems.filter((item) => s(item.state).toLowerCase() === "blocked").length;
 
   const leadItem =
-    financeItems.find((item) =>
-      ["blocked", "pending review", "awaiting"].includes(
-        String(item.state).toLowerCase()
-      )
-    ) || financeItems[0];
+    firstMeaningful(
+      financeItems,
+      (item) =>
+        s(item.state).toLowerCase() === "blocked" ||
+        s(item.state).toLowerCase() === "pending review"
+    ) || null;
 
   return (
     <ExecutiveShell
@@ -231,8 +216,8 @@ export default function FinanceHandoffPage() {
                   Active finance blocker or next settlement decision
                 </div>
               </div>
-              <span className={`bb-chip ${chipClass(leadItem?.state)}`}>
-                {leadItem?.state || "pending review"}
+              <span className={`bb-chip ${chipClass(leadItem?.state || "clear")}`}>
+                {leadItem?.state || "clear"}
               </span>
             </div>
 
@@ -251,11 +236,11 @@ export default function FinanceHandoffPage() {
               </div>
               <div className="bb-metric-row">
                 <span>Lead control item</span>
-                <strong>{leadItem?.item || "—"}</strong>
+                <strong>{leadItem?.item || "No active finance blocker"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Lead state</span>
-                <strong>{leadItem?.state || "—"}</strong>
+                <strong>{leadItem?.state || "clear"}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Finance blocked flags</span>
@@ -310,4 +295,4 @@ export default function FinanceHandoffPage() {
       </div>
     </ExecutiveShell>
   );
-        }
+    }

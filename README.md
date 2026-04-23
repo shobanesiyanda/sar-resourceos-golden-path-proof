@@ -1,3 +1,4 @@
+<!-- trigger deploy -->
 # SAR ResourceOS Golden Path Proof
 
 This is a beginner-deployable Next.js baseline proving one full parcel lifecycle from:

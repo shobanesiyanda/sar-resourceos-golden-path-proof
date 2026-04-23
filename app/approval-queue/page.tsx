@@ -3,9 +3,9 @@ import { getExceptions } from "../../lib/exceptions";
 import { getGoldenPathParcel } from "../../lib/goldenPath";
 import {
   chipClass,
+  exceptionToApprovalState,
   firstMeaningful,
   normalizeDecisionStatus,
-  normalizeExceptionStatus,
   s,
   yn,
 } from "../../lib/dashboardLogic";
@@ -22,22 +22,21 @@ type ApprovalItem = {
 function buildApprovalItems(parcel: any, rawExceptions: any[]): ApprovalItem[] {
   const parcelId = s(parcel?.parcelId, "PAR-CHR-2026-0001");
 
-  const seededFromExceptions = (rawExceptions || []).map((item: any, index: number) => {
-    const status = normalizeExceptionStatus(item?.status);
-    return {
-      id: s(item?.exceptionId, `APR-EX-${index + 1}`),
-      subject: s(item?.title || item?.reason, `Exception item ${index + 1}`),
-      queue: "Exception",
-      decisionState:
-        yn(item?.financeAllowed) === "no"
-          ? "blocked"
-          : status === "resolved"
-            ? "approved"
-            : status,
-      owner: s(item?.owner || item?.assignedTo, "Operations"),
-      note: `Linked to parcel ${parcelId}`,
-    };
-  });
+  const seededFromExceptions = (rawExceptions || []).map((item: any, index: number) => ({
+    id: s(item?.exceptionId, `APR-EX-${index + 1}`),
+    subject: s(item?.title || item?.reason, `Exception item ${index + 1}`),
+    queue: "Exception",
+    decisionState: exceptionToApprovalState(item?.status, item?.financeAllowed),
+    owner: s(item?.owner || item?.assignedTo, "Operations"),
+    note:
+      yn(item?.financeAllowed) === "no"
+        ? `Finance-sensitive review linked to parcel ${parcelId}`
+        : `Operational review linked to parcel ${parcelId}`,
+  }));
+
+  const financeSensitiveCount = seededFromExceptions.filter(
+    (x) => x.note.toLowerCase().includes("finance-sensitive")
+  ).length;
 
   return [
     {
@@ -52,11 +51,12 @@ function buildApprovalItems(parcel: any, rawExceptions: any[]): ApprovalItem[] {
       id: "APR-002",
       subject: "Finance-sensitive exception review",
       queue: "Finance",
-      decisionState: seededFromExceptions.some((x) => x.decisionState === "blocked")
-        ? "blocked"
-        : "pending review",
+      decisionState: financeSensitiveCount > 0 ? "pending review" : "approved",
       owner: "Finance Control",
-      note: "Finance-blocked alerts still need sign-off or resolution.",
+      note:
+        financeSensitiveCount > 0
+          ? "Finance-sensitive exceptions still need review."
+          : "No finance-sensitive exception review remains open.",
     },
     ...seededFromExceptions,
   ].map((item) => ({
@@ -75,12 +75,16 @@ export default function ApprovalQueuePage() {
 
   const pending = approvalItems.filter((item) => item.decisionState === "pending review").length;
   const blocked = approvalItems.filter((item) => item.decisionState === "blocked").length;
+  const held = approvalItems.filter((item) => item.decisionState === "held").length;
   const approved = approvalItems.filter((item) => item.decisionState === "approved").length;
 
   const leadItem =
     firstMeaningful(
       approvalItems,
-      (item) => item.decisionState === "blocked" || item.decisionState === "pending review"
+      (item) =>
+        item.decisionState === "blocked" ||
+        item.decisionState === "held" ||
+        item.decisionState === "pending review"
     ) || null;
 
   return (
@@ -137,12 +141,12 @@ export default function ApprovalQueuePage() {
           <div className="bb-kpi-value">{blocked}</div>
         </div>
         <div className="bb-kpi-card">
-          <div className="bb-kpi-label">Approved</div>
-          <div className="bb-kpi-value">{approved}</div>
+          <div className="bb-kpi-label">Held</div>
+          <div className="bb-kpi-value">{held}</div>
         </div>
         <div className="bb-kpi-card">
-          <div className="bb-kpi-label">Exception-linked</div>
-          <div className="bb-kpi-value">{rawExceptions.length}</div>
+          <div className="bb-kpi-label">Approved</div>
+          <div className="bb-kpi-value">{approved}</div>
         </div>
       </div>
 
@@ -233,6 +237,18 @@ export default function ApprovalQueuePage() {
                 <span>Note</span>
                 <strong>{leadItem?.note || "No note"}</strong>
               </div>
+              <div className="bb-metric-row">
+                <span>Next action</span>
+                <strong>
+                  {leadItem?.decisionState === "blocked"
+                    ? "Resolve hard-stop control item before release"
+                    : leadItem?.decisionState === "held"
+                      ? "Clear temporary hold and confirm control owner"
+                      : leadItem?.decisionState === "pending review"
+                        ? "Complete approval review and record decision"
+                        : "Queue currently clear"}
+                </strong>
+              </div>
             </div>
           </section>
 
@@ -250,22 +266,19 @@ export default function ApprovalQueuePage() {
               <div className="bb-note">
                 <div className="bb-note-dot is-gold" />
                 <div className="bb-note-text">
-                  Approval items should remain visible until a decision is taken
-                  and propagated into downstream control pages.
+                  Pending review should represent an open decision, not an automatic hard stop.
                 </div>
               </div>
               <div className="bb-note">
                 <div className="bb-note-dot" />
                 <div className="bb-note-text">
-                  Blocked approval items should stop operational progression where
-                  control or finance risk remains open.
+                  Held and blocked should remain separate so queue severity is not overstated.
                 </div>
               </div>
               <div className="bb-note">
                 <div className="bb-note-dot" />
                 <div className="bb-note-text">
-                  Approved items should push the parcel forward into finance
-                  readiness or cleared execution.
+                  Finance-sensitive items can remain pending review until a finance decision is taken.
                 </div>
               </div>
             </div>
@@ -274,4 +287,4 @@ export default function ApprovalQueuePage() {
       </div>
     </ExecutiveShell>
   );
-                            }
+    }

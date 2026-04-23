@@ -43,9 +43,9 @@ export default function ExceptionsPage() {
     firstMeaningful(
       rows,
       (x) =>
-        x.financeAllowed === "no" ||
         x.status === "blocked" ||
         x.status === "held" ||
+        (x.status === "pending review" && x.financeAllowed === "no") ||
         x.status === "pending review"
     ) || null;
 
@@ -224,9 +224,13 @@ export default function ExceptionsPage() {
                 <strong>
                   {!leadItem
                     ? "Queue currently clear"
-                    : leadItem.financeAllowed === "no"
-                      ? "Resolve finance-sensitive blocker before release"
-                      : "Route for approval decision"}
+                    : leadItem.status === "blocked"
+                      ? "Resolve hard-stop blocker before progression"
+                      : leadItem.status === "held"
+                        ? "Release hold or confirm supporting clearance"
+                        : leadItem.financeAllowed === "no"
+                          ? "Route for finance-sensitive approval review"
+                          : "Complete review and close exception"}
                 </strong>
               </div>
             </div>
@@ -253,15 +257,15 @@ export default function ExceptionsPage() {
               <div className="bb-note">
                 <div className="bb-note-dot" />
                 <div className="bb-note-text">
-                  Finance-blocked items should override normal progression into
-                  dispatch, reconciliation, or settlement.
+                  Finance-blocked items should be escalated, but not automatically
+                  treated as hard-stop blocked approvals unless the underlying state is blocked.
                 </div>
               </div>
               <div className="bb-note">
                 <div className="bb-note-dot" />
                 <div className="bb-note-text">
-                  Pending items should move into approval routing rather than remain
-                  informally unresolved.
+                  Held items and pending-review items should remain distinct so operators
+                  can separate temporary pauses from unresolved decisions.
                 </div>
               </div>
             </div>
@@ -270,4 +274,4 @@ export default function ExceptionsPage() {
       </div>
     </ExecutiveShell>
   );
-}
+    }

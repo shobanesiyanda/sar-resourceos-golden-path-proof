@@ -88,12 +88,6 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <Link
-              href="/"
-              className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-bold text-slate-200"
-            >
-              Back to Proof
-            </Link>
           </div>
 
           {/* Today summary */}

@@ -30,7 +30,7 @@ const controlCards = [
 
 export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-[#050914] text-white">
+    <main className="min-h-screen bg-[#050914] pt-20 text-white md:pt-6">
       <div className="mx-auto flex max-w-7xl gap-6 px-5 py-6">
         {/* Sidebar */}
         <aside className="hidden w-72 shrink-0 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl lg:block">

@@ -28,7 +28,7 @@ export default function LoginPage() {
       return;
     }
 
-    window.location.href = "/";
+    window.location.href = "/dashboard";
   }
 
   async function handleMagicLink(event: FormEvent<HTMLFormElement>) {

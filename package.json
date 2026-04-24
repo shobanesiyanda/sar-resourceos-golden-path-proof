@@ -7,14 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
-  },
+},
   "dependencies": {
-    "@supabase/ssr": "^0.5.2",
-"@supabase/supabase-js": "^2.48.1",
-    "next": "15.2.8",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
+    "@supabase/supabase-js": "latest",
+    "@supabase/ssr": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  }
+}
   "devDependencies": {
     "typescript": "^5.6.3",
     "@types/react": "^18.3.12",

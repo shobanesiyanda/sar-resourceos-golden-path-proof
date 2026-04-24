@@ -1,3 +1,16 @@
+export type ControlState =
+  | "approved"
+  | "resolved"
+  | "complete"
+  | "ready"
+  | "matched"
+  | "in transit"
+  | "pending review"
+  | "held"
+  | "blocked"
+  | "rejected"
+  | "clear";
+
 export function s(value: unknown, fallback = ""): string {
   if (value === null || value === undefined) return fallback;
   const out = String(value).trim();
@@ -62,8 +75,9 @@ export function exceptionToApprovalState(
   if (normalized === "blocked") return "blocked";
   if (normalized === "held") return "held";
 
-  // Pending-review items stay pending unless finance is explicitly blocked.
-  if (normalized === "pending review" && finance === "no") return "pending review";
+  if (normalized === "pending review" && finance === "no") {
+    return "pending review";
+  }
 
   return "pending review";
 }
@@ -115,4 +129,119 @@ export function firstMeaningful<T>(
   predicate: (item: T) => boolean
 ): T | undefined {
   return items.find(predicate) || items[0];
+}
+
+export type NormalizedException = {
+  exceptionId: string;
+  title: string;
+  status: string;
+  owner: string;
+  financeAllowed: "yes" | "no";
+  parcelId: string;
+  note: string;
+};
+
+export function normalizeExceptions(raw: any[], fallbackParcelId = "PAR-CHR-2026-0001"): NormalizedException[] {
+  return (raw || []).map((item: any, index: number) => ({
+    exceptionId: s(item?.exceptionId, `EX-${index + 1}`),
+    title: s(item?.title || item?.reason, `Operational exception ${index + 1}`),
+    status: normalizeExceptionStatus(item?.status),
+    owner: s(item?.owner || item?.assignedTo, "Operations"),
+    financeAllowed: yn(item?.financeAllowed),
+    parcelId: s(item?.parcelId, fallbackParcelId),
+    note: s(item?.note || item?.comment || item?.detail, "No additional note"),
+  }));
+}
+
+export function getControlSummary(rawExceptions: any[], parcelId = "PAR-CHR-2026-0001") {
+  const exceptions = normalizeExceptions(rawExceptions, parcelId).filter(
+    (item) => !item.parcelId || item.parcelId === parcelId
+  );
+
+  const blocked = exceptions.filter((item) => item.status === "blocked").length;
+  const held = exceptions.filter((item) => item.status === "held").length;
+  const pendingReview = exceptions.filter((item) => item.status === "pending review").length;
+  const approvedOrResolved = exceptions.filter(
+    (item) => item.status === "approved" || item.status === "resolved"
+  ).length;
+
+  const financeSensitive = exceptions.filter((item) => item.financeAllowed === "no").length;
+
+  const hardStopFinanceBlocked = exceptions.filter(
+    (item) =>
+      item.financeAllowed === "no" &&
+      (item.status === "blocked" || item.status === "held")
+  ).length;
+
+  const openItems = exceptions.filter(
+    (item) =>
+      item.status === "blocked" ||
+      item.status === "held" ||
+      item.status === "pending review"
+  ).length;
+
+  const leadException =
+    firstMeaningful(
+      exceptions,
+      (item) =>
+        item.status === "blocked" ||
+        item.status === "held" ||
+        (item.status === "pending review" && item.financeAllowed === "no") ||
+        item.status === "pending review"
+    ) || null;
+
+  const masterState =
+    blocked > 0 || hardStopFinanceBlocked > 0
+      ? "blocked"
+      : held > 0
+        ? "held"
+        : pendingReview > 0
+          ? "pending review"
+          : "approved";
+
+  return {
+    exceptions,
+    leadException,
+    total: exceptions.length,
+    openItems,
+    blocked,
+    held,
+    pendingReview,
+    approvedOrResolved,
+    financeSensitive,
+    hardStopFinanceBlocked,
+    masterState,
+  };
+}
+
+export function buildModuleSummary(input: {
+  acceptedTons: string | number;
+  avgMargin?: string | number;
+  routePassing?: string | number;
+  readyChecks?: string | number;
+  blockedChecks?: string | number;
+  dispatchLoads?: string | number;
+  matchedLoads?: string | number;
+  financeState?: string;
+  controlSummary: ReturnType<typeof getControlSummary>;
+}) {
+  const control = input.controlSummary;
+
+  return {
+    acceptedTons: s(input.acceptedTons, "33.9"),
+    avgMargin: s(input.avgMargin, "18.9%"),
+    routePassing: s(input.routePassing, "2"),
+    readyChecks: s(input.readyChecks, "3"),
+    blockedChecks: s(input.blockedChecks, String(control.blocked)),
+    dispatchLoads: s(input.dispatchLoads, "5"),
+    matchedLoads: s(input.matchedLoads, "2"),
+    financeState: normalizeFinanceState(input.financeState || "finance_handoff_ready"),
+    exceptionsTotal: control.total,
+    exceptionsOpen: control.openItems,
+    blocked: control.blocked,
+    held: control.held,
+    pendingReview: control.pendingReview,
+    hardStopFinanceBlocked: control.hardStopFinanceBlocked,
+    masterState: control.masterState,
+  };
 }

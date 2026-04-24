@@ -1,7 +1,13 @@
 import ExecutiveShell from "../../components/ExecutiveShell";
 import { getGoldenPathParcel } from "../../lib/goldenPath";
 import { getExceptions } from "../../lib/exceptions";
-import { chipClass, s, yn } from "../../lib/dashboardLogic";
+import {
+  buildModuleSummary,
+  chipClass,
+  getControlSummary,
+  normalizeFinanceState,
+  s,
+} from "../../lib/dashboardLogic";
 
 export default function GoldenPathPage() {
   const data: any = getGoldenPathParcel();
@@ -10,18 +16,22 @@ export default function GoldenPathPage() {
   const parcel: any = data?.parcel || {};
   const parcelId = s(parcel?.parcelId, "PAR-CHR-2026-0001");
   const acceptedTons = s(parcel?.acceptedTons, "33.9");
-  const financeState = s(parcel?.financeState, "finance_handoff_ready");
-  const exportState = s(parcel?.accountingExportState, "ready_for_export");
+  const financeState = normalizeFinanceState(parcel?.financeState || "finance_handoff_ready");
+  const exportState = normalizeFinanceState(parcel?.accountingExportState || "ready_for_export");
 
-  const exceptions = (exceptionsData?.exceptions || []).filter(
-    (item: any) => !item?.parcelId || s(item.parcelId) === parcelId
-  );
+  const controlSummary = getControlSummary(exceptionsData?.exceptions || [], parcelId);
 
-  const hardStopFinanceBlocked = exceptions.filter(
-    (item: any) =>
-      yn(item?.financeAllowed) === "no" &&
-      ["blocked", "held"].includes(String(item?.status || "").toLowerCase())
-  ).length;
+  const summary = buildModuleSummary({
+    acceptedTons,
+    avgMargin: "18.9%",
+    routePassing: "2",
+    readyChecks: "3",
+    blockedChecks: controlSummary.blocked,
+    dispatchLoads: "5",
+    matchedLoads: "2",
+    financeState,
+    controlSummary,
+  });
 
   const stages = [
     {
@@ -39,28 +49,41 @@ export default function GoldenPathPage() {
     {
       title: "Execution Readiness",
       sub:
-        hardStopFinanceBlocked > 0
-          ? "Blocked by finance-sensitive hard stop"
-          : "Release gate active",
-      state: hardStopFinanceBlocked > 0 ? "blocked" : "pending review",
+        summary.masterState === "blocked"
+          ? "Blocked by hard-stop control item"
+          : summary.masterState === "held"
+            ? "Held pending temporary clearance"
+            : summary.masterState === "pending review"
+              ? "Pending management or evidence review"
+              : "Release gate clear",
+      state: summary.masterState,
       href: "/execution-readiness",
     },
     {
       title: "Dispatch Control",
-      sub: "Loads in motion",
-      state: "in transit",
+      sub:
+        summary.masterState === "blocked"
+          ? "Dispatch remains prevented by hard stop"
+          : "Loads in movement control",
+      state: summary.masterState === "blocked" ? "pending review" : "in transit",
       href: "/dispatch-control",
     },
     {
       title: "Reconciliation",
-      sub: "Awaiting final match",
+      sub: "Weight and variance review",
       state: "pending review",
       href: "/reconciliation",
     },
     {
       title: "Finance Handoff",
-      sub: "Downstream release state",
-      state: financeState,
+      sub:
+        summary.hardStopFinanceBlocked > 0
+          ? "Finance hard-stop flag active"
+          : "Downstream release state",
+      state:
+        summary.hardStopFinanceBlocked > 0
+          ? "blocked"
+          : financeState,
       href: "/finance-handoff",
     },
   ];
@@ -84,7 +107,9 @@ export default function GoldenPathPage() {
           <div className="bb-command-tags">
             <span className="bb-chip bb-chip-gold">Parcel active</span>
             <span className="bb-chip bb-chip-blue">Chain connected</span>
-            <span className="bb-chip bb-chip-amber">Operator view</span>
+            <span className={`bb-chip ${chipClass(summary.masterState)}`}>
+              {summary.masterState}
+            </span>
           </div>
         </section>
 
@@ -92,20 +117,20 @@ export default function GoldenPathPage() {
           <div className="bb-command-side-block">
             <div className="bb-side-label">Lead parcel</div>
             <div className="bb-side-value">{parcelId}</div>
-            <div className="bb-side-sub">Accepted tons {acceptedTons}</div>
+            <div className="bb-side-sub">Accepted tons {summary.acceptedTons}</div>
           </div>
 
           <div className="bb-command-side-divider" />
 
           <div className="bb-command-side-block">
-            <div className="bb-side-label">Finance state</div>
-            <div className="bb-side-state">{financeState}</div>
+            <div className="bb-side-label">Control state</div>
+            <div className="bb-side-state">{summary.masterState}</div>
           </div>
         </section>
 
         <aside className="bb-operator-card">
           <div className="bb-user-role">Chain status</div>
-          <div className="bb-user-name">Live</div>
+          <div className="bb-user-name">{summary.masterState}</div>
           <div className="bb-user-org">Golden path</div>
         </aside>
       </div>
@@ -113,19 +138,21 @@ export default function GoldenPathPage() {
       <div className="bb-grid bb-grid-kpis">
         <div className="bb-kpi-card">
           <div className="bb-kpi-label">Accepted tons</div>
-          <div className="bb-kpi-value">{acceptedTons}</div>
+          <div className="bb-kpi-value">{summary.acceptedTons}</div>
         </div>
         <div className="bb-kpi-card">
-          <div className="bb-kpi-label">Exceptions</div>
-          <div className="bb-kpi-value">{exceptions.length}</div>
+          <div className="bb-kpi-label">Open exceptions</div>
+          <div className="bb-kpi-value">{summary.exceptionsOpen}</div>
         </div>
         <div className="bb-kpi-card">
-          <div className="bb-kpi-label">Hard-stop finance blocked</div>
-          <div className="bb-kpi-value">{hardStopFinanceBlocked}</div>
+          <div className="bb-kpi-label">Blocked / held</div>
+          <div className="bb-kpi-value">
+            {summary.blocked} / {summary.held}
+          </div>
         </div>
         <div className="bb-kpi-card">
-          <div className="bb-kpi-label">Export state</div>
-          <div className="bb-kpi-value" style={{ fontSize: 18 }}>{exportState}</div>
+          <div className="bb-kpi-label">Hard-stop finance</div>
+          <div className="bb-kpi-value">{summary.hardStopFinanceBlocked}</div>
         </div>
       </div>
 
@@ -138,7 +165,9 @@ export default function GoldenPathPage() {
                 Connected operating stages across the live parcel lifecycle
               </div>
             </div>
-            <span className="bb-chip bb-chip-gold">{stages.length} live stages</span>
+            <span className={`bb-chip ${chipClass(summary.masterState)}`}>
+              {summary.masterState}
+            </span>
           </div>
 
           <div className="bb-table-wrap">
@@ -182,8 +211,8 @@ export default function GoldenPathPage() {
                   Operating status for the controlled parcel
                 </div>
               </div>
-              <span className={`bb-chip ${chipClass(financeState)}`}>
-                {financeState}
+              <span className={`bb-chip ${chipClass(summary.masterState)}`}>
+                {summary.masterState}
               </span>
             </div>
 
@@ -194,7 +223,7 @@ export default function GoldenPathPage() {
               </div>
               <div className="bb-metric-row">
                 <span>Accepted tons</span>
-                <strong>{acceptedTons}</strong>
+                <strong>{summary.acceptedTons}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Finance state</span>
@@ -205,12 +234,24 @@ export default function GoldenPathPage() {
                 <strong>{exportState}</strong>
               </div>
               <div className="bb-metric-row">
-                <span>Exceptions linked</span>
-                <strong>{exceptions.length}</strong>
+                <span>Open exceptions</span>
+                <strong>{summary.exceptionsOpen}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Blocked</span>
+                <strong>{summary.blocked}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Held</span>
+                <strong>{summary.held}</strong>
+              </div>
+              <div className="bb-metric-row">
+                <span>Pending review</span>
+                <strong>{summary.pendingReview}</strong>
               </div>
               <div className="bb-metric-row">
                 <span>Hard-stop finance blocked</span>
-                <strong>{hardStopFinanceBlocked}</strong>
+                <strong>{summary.hardStopFinanceBlocked}</strong>
               </div>
             </div>
           </section>
@@ -229,22 +270,22 @@ export default function GoldenPathPage() {
               <div className="bb-note">
                 <div className="bb-note-dot is-gold" />
                 <div className="bb-note-text">
-                  The golden path should remain visible as one joined operational
-                  thread rather than separate disconnected pages.
+                  Golden Path now uses the same blocked / held / pending review /
+                  approved state model as Exceptions, Approval Queue, and Finance Handoff.
                 </div>
               </div>
               <div className="bb-note">
                 <div className="bb-note-dot" />
                 <div className="bb-note-text">
-                  Hard-stop finance blockers should be counted separately from
-                  general pending-review finance-sensitive items.
+                  Hard-stop finance blockers are separated from general finance-sensitive
+                  pending-review items.
                 </div>
               </div>
               <div className="bb-note">
                 <div className="bb-note-dot" />
                 <div className="bb-note-text">
-                  Reconciliation and finance handoff should only follow completed
-                  movement and delivery evidence.
+                  Summary cards and chain rows are now driven from the same normalized
+                  control summary.
                 </div>
               </div>
             </div>
@@ -253,4 +294,4 @@ export default function GoldenPathPage() {
       </div>
     </ExecutiveShell>
   );
-                                                      }
+    }

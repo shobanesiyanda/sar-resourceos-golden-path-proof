@@ -1,38 +1,81 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "../../lib/supabase/client";
 
 const controlCards = [
   {
     title: "Opportunity Intake",
     status: "Active",
-    description: "Supplier, buyer, plant and logistics opportunities captured for review.",
+    description:
+      "Supplier, buyer, plant and logistics opportunities captured for review.",
   },
   {
     title: "Route Builder",
     status: "Pending",
-    description: "Build supplier → wash plant → buyer chains with route economics.",
+    description:
+      "Build supplier → wash plant → buyer chains with route economics.",
   },
   {
     title: "Execution Readiness",
     status: "Blocked",
-    description: "Release gates, document checks, KYC, assay and commercial approvals.",
+    description:
+      "Release gates, document checks, KYC, assay and commercial approvals.",
   },
   {
     title: "Dispatch Control",
     status: "Held",
-    description: "Parcel movement, truck release, weighbridge, delivery and evidence tracking.",
+    description:
+      "Parcel movement, truck release, weighbridge, delivery and evidence tracking.",
   },
   {
     title: "Finance Handoff",
     status: "Pending",
-    description: "Settlement readiness, invoice pack, profit view and payment approval control.",
+    description:
+      "Settlement readiness, invoice pack, profit view and payment approval control.",
   },
 ];
 
 export default function DashboardPage() {
+  const supabase = createClient();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function checkUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        window.location.href = "/login";
+        return;
+      }
+
+      setChecking(false);
+    }
+
+    checkUser();
+  }, [supabase]);
+
+  if (checking) {
+    return (
+      <main className="min-h-screen bg-[#050914] px-5 py-10 text-white">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-[#080d18] p-6 shadow-2xl">
+          <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
+            SAR ResourceOS
+          </p>
+          <h1 className="mt-3 text-2xl font-black">Checking secure access...</h1>
+          <p className="mt-3 text-sm text-slate-400">
+            Verifying your Supabase session before opening the control dashboard.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#050914] pt-20 text-white md:pt-6">
       <div className="mx-auto flex max-w-7xl gap-6 px-5 py-6">
-        {/* Sidebar */}
         <aside className="hidden w-72 shrink-0 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl lg:block">
           <div className="mb-6 border-b border-white/10 pb-5">
             <div className="text-3xl font-black text-[#d7ad32]">SAR</div>
@@ -70,27 +113,21 @@ export default function DashboardPage() {
           </nav>
         </aside>
 
-        {/* Main dashboard */}
         <section className="flex-1">
-          {/* Topbar */}
-          <div className="mb-6 flex flex-col gap-4 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-                SAR ResourceOS
-              </p>
-              <h1 className="mt-2 text-3xl font-black md:text-5xl">
-                Executive Control Dashboard
-              </h1>
-              <p className="mt-3 max-w-3xl text-base text-slate-300">
-                Live operating shell for opportunity intake, route control,
-                execution readiness, parcel movement, reconciliation, approvals
-                and finance handoff.
-              </p>
-            </div>
-
+          <div className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
+              SAR ResourceOS
+            </p>
+            <h1 className="mt-2 text-3xl font-black md:text-5xl">
+              Executive Control Dashboard
+            </h1>
+            <p className="mt-3 max-w-3xl text-base text-slate-300">
+              Live operating shell for opportunity intake, route control,
+              execution readiness, parcel movement, reconciliation, approvals
+              and finance handoff.
+            </p>
           </div>
 
-          {/* Today summary */}
           <div className="mb-6 grid gap-4 md:grid-cols-4">
             <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
               <div className="text-xs uppercase tracking-[0.25em] text-slate-400">
@@ -135,7 +172,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Control cards */}
           <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {controlCards.map((card) => (
               <div
@@ -165,7 +201,6 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Route flow */}
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
             <div className="mb-5">
               <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
@@ -197,4 +232,4 @@ export default function DashboardPage() {
       </div>
     </main>
   );
-  }
+        }

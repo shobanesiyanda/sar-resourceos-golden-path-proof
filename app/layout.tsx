@@ -1,14 +1,24 @@
+import type { Metadata } from "next";
 import "./globals.css";
+import AuthQuickAccess from "../components/AuthQuickAccess";
 
-export const metadata = {
-  title: "SAR ResourceOS Golden Path Proof",
-  description: "One full parcel proof from document to finance handoff."
+export const metadata: Metadata = {
+  title: "SAR ResourceOS",
+  description:
+    "SAR ResourceOS live chrome parcel control system for opportunity intake, route economics, execution readiness, dispatch, reconciliation, approvals, exceptions, and finance handoff.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthQuickAccess />
+        {children}
+      </body>
     </html>
   );
 }

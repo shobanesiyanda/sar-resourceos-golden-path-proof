@@ -38,36 +38,54 @@ export default function HomePage() {
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
+          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#d7ad32]">
               Controlled Access
             </p>
             <h2 className="mt-3 text-xl font-black">Authorised users only</h2>
             <p className="mt-3 text-sm leading-6 text-slate-400">
               Access is restricted to approved operators and internal users.
+              Live operational controls are not exposed publicly.
             </p>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
+          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#d7ad32]">
               Transaction Control
             </p>
-            <h2 className="mt-3 text-xl font-black">Route to finance handoff</h2>
+            <h2 className="mt-3 text-xl font-black">
+              Route to finance handoff
+            </h2>
             <p className="mt-3 text-sm leading-6 text-slate-400">
-              The live dashboard is available only after login.
+              The live dashboard is available only after secure login and
+              Supabase session verification.
             </p>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
+          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#d7ad32]">
               Shobane African Resources
             </p>
-            <h2 className="mt-3 text-xl font-black">Internal operating system</h2>
+            <h2 className="mt-3 text-xl font-black">
+              Internal operating system
+            </h2>
             <p className="mt-3 text-sm leading-6 text-slate-400">
-              Built for controlled chrome parcel execution and operating
-              discipline.
+              Built for controlled chrome parcel execution, route discipline,
+              evidence tracking, approvals and finance readiness.
             </p>
           </div>
+        </div>
+
+        <div className="mt-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+          <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
+            Access Notice
+          </p>
+          <p className="mt-3 text-sm leading-7 text-slate-400">
+            This platform is an internal operating environment of Shobane
+            African Resources. Unauthorised access is not permitted. Users must
+            sign in before accessing transaction dashboards, parcel controls,
+            counterparty information or finance handoff workflows.
+          </p>
         </div>
       </section>
     </main>

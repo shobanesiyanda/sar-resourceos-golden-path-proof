@@ -1,6 +1,37 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { createClient } from "../lib/supabase/client";
 
 export default function HomePage() {
+  const supabase = createClient();
+  const [email, setEmail] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function loadUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      setEmail(user?.email ?? null);
+      setChecking(false);
+    }
+
+    loadUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setEmail(session?.user?.email ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   return (
     <main className="min-h-screen bg-[#050914] px-5 py-24 text-white">
       <section className="mx-auto max-w-5xl">
@@ -21,19 +52,30 @@ export default function HomePage() {
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/login"
-              className="rounded-full border border-[#d7ad32]/50 bg-[#d7ad32] px-6 py-4 text-center text-sm font-black text-[#07101c]"
-            >
-              Login
-            </Link>
+            {checking ? null : email ? (
+              <Link
+                href="/dashboard"
+                className="rounded-full border border-[#d7ad32]/50 bg-[#d7ad32] px-6 py-4 text-center text-sm font-black text-[#07101c]"
+              >
+                Open Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="rounded-full border border-[#d7ad32]/50 bg-[#d7ad32] px-6 py-4 text-center text-sm font-black text-[#07101c]"
+                >
+                  Login
+                </Link>
 
-            <Link
-              href="/signup"
-              className="rounded-full border border-white/10 bg-white/[0.04] px-6 py-4 text-center text-sm font-black text-slate-200"
-            >
-              Request / Create Access
-            </Link>
+                <Link
+                  href="/signup"
+                  className="rounded-full border border-white/10 bg-white/[0.04] px-6 py-4 text-center text-sm font-black text-slate-200"
+                >
+                  Request / Create Access
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -90,4 +132,4 @@ export default function HomePage() {
       </section>
     </main>
   );
-}
+        }

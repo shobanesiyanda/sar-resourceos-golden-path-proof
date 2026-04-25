@@ -12,14 +12,14 @@ type Profile = {
 };
 
 type Counterparty = {
-  counterparty_code: string;
+  id: string;
   counterparty_type: string;
   company_name: string;
   location: string | null;
   province: string | null;
   contact_person: string | null;
-  contact_email: string | null;
-  contact_phone: string | null;
+  email: string | null;
+  phone: string | null;
   status: string;
   notes: string | null;
   created_at: string;
@@ -102,7 +102,7 @@ export default function CounterpartiesPage() {
       const { data: counterpartyData, error: counterpartyError } = await supabase
         .from("counterparties")
         .select(
-          "counterparty_code, counterparty_type, company_name, location, province, contact_person, contact_email, contact_phone, status, notes, created_at"
+          "id, counterparty_type, company_name, location, province, contact_person, email, phone, status, notes, created_at"
         )
         .order("counterparty_type", { ascending: true });
 
@@ -135,7 +135,9 @@ export default function CounterpartiesPage() {
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-red-200">
             SAR ResourceOS
           </p>
-          <h1 className="mt-3 text-2xl font-black">Counterparties module error</h1>
+          <h1 className="mt-3 text-2xl font-black">
+            Counterparties module error
+          </h1>
           <p className="mt-3 text-slate-300">{error}</p>
         </section>
       </main>
@@ -179,7 +181,8 @@ export default function CounterpartiesPage() {
         <Card label="SAR ResourceOS" title="Counterparties Control Module">
           <p className="mt-3 text-sm leading-7 text-slate-300">
             Live counterparty register for suppliers, buyers, wash plants and
-            transporters linked to route readiness, verification and release control.
+            transporters linked to route readiness, verification and release
+            control.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -188,6 +191,13 @@ export default function CounterpartiesPage() {
               className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
             >
               Back to Dashboard
+            </Link>
+
+            <Link
+              href="/route-builder"
+              className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300"
+            >
+              Route Builder
             </Link>
 
             <Link
@@ -222,7 +232,9 @@ export default function CounterpartiesPage() {
             <p className="mt-3 text-4xl font-black text-[#f5d778]">
               {pendingCount}
             </p>
-            <p className="mt-2 text-sm text-slate-400">Awaiting verification.</p>
+            <p className="mt-2 text-sm text-slate-400">
+              Awaiting verification.
+            </p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
@@ -232,7 +244,9 @@ export default function CounterpartiesPage() {
             <p className="mt-3 text-4xl font-black text-red-200">
               {blockedCount}
             </p>
-            <p className="mt-2 text-sm text-slate-400">Blocking readiness.</p>
+            <p className="mt-2 text-sm text-slate-400">
+              Blocking readiness.
+            </p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
@@ -249,8 +263,8 @@ export default function CounterpartiesPage() {
         <section className="mb-6 grid gap-6 xl:grid-cols-4">
           <Card label="Supplier" title={`${suppliers.length} linked`}>
             <p className="mt-3 text-sm leading-6 text-slate-400">
-              Feedstock/source parties requiring KYC, source evidence, commercial
-              terms and material availability confirmation.
+              Feedstock/source parties requiring KYC, source evidence,
+              commercial terms and material availability confirmation.
             </p>
           </Card>
 
@@ -289,10 +303,12 @@ export default function CounterpartiesPage() {
                       {item.counterparty_type}
                     </p>
 
-                    <h3 className="mt-2 text-xl font-black">{item.company_name}</h3>
+                    <h3 className="mt-2 text-xl font-black">
+                      {item.company_name}
+                    </h3>
 
                     <p className="mt-2 text-sm font-semibold text-[#d7ad32]">
-                      {item.counterparty_code}
+                      ID: {item.id.slice(0, 8)}
                     </p>
 
                     <p className="mt-3 text-sm leading-6 text-slate-400">
@@ -300,7 +316,7 @@ export default function CounterpartiesPage() {
                       {item.province ? `, ${item.province}` : ""}
                     </p>
 
-                    {item.contact_person || item.contact_email || item.contact_phone ? (
+                    {item.contact_person || item.email || item.phone ? (
                       <div className="mt-4 rounded-2xl border border-white/10 bg-[#050914]/70 p-4">
                         <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
                           Contact
@@ -311,11 +327,11 @@ export default function CounterpartiesPage() {
                         </p>
 
                         <p className="mt-1 text-sm text-slate-400">
-                          {item.contact_email ?? "Email pending"}
+                          {item.email ?? "Email pending"}
                         </p>
 
                         <p className="mt-1 text-sm text-slate-400">
-                          {item.contact_phone ?? "Phone pending"}
+                          {item.phone ?? "Phone pending"}
                         </p>
                       </div>
                     ) : null}
@@ -340,7 +356,8 @@ export default function CounterpartiesPage() {
                   Supplier verification
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Supplier status must move out of Pending before commercial release.
+                  Supplier status must move out of Pending before commercial
+                  release.
                 </p>
               </div>
 
@@ -391,8 +408,9 @@ export default function CounterpartiesPage() {
                   Control Result
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Route readiness remains controlled until supplier, plant, buyer
-                  and transporter records are verified with supporting documents.
+                  Route readiness remains controlled until supplier, plant,
+                  buyer and transporter records are verified with supporting
+                  documents.
                 </p>
               </div>
             </div>
@@ -401,4 +419,4 @@ export default function CounterpartiesPage() {
       </div>
     </main>
   );
-    }
+            }

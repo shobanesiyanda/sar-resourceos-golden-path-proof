@@ -1,160 +1,81 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 
-type UserState = {
-  email: string | null;
-  signedIn: boolean;
+type NavItem = {
+  href: string;
+  label: string;
 };
 
-const liveLinks = [
-  {
-    shortLabel: "Dash",
-    fullLabel: "Dashboard",
-    href: "/dashboard",
-  },
-  {
-    shortLabel: "Ops",
-    fullLabel: "Operations",
-    href: "/operations",
-  },
-  {
-    shortLabel: "Route",
-    fullLabel: "Route Builder",
-    href: "/route-builder",
-  },
-  {
-    shortLabel: "Finance",
-    fullLabel: "Finance",
-    href: "/finance",
-  },
-  {
-    shortLabel: "Analytics",
-    fullLabel: "Analytics",
-    href: "/analytics",
-  },
-  {
-    shortLabel: "Docs",
-    fullLabel: "Documents",
-    href: "/documents",
-  },
-  {
-    shortLabel: "Approvals",
-    fullLabel: "Approvals",
-    href: "/approvals",
-  },
-  {
-    shortLabel: "Parties",
-    fullLabel: "Counterparties",
-    href: "/counterparties",
-  },
+const navItems: NavItem[] = [
+  { href: "/dashboard", label: "Dash" },
+  { href: "/operations", label: "Ops" },
+  { href: "/route-builder", label: "Route" },
+  { href: "/finance", label: "Finance" },
+  { href: "/analytics", label: "Analytics" },
+  { href: "/documents", label: "Docs" },
+  { href: "/approvals", label: "Approvals" },
+  { href: "/counterparties", label: "Parties" },
 ];
 
+function isActive(pathname: string, href: string) {
+  if (href === "/dashboard") {
+    return pathname === "/dashboard" || pathname === "/";
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export default function AuthQuickAccess() {
-  const supabase = createClient();
   const pathname = usePathname();
-
-  const [userState, setUserState] = useState<UserState>({
-    email: null,
-    signedIn: false,
-  });
-
-  useEffect(() => {
-    async function loadUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      setUserState({
-        email: user?.email ?? null,
-        signedIn: Boolean(user),
-      });
-    }
-
-    loadUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserState({
-        email: session?.user?.email ?? null,
-        signedIn: Boolean(session?.user),
-      });
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
+  const router = useRouter();
+  const supabase = createClient();
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    window.location.href = "/login";
-  }
-
-  if (!userState.signedIn) {
-    return (
-      <div className="fixed left-4 right-4 top-6 z-50 mx-auto max-w-4xl rounded-full border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur">
-        <div className="flex items-center justify-end gap-2">
-          <Link
-            href="/login"
-            className={`rounded-full border px-5 py-3 text-sm font-black ${
-              pathname === "/login"
-                ? "border-[#d7ad32]/60 bg-[#d7ad32] text-[#07101c]"
-                : "border-white/10 bg-white/[0.03] text-slate-200"
-            }`}
-          >
-            Login
-          </Link>
-
-          <Link
-            href="/login"
-            className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
-          >
-            Sign up
-          </Link>
-        </div>
-      </div>
-    );
+    router.push("/");
+    router.refresh();
   }
 
   return (
-    <div className="fixed left-3 right-3 top-6 z-50 mx-auto max-w-5xl rounded-full border border-white/10 bg-[#080d18]/95 p-1.5 shadow-2xl backdrop-blur">
-      <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap">
-        <div className="shrink-0 rounded-full px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#d7ad32] sm:px-4 sm:py-3 sm:text-xs sm:tracking-[0.25em]">
-          Signed in
-        </div>
+    <div className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#050914]/95 px-3 pb-3 pt-3 shadow-2xl shadow-black/40 backdrop-blur-xl">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex min-h-[54px] items-center gap-2 overflow-x-auto rounded-full border border-white/10 bg-[#080d18]/95 p-2 scrollbar-hide">
+          <div className="shrink-0 px-3 text-[11px] font-black uppercase tracking-[0.3em] text-[#d7ad32]">
+            Signed In
+          </div>
 
-        {liveLinks.map((item) => {
-          const active = pathname === item.href;
+          <div className="flex shrink-0 items-center gap-2">
+            {navItems.map((item) => {
+              const active = isActive(pathname, item.href);
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`shrink-0 rounded-full border px-3.5 py-2.5 text-xs font-black sm:px-5 sm:py-3 sm:text-sm ${
-                active
-                  ? "border-[#d7ad32]/60 bg-[#d7ad32] text-[#07101c]"
-                  : "border-white/10 bg-white/[0.03] text-slate-200"
-              }`}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={[
+                    "shrink-0 rounded-full border px-4 py-3 text-sm font-black transition",
+                    active
+                      ? "border-[#d7ad32] bg-[#d7ad32] text-[#07101c]"
+                      : "border-white/10 bg-white/[0.03] text-slate-200 hover:border-[#d7ad32]/50 hover:text-white",
+                  ].join(" ")}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-black text-slate-200 transition hover:border-red-300/50 hover:text-red-100"
             >
-              <span className="sm:hidden">{item.shortLabel}</span>
-              <span className="hidden sm:inline">{item.fullLabel}</span>
-            </Link>
-          );
-        })}
-
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs font-black text-slate-200 sm:px-5 sm:py-3 sm:text-sm"
-        >
-          <span className="sm:hidden">Out</span>
-          <span className="hidden sm:inline">Sign out</span>
-        </button>
+              Out
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

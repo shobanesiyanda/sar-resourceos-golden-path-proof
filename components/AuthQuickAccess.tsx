@@ -11,18 +11,9 @@ type UserState = {
 };
 
 const liveLinks = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-  },
-  {
-    label: "Documents",
-    href: "/documents",
-  },
-  {
-    label: "Approvals",
-    href: "/approvals",
-  },
+  { label: "Dashboard", href: "/dashboard" },
+  { label: "Documents", href: "/documents" },
+  { label: "Approvals", href: "/approvals" },
 ];
 
 export default function AuthQuickAccess() {
@@ -128,4 +119,4 @@ export default function AuthQuickAccess() {
       </div>
     </div>
   );
-}
+      }

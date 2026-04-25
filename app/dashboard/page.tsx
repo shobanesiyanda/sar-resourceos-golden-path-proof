@@ -5,13 +5,13 @@ import { createClient } from "../../lib/supabase/client";
 
 type Profile = {
   full_name: string;
-  email: string;
   company_name: string | null;
   role: string;
   is_active: boolean;
 };
 
 type Parcel = {
+  id: string;
   parcel_code: string;
   commodity: string;
   product_description: string | null;
@@ -24,16 +24,13 @@ type Parcel = {
 };
 
 type RouteChain = {
-  route_code: string;
   route_name: string | null;
   origin_location: string | null;
   plant_location: string | null;
   delivery_location: string | null;
   transport_cost_per_ton: number | null;
   tolling_cost_per_ton: number | null;
-  estimated_margin_per_ton: number | null;
   status: string;
-  notes: string | null;
 };
 
 type Counterparty = {
@@ -42,6 +39,21 @@ type Counterparty = {
   location: string | null;
   province: string | null;
   status: string;
+};
+
+type DocumentRecord = {
+  document_code: string;
+  document_type: string;
+  title: string;
+  status: string;
+  notes: string | null;
+};
+
+type ApprovalRecord = {
+  approval_code: string;
+  approval_type: string;
+  status: string;
+  decision_note: string | null;
 };
 
 function money(value: number | null | undefined) {
@@ -67,11 +79,29 @@ function Badge({ state }: { state: string }) {
       : "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
 
   return (
-    <span
-      className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${style}`}
-    >
+    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${style}`}>
       {state}
     </span>
+  );
+}
+
+function Card({
+  label,
+  title,
+  children,
+}: {
+  label: string;
+  title: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+      <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
+        {label}
+      </p>
+      <h2 className="mt-2 text-2xl font-black">{title}</h2>
+      {children}
+    </section>
   );
 }
 
@@ -83,8 +113,10 @@ export default function DashboardPage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [parcel, setParcel] = useState<Parcel | null>(null);
-  const [routeChain, setRouteChain] = useState<RouteChain | null>(null);
+  const [route, setRoute] = useState<RouteChain | null>(null);
   const [counterparties, setCounterparties] = useState<Counterparty[]>([]);
+  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
+  const [approvals, setApprovals] = useState<ApprovalRecord[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -102,12 +134,12 @@ export default function DashboardPage() {
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("full_name, email, company_name, role, is_active")
+        .select("full_name, company_name, role, is_active")
         .eq("id", user.id)
         .single();
 
       if (profileError || !profileData || profileData.is_active !== true) {
-        setError("Profile not found or inactive. Check Supabase profiles table.");
+        setError("Profile not found or inactive.");
         setLoading(false);
         return;
       }
@@ -115,13 +147,13 @@ export default function DashboardPage() {
       const { data: parcelData, error: parcelError } = await supabase
         .from("parcels")
         .select(
-          "parcel_code, commodity, product_description, accepted_tons, expected_price_per_ton, indicative_revenue, control_state, operator_name, company_name"
+          "id, parcel_code, commodity, product_description, accepted_tons, expected_price_per_ton, indicative_revenue, control_state, operator_name, company_name"
         )
         .eq("parcel_code", "PAR-CHR-2026-0001")
         .single();
 
       if (parcelError || !parcelData) {
-        setError("Parcel not found. Check Supabase parcels table.");
+        setError("Parcel not found.");
         setLoading(false);
         return;
       }
@@ -129,7 +161,7 @@ export default function DashboardPage() {
       const { data: routeData } = await supabase
         .from("route_chains")
         .select(
-          "route_code, route_name, origin_location, plant_location, delivery_location, transport_cost_per_ton, tolling_cost_per_ton, estimated_margin_per_ton, status, notes"
+          "route_name, origin_location, plant_location, delivery_location, transport_cost_per_ton, tolling_cost_per_ton, status"
         )
         .eq("route_code", "ROUTE-CHR-2026-0001")
         .maybeSingle();
@@ -139,10 +171,24 @@ export default function DashboardPage() {
         .select("counterparty_type, company_name, location, province, status")
         .order("counterparty_type", { ascending: true });
 
+      const { data: documentData } = await supabase
+        .from("documents")
+        .select("document_code, document_type, title, status, notes")
+        .eq("parcel_id", parcelData.id)
+        .order("document_code", { ascending: true });
+
+      const { data: approvalData } = await supabase
+        .from("approvals")
+        .select("approval_code, approval_type, status, decision_note")
+        .eq("parcel_id", parcelData.id)
+        .order("approval_code", { ascending: true });
+
       setProfile(profileData);
       setParcel(parcelData);
-      setRouteChain(routeData ?? null);
+      setRoute(routeData ?? null);
       setCounterparties(counterpartyData ?? []);
+      setDocuments(documentData ?? []);
+      setApprovals(approvalData ?? []);
       setLoading(false);
     }
 
@@ -152,17 +198,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-[#080d18] p-6 shadow-2xl">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-            SAR ResourceOS
-          </p>
-          <h1 className="mt-3 text-2xl font-black">
-            Loading live Supabase data...
-          </h1>
-          <p className="mt-3 text-sm text-slate-400">
-            Loading profile, parcel, route chain and counterparties.
-          </p>
-        </div>
+        <Card label="SAR ResourceOS" title="Loading live Supabase data..." />
       </main>
     );
   }
@@ -170,295 +206,209 @@ export default function DashboardPage() {
   if (error) {
     return (
       <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-red-400/30 bg-[#080d18] p-6 shadow-2xl">
+        <section className="rounded-3xl border border-red-400/30 bg-[#080d18] p-6 text-white">
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-red-200">
             SAR ResourceOS
           </p>
           <h1 className="mt-3 text-2xl font-black">Live data error</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-300">{error}</p>
-        </div>
+          <p className="mt-3 text-slate-300">{error}</p>
+        </section>
       </main>
     );
   }
 
-  const supplier = counterparties.find(
-    (item) => item.counterparty_type === "Supplier"
-  );
-  const washPlant = counterparties.find(
-    (item) => item.counterparty_type === "Wash Plant"
-  );
-  const buyer = counterparties.find((item) => item.counterparty_type === "Buyer");
-  const transporter = counterparties.find(
-    (item) => item.counterparty_type === "Transporter"
-  );
-
   const revenue =
     parcel?.indicative_revenue ??
-    Number(parcel?.accepted_tons ?? 0) *
-      Number(parcel?.expected_price_per_ton ?? 0);
+    Number(parcel?.accepted_tons ?? 0) * Number(parcel?.expected_price_per_ton ?? 0);
 
-  const opportunityCards = [
-    {
-      title: "Parcel Intake",
-      state: parcel?.control_state ?? "Pending",
-      note: `${parcel?.parcel_code ?? "No parcel"} • ${tons(
-        parcel?.accepted_tons
-      )}t`,
-    },
-    {
-      title: "Supplier Verification",
-      state: supplier?.status ?? "Pending",
-      note: supplier?.company_name ?? "No supplier linked",
-    },
-    {
-      title: "Plant Readiness",
-      state: washPlant?.status ?? "Pending",
-      note: washPlant?.company_name ?? "No wash plant linked",
-    },
-  ];
+  const blockedDocuments = documents.filter(
+    (item) => item.status === "Blocked" || item.status === "Pending"
+  );
 
-  const readinessFlow = [
-    {
-      title: "Supplier",
-      state: supplier?.status ?? "Pending",
-      note: supplier?.company_name ?? "Supplier pending",
-    },
-    {
-      title: "Wash Plant",
-      state: washPlant?.status ?? "Pending",
-      note: washPlant?.company_name ?? "Plant pending",
-    },
-    {
-      title: "Buyer",
-      state: buyer?.status ?? "Pending",
-      note: buyer?.company_name ?? "Buyer pending",
-    },
-    {
-      title: "Transporter",
-      state: transporter?.status ?? "Pending",
-      note: transporter?.company_name ?? "Transporter pending",
-    },
-    {
-      title: "Finance",
-      state: parcel?.control_state ?? "Pending",
-      note: "Finance handoff follows route and document readiness.",
-    },
-  ];
+  const blockedApprovals = approvals.filter(
+    (item) => item.status === "Blocked" || item.status === "Pending"
+  );
 
   return (
     <main className="min-h-screen bg-[#050914] pt-28 text-white">
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-        <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl md:p-6">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-            SAR ResourceOS
+        <Card label="SAR ResourceOS" title="Executive Control Dashboard">
+          <p className="mt-3 text-sm leading-7 text-slate-300">
+            Live Supabase-backed dashboard for chrome parcel control, route readiness,
+            documents, approvals, counterparties and finance handoff.
           </p>
 
-          <h1 className="mt-2 text-3xl font-black leading-tight md:text-5xl">
-            Executive Control Dashboard
-          </h1>
-
-          <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-300 md:text-base">
-            Live Supabase-backed dashboard for chrome parcel control, route
-            readiness, counterparties, approvals and finance handoff.
-          </p>
-
-          <div className="mt-5 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
-                Role
-              </div>
-              <div className="mt-2 font-black capitalize">{profile?.role}</div>
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Role</p>
+              <p className="mt-2 font-black capitalize">{profile?.role}</p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
                 Commodity
-              </div>
-              <div className="mt-2 font-black text-[#d7ad32]">
-                {parcel?.commodity}
-              </div>
+              </p>
+              <p className="mt-2 font-black text-[#d7ad32]">{parcel?.commodity}</p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
-                Mode
-              </div>
-              <div className="mt-2 font-black">Live v1</div>
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+                Documents
+              </p>
+              <p className="mt-2 font-black">{documents.length}</p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
-                Status
-              </div>
-              <div className="mt-2">
-                <Badge state={parcel?.control_state ?? "Pending"} />
-              </div>
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+                Approvals
+              </p>
+              <p className="mt-2 font-black">{approvals.length}</p>
             </div>
           </div>
-        </section>
+        </Card>
 
         <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
               Lead Parcel
             </p>
-            <div className="mt-3 text-2xl font-black">
-              {parcel?.parcel_code}
-            </div>
-            <p className="mt-2 text-sm text-slate-400">
-              {parcel?.product_description}
-            </p>
+            <p className="mt-3 text-2xl font-black">{parcel?.parcel_code}</p>
+            <p className="mt-2 text-sm text-slate-400">{parcel?.product_description}</p>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
               Accepted Tons
             </p>
-            <div className="mt-3 text-4xl font-black">
-              {tons(parcel?.accepted_tons)}
-            </div>
-            <p className="mt-2 text-sm text-slate-400">
-              Loaded from Supabase parcels.
-            </p>
+            <p className="mt-3 text-4xl font-black">{tons(parcel?.accepted_tons)}</p>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
               Indicative Revenue
             </p>
-            <div className="mt-3 text-3xl font-black">{money(revenue)}</div>
+            <p className="mt-3 text-3xl font-black">{money(revenue)}</p>
             <p className="mt-2 text-sm text-slate-400">
-              {tons(parcel?.accepted_tons)}t ×{" "}
-              {money(parcel?.expected_price_per_ton)}/t
+              {tons(parcel?.accepted_tons)}t × {money(parcel?.expected_price_per_ton)}/t
             </p>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
               Operator
             </p>
-            <div className="mt-3 text-2xl font-black">
+            <p className="mt-3 text-2xl font-black">
               {parcel?.operator_name ?? profile?.full_name}
-            </div>
+            </p>
             <p className="mt-2 text-sm font-semibold text-[#d7ad32]">
               {parcel?.company_name ?? profile?.company_name}
             </p>
           </div>
         </section>
 
-        <section className="mb-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-              Opportunity Cards
-            </p>
-            <h2 className="mt-2 text-2xl font-black">
-              Open commercial workstreams
-            </h2>
-
-            <div className="mt-5 grid gap-4 md:grid-cols-3 xl:grid-cols-1">
-              {opportunityCards.map((card) => (
-                <div
-                  key={card.title}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="font-black">{card.title}</h3>
-                    <Badge state={card.state} />
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-400">
-                    {card.note}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-              Readiness / Route Flow
-            </p>
-            <h2 className="mt-2 text-2xl font-black">
-              Supplier → Plant → Buyer → Finance
-            </h2>
-
-            <div className="mt-5 space-y-4">
-              {readinessFlow.map((item) => (
-                <div
-                  key={item.title}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="font-black">{item.title}</div>
-                    <Badge state={item.state} />
-                  </div>
-                  <p className="mt-2 text-sm text-slate-400">{item.note}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-            Route Chain
-          </p>
-          <h2 className="mt-2 text-2xl font-black">
-            {routeChain?.route_name ?? "Route chain pending"}
-          </h2>
-
+        <Card label="Route Chain" title={route?.route_name ?? "Route chain pending"}>
           <div className="mt-5 grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Origin
-              </p>
-              <p className="mt-2 font-black">
-                {routeChain?.origin_location ?? "Pending"}
-              </p>
-            </div>
+            {[
+              ["Origin", route?.origin_location ?? "Pending"],
+              ["Plant", route?.plant_location ?? "Pending"],
+              ["Delivery", route?.delivery_location ?? "Pending"],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">{label}</p>
+                <p className="mt-2 font-black">{value}</p>
+              </div>
+            ))}
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Plant
-              </p>
-              <p className="mt-2 font-black">
-                {routeChain?.plant_location ?? "Pending"}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Delivery
-              </p>
-              <p className="mt-2 font-black">
-                {routeChain?.delivery_location ?? "Pending"}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Status
-              </p>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Status</p>
               <div className="mt-2">
-                <Badge state={routeChain?.status ?? "Pending"} />
+                <Badge state={route?.status ?? "Pending"} />
               </div>
             </div>
           </div>
+        </Card>
+
+        <section className="mb-6 grid gap-6 xl:grid-cols-2">
+          <Card label="Documents" title="Release document register">
+            <div className="mt-5 space-y-4">
+              {documents.map((item) => (
+                <div key={item.document_code} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                        {item.document_type}
+                      </p>
+                      <h3 className="mt-2 font-black">{item.title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-400">
+                        {item.notes ?? "No document note captured."}
+                      </p>
+                    </div>
+                    <Badge state={item.status} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card label="Approvals" title="Approval queue and release gates">
+            <div className="mt-5 space-y-4">
+              {approvals.map((item) => (
+                <div key={item.approval_code} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                        {item.approval_type}
+                      </p>
+                      <h3 className="mt-2 font-black">{item.approval_code}</h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-400">
+                        {item.decision_note ?? "No approval note captured."}
+                      </p>
+                    </div>
+                    <Badge state={item.status} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-              Finance / Exposure / Margin
-            </p>
-            <h2 className="mt-2 text-2xl font-black">
-              First parcel finance view
-            </h2>
+        <Card label="Exceptions / Next Actions" title="Items blocking release">
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {blockedDocuments.map((item) => (
+              <div key={item.document_code} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  Document
+                </p>
+                <h3 className="mt-2 font-black">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{item.notes}</p>
+                <div className="mt-3">
+                  <Badge state={item.status} />
+                </div>
+              </div>
+            ))}
 
+            {blockedApprovals.map((item) => (
+              <div key={item.approval_code} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  Approval
+                </p>
+                <h3 className="mt-2 font-black">{item.approval_type}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  {item.decision_note}
+                </p>
+                <div className="mt-3">
+                  <Badge state={item.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <section className="grid gap-6 xl:grid-cols-2">
+          <Card label="Finance / Exposure / Margin" title="First parcel finance view">
             <div className="mt-5 space-y-4">
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Revenue
-                </p>
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Revenue</p>
                 <p className="mt-2 text-2xl font-black">{money(revenue)}</p>
               </div>
 
@@ -467,7 +417,7 @@ export default function DashboardPage() {
                   Transport Cost / Ton
                 </p>
                 <p className="mt-2 text-2xl font-black">
-                  {money(routeChain?.transport_cost_per_ton)}
+                  {money(route?.transport_cost_per_ton)}
                 </p>
               </div>
 
@@ -476,24 +426,16 @@ export default function DashboardPage() {
                   Tolling Cost / Ton
                 </p>
                 <p className="mt-2 text-2xl font-black">
-                  {money(routeChain?.tolling_cost_per_ton)}
+                  {money(route?.tolling_cost_per_ton)}
                 </p>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-              Counterparties
-            </p>
-            <h2 className="mt-2 text-2xl font-black">Linked route parties</h2>
-
+          <Card label="Counterparties" title="Linked route parties">
             <div className="mt-5 space-y-4">
               {counterparties.map((item) => (
-                <div
-                  key={`${item.counterparty_type}-${item.company_name}`}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-                >
+                <div key={`${item.counterparty_type}-${item.company_name}`} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
@@ -510,7 +452,7 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </section>
       </div>
     </main>

@@ -22,6 +22,17 @@ type Parcel = {
   control_state: string;
   operator_name: string | null;
   company_name: string | null;
+  feedstock_tons: number | null;
+  feedstock_cost_per_ton: number | null;
+  transport_to_plant_cost_per_ton: number | null;
+  tolling_cost_per_ton: number | null;
+  estimated_feedstock_cost: number | null;
+  estimated_transport_cost: number | null;
+  estimated_tolling_cost: number | null;
+  estimated_route_cost: number | null;
+  estimated_route_surplus: number | null;
+  estimated_route_margin_percent: number | null;
+  economics_basis: string | null;
 };
 
 type RouteChain = {
@@ -30,9 +41,6 @@ type RouteChain = {
   origin_location: string | null;
   plant_location: string | null;
   delivery_location: string | null;
-  transport_cost_per_ton: number | null;
-  tolling_cost_per_ton: number | null;
-  estimated_margin_per_ton: number | null;
   status: string;
   notes: string | null;
 };
@@ -148,7 +156,7 @@ export default function FinancePage() {
       const { data: parcelData, error: parcelError } = await supabase
         .from("parcels")
         .select(
-          "id, parcel_code, commodity, product_description, accepted_tons, expected_price_per_ton, indicative_revenue, control_state, operator_name, company_name"
+          "id, parcel_code, commodity, product_description, accepted_tons, expected_price_per_ton, indicative_revenue, control_state, operator_name, company_name, feedstock_tons, feedstock_cost_per_ton, transport_to_plant_cost_per_ton, tolling_cost_per_ton, estimated_feedstock_cost, estimated_transport_cost, estimated_tolling_cost, estimated_route_cost, estimated_route_surplus, estimated_route_margin_percent, economics_basis"
         )
         .eq("parcel_code", "PAR-CHR-2026-0001")
         .single();
@@ -162,7 +170,7 @@ export default function FinancePage() {
       const { data: routeData } = await supabase
         .from("route_chains")
         .select(
-          "route_code, route_name, origin_location, plant_location, delivery_location, transport_cost_per_ton, tolling_cost_per_ton, estimated_margin_per_ton, status, notes"
+          "route_code, route_name, origin_location, plant_location, delivery_location, status, notes"
         )
         .eq("route_code", "ROUTE-CHR-2026-0001")
         .maybeSingle();
@@ -214,29 +222,33 @@ export default function FinancePage() {
 
   const concentrateTons = Number(parcel?.accepted_tons ?? 0);
   const pricePerTon = Number(parcel?.expected_price_per_ton ?? 0);
+  const revenue = Number(parcel?.indicative_revenue ?? concentrateTons * pricePerTon);
 
-  const revenue = parcel?.indicative_revenue ?? concentrateTons * pricePerTon;
+  const feedstockTons = Number(parcel?.feedstock_tons ?? 0);
+  const feedstockCostPerTon = Number(parcel?.feedstock_cost_per_ton ?? 0);
+  const transportToPlantCostPerTon = Number(
+    parcel?.transport_to_plant_cost_per_ton ?? 0
+  );
+  const tollingCostPerTon = Number(parcel?.tolling_cost_per_ton ?? 0);
 
-  /**
-   * Live v1 operating assumptions.
-   * Later these must move into Supabase parcel economics fields.
-   *
-   * Current first-parcel basis:
-   * 3 × 36t feedstock trucks = 108t feedstock
-   * producing 33.900t concentrate.
-   */
-  const feedstockTons = 108;
-  const feedstockCostPerTon = 150;
-  const transportToPlantCostPerTon = Number(route?.transport_cost_per_ton ?? 150);
-  const tollingCostPerTon = Number(route?.tolling_cost_per_ton ?? 350);
+  const feedstockCost = Number(
+    parcel?.estimated_feedstock_cost ?? feedstockTons * feedstockCostPerTon
+  );
+  const transportCost = Number(
+    parcel?.estimated_transport_cost ?? feedstockTons * transportToPlantCostPerTon
+  );
+  const tollingCost = Number(
+    parcel?.estimated_tolling_cost ?? feedstockTons * tollingCostPerTon
+  );
 
-  const feedstockCost = feedstockTons * feedstockCostPerTon;
-  const transportCost = feedstockTons * transportToPlantCostPerTon;
-  const tollingCost = feedstockTons * tollingCostPerTon;
-
-  const routeCost = feedstockCost + transportCost + tollingCost;
-  const routeSurplus = revenue - routeCost;
-  const routeMargin = revenue > 0 ? (routeSurplus / revenue) * 100 : 0;
+  const routeCost = Number(
+    parcel?.estimated_route_cost ?? feedstockCost + transportCost + tollingCost
+  );
+  const routeSurplus = Number(parcel?.estimated_route_surplus ?? revenue - routeCost);
+  const routeMargin = Number(
+    parcel?.estimated_route_margin_percent ??
+      (revenue > 0 ? (routeSurplus / revenue) * 100 : 0)
+  );
 
   const blockedDocuments = documents.filter(
     (item) => item.status === "Blocked" || item.status === "Pending"
@@ -257,9 +269,9 @@ export default function FinancePage() {
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
         <Card label="SAR ResourceOS" title="Finance / Exposure / Margin">
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            Live finance-control page for first parcel revenue, feedstock cost,
-            route exposure, transport cost, tolling cost, indicative surplus,
-            margin and handoff readiness.
+            Live finance-control page reading parcel economics directly from
+            Supabase: revenue, feedstock cost, route exposure, transport cost,
+            tolling cost, indicative surplus, margin and handoff readiness.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -375,7 +387,7 @@ export default function FinancePage() {
             </div>
           </Card>
 
-          <Card label="Exposure" title="Feedstock-based route cost exposure">
+          <Card label="Exposure" title="Supabase parcel economics">
             <div className="mt-5 space-y-4">
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
@@ -440,13 +452,11 @@ export default function FinancePage() {
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Control Note
+                  Economics Basis
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  This corrected Live v1 view calculates sales on concentrate
-                  tons, but calculates feedstock, transport and tolling costs on
-                  feedstock tons. Feedstock tons are currently a fixed Live v1
-                  assumption and should later move into Supabase.
+                  {parcel?.economics_basis ??
+                    "Revenue is calculated on concentrate tons. Feedstock, transport and tolling are calculated on feedstock tons."}
                 </p>
               </div>
             </div>
@@ -495,10 +505,9 @@ export default function FinancePage() {
               {profile?.company_name ?? "Shobane African Resources"}
             </p>
             <p className="mt-3 text-sm leading-6 text-slate-400">
-              The finance page is currently a live read-only exposure and margin
-              view. The next phase should add finance approvals, settlement
-              records, funding drawdowns, payment release controls and
-              parcel-level P&amp;L.
+              The finance page now reads parcel economics from Supabase. The
+              next phase can add editable economics inputs, approval locks,
+              settlement records and payment release controls.
             </p>
           </div>
         </Card>

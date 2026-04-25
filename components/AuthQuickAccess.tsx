@@ -43,43 +43,50 @@ export default function AuthQuickAccess() {
 
   if (email) {
     return (
-      <div className="fixed right-4 top-4 z-50 flex items-center gap-2 rounded-full border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur">
-        <span className="hidden max-w-[220px] truncate px-3 text-sm font-bold text-slate-200 sm:inline">
-          {email}
-        </span>
+      <div className="fixed left-4 right-4 top-4 z-50 mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-3xl border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur md:left-6 md:right-6">
+        <div className="min-w-0 px-3">
+          <p className="hidden truncate text-xs font-bold uppercase tracking-[0.22em] text-[#d7ad32] sm:block">
+            Signed in
+          </p>
+          <p className="max-w-[150px] truncate text-xs font-bold text-slate-300 sm:max-w-[260px]">
+            {email}
+          </p>
+        </div>
 
-        <Link
-          href="/dashboard"
-          className="rounded-full border border-[#d7ad32]/40 bg-[#d7ad32] px-4 py-2 text-sm font-black text-[#07101c]"
-        >
-          Dashboard
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/dashboard"
+            className="rounded-full border border-[#d7ad32]/40 bg-[#d7ad32] px-4 py-2 text-sm font-black text-[#07101c]"
+          >
+            Dashboard
+          </Link>
 
-        <button
-          onClick={handleSignOut}
-          className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-black text-slate-200"
-        >
-          Sign out
-        </button>
+          <button
+            onClick={handleSignOut}
+            className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-black text-slate-200"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed right-4 top-4 z-50 flex items-center gap-2 rounded-full border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur">
+    <div className="fixed left-4 right-4 top-4 z-50 mx-auto flex max-w-7xl items-center justify-end gap-2 rounded-3xl border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur md:left-6 md:right-6">
       <Link
         href="/login"
-        className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-black text-slate-200"
+        className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 text-sm font-black text-slate-200"
       >
         Login
       </Link>
 
       <Link
         href="/signup"
-        className="rounded-full bg-[#d7ad32] px-4 py-2 text-sm font-black text-[#07101c]"
+        className="rounded-full bg-[#d7ad32] px-5 py-2 text-sm font-black text-[#07101c]"
       >
         Sign up
       </Link>
     </div>
   );
-} 
+}

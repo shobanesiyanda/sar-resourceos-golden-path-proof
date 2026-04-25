@@ -14,6 +14,7 @@ const navItems: NavItem[] = [
   { href: "/operations", label: "Ops" },
   { href: "/route-builder", label: "Route" },
   { href: "/finance", label: "Finance" },
+  { href: "/economics", label: "Econ" },
   { href: "/analytics", label: "Analytics" },
   { href: "/documents", label: "Docs" },
   { href: "/approvals", label: "Approvals" },
@@ -79,4 +80,4 @@ export default function AuthQuickAccess() {
       </div>
     </div>
   );
-    }
+}

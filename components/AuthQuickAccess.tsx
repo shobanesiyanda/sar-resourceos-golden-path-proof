@@ -43,9 +43,9 @@ export default function AuthQuickAccess() {
 
   if (email) {
     return (
-      <div className="fixed left-4 right-4 top-4 z-50 mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-3xl border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur md:left-6 md:right-6">
-        <div className="min-w-0 px-3">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#d7ad32]">
+      <div className="fixed left-4 right-4 top-4 z-50 mx-auto flex max-w-7xl items-center justify-between gap-2 rounded-3xl border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur md:left-6 md:right-6">
+        <div className="min-w-0 px-2 sm:px-3">
+          <p className="whitespace-nowrap text-[10px] font-black uppercase tracking-[0.12em] text-[#d7ad32] sm:text-xs sm:tracking-[0.22em]">
             Signed in
           </p>
 
@@ -90,4 +90,4 @@ export default function AuthQuickAccess() {
       </Link>
     </div>
   );
-}
+            }

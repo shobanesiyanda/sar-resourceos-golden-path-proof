@@ -2,12 +2,37 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "../lib/supabase/client";
+import { usePathname } from "next/navigation";
+import { createClient } from "../../lib/supabase/client";
+
+type UserState = {
+  email: string | null;
+  signedIn: boolean;
+};
+
+const liveLinks = [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+  },
+  {
+    label: "Documents",
+    href: "/documents",
+  },
+  {
+    label: "Approvals",
+    href: "/approvals",
+  },
+];
 
 export default function AuthQuickAccess() {
   const supabase = createClient();
-  const [email, setEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+
+  const [userState, setUserState] = useState<UserState>({
+    email: null,
+    signedIn: false,
+  });
 
   useEffect(() => {
     async function loadUser() {
@@ -15,8 +40,10 @@ export default function AuthQuickAccess() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      setEmail(user?.email ?? null);
-      setLoading(false);
+      setUserState({
+        email: user?.email ?? null,
+        signedIn: Boolean(user),
+      });
     }
 
     loadUser();
@@ -24,7 +51,10 @@ export default function AuthQuickAccess() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setEmail(session?.user?.email ?? null);
+      setUserState({
+        email: session?.user?.email ?? null,
+        signedIn: Boolean(session?.user),
+      });
     });
 
     return () => {
@@ -34,60 +64,68 @@ export default function AuthQuickAccess() {
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    window.location.href = "/";
+    window.location.href = "/login";
   }
 
-  if (loading) {
-    return null;
-  }
-
-  if (email) {
+  if (!userState.signedIn) {
     return (
-      <div className="fixed left-4 right-4 top-4 z-50 mx-auto flex max-w-7xl items-center justify-between gap-2 rounded-3xl border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur md:left-6 md:right-6">
-        <div className="min-w-0 px-2 sm:px-3">
-          <p className="whitespace-nowrap text-[10px] font-black uppercase tracking-[0.12em] text-[#d7ad32] sm:text-xs sm:tracking-[0.22em]">
-            Signed in
-          </p>
-
-          <p className="hidden max-w-[260px] truncate text-xs font-bold text-slate-300 sm:block">
-            {email}
-          </p>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
+      <div className="fixed left-4 right-4 top-6 z-50 mx-auto max-w-4xl rounded-full border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur">
+        <div className="flex items-center justify-end gap-2">
           <Link
-            href="/dashboard"
-            className="rounded-full border border-[#d7ad32]/40 bg-[#d7ad32] px-4 py-2 text-sm font-black text-[#07101c]"
+            href="/login"
+            className={`rounded-full border px-5 py-3 text-sm font-black ${
+              pathname === "/login"
+                ? "border-[#d7ad32]/60 bg-[#d7ad32] text-[#07101c]"
+                : "border-white/10 bg-white/[0.03] text-slate-200"
+            }`}
           >
-            Dashboard
+            Login
           </Link>
 
-          <button
-            onClick={handleSignOut}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-black text-slate-200"
+          <Link
+            href="/login"
+            className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
           >
-            Sign out
-          </button>
+            Sign up
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed left-4 right-4 top-4 z-50 mx-auto flex max-w-7xl items-center justify-end gap-2 rounded-3xl border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur md:left-6 md:right-6">
-      <Link
-        href="/login"
-        className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 text-sm font-black text-slate-200"
-      >
-        Login
-      </Link>
+    <div className="fixed left-4 right-4 top-6 z-50 mx-auto max-w-5xl rounded-full border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur">
+      <div className="flex items-center gap-2 overflow-x-auto">
+        <div className="shrink-0 rounded-full px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+          Signed in
+        </div>
 
-      <Link
-        href="/signup"
-        className="rounded-full bg-[#d7ad32] px-5 py-2 text-sm font-black text-[#07101c]"
-      >
-        Sign up
-      </Link>
+        {liveLinks.map((item) => {
+          const active = pathname === item.href;
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`shrink-0 rounded-full border px-5 py-3 text-sm font-black ${
+                active
+                  ? "border-[#d7ad32]/60 bg-[#d7ad32] text-[#07101c]"
+                  : "border-white/10 bg-white/[0.03] text-slate-200"
+              }`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-200"
+        >
+          Sign out
+        </button>
+      </div>
     </div>
   );
-            }
+}

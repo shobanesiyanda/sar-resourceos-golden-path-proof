@@ -254,16 +254,20 @@ export default function AnalyticsPage() {
     );
   }
 
-  const acceptedTons = Number(parcel?.accepted_tons ?? 0);
+  const concentrateTons = Number(parcel?.accepted_tons ?? 0);
   const pricePerTon = Number(parcel?.expected_price_per_ton ?? 0);
-  const revenue = parcel?.indicative_revenue ?? acceptedTons * pricePerTon;
+  const revenue = parcel?.indicative_revenue ?? concentrateTons * pricePerTon;
 
-  const transportCostPerTon = Number(route?.transport_cost_per_ton ?? 0);
-  const tollingCostPerTon = Number(route?.tolling_cost_per_ton ?? 0);
+  const feedstockTons = 108;
+  const feedstockCostPerTon = 150;
+  const transportToPlantCostPerTon = Number(route?.transport_cost_per_ton ?? 150);
+  const tollingCostPerTon = Number(route?.tolling_cost_per_ton ?? 350);
 
-  const transportCost = transportCostPerTon * acceptedTons;
-  const tollingCost = tollingCostPerTon * acceptedTons;
-  const routeCost = transportCost + tollingCost;
+  const feedstockCost = feedstockTons * feedstockCostPerTon;
+  const transportCost = feedstockTons * transportToPlantCostPerTon;
+  const tollingCost = feedstockTons * tollingCostPerTon;
+
+  const routeCost = feedstockCost + transportCost + tollingCost;
   const routeSurplus = revenue - routeCost;
   const routeMargin = revenue > 0 ? (routeSurplus / revenue) * 100 : 0;
 
@@ -335,9 +339,9 @@ export default function AnalyticsPage() {
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
         <Card label="SAR ResourceOS" title="Analytics Control Module">
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            Live analytics view for parcel readiness, release blockers, route
-            exposure, margin control, counterparty readiness and finance handoff
-            risk.
+            Live analytics view for parcel readiness, release blockers,
+            feedstock-based route exposure, margin control, counterparty
+            readiness and finance handoff risk.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -382,7 +386,7 @@ export default function AnalyticsPage() {
           <MetricCard
             label="Route Margin"
             value={percent(routeMargin)}
-            note="Revenue less transport and tolling only."
+            note="Revenue less feedstock, transport and tolling costs."
             tone={routeMargin >= 18 ? "green" : routeMargin >= 10 ? "gold" : "red"}
           />
 
@@ -402,7 +406,7 @@ export default function AnalyticsPage() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-2">
-          <Card label="Commercial Analytics" title="Revenue and margin signal">
+          <Card label="Commercial Analytics" title="Revenue and tonnage signal">
             <div className="mt-5 space-y-4">
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
@@ -416,9 +420,16 @@ export default function AnalyticsPage() {
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Accepted Tons
+                  Concentrate Tons
                 </p>
-                <p className="mt-2 text-3xl font-black">{tons(acceptedTons)}</p>
+                <p className="mt-2 text-3xl font-black">{tons(concentrateTons)}</p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  Feedstock Tons
+                </p>
+                <p className="mt-2 text-3xl font-black">{tons(feedstockTons)}</p>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -426,12 +437,22 @@ export default function AnalyticsPage() {
                   Revenue
                 </p>
                 <p className="mt-2 text-3xl font-black">{money(revenue)}</p>
+                <p className="mt-2 text-sm text-slate-400">
+                  {tons(concentrateTons)}t concentrate × {money(pricePerTon)}/t
+                </p>
               </div>
             </div>
           </Card>
 
-          <Card label="Exposure Analytics" title="Route cost and surplus">
+          <Card label="Exposure Analytics" title="Feedstock-based cost and surplus">
             <div className="mt-5 space-y-4">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  Feedstock Cost
+                </p>
+                <p className="mt-2 text-3xl font-black">{money(feedstockCost)}</p>
+              </div>
+
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
                   Transport Cost
@@ -444,6 +465,13 @@ export default function AnalyticsPage() {
                   Tolling Cost
                 </p>
                 <p className="mt-2 text-3xl font-black">{money(tollingCost)}</p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  Route Cost
+                </p>
+                <p className="mt-2 text-3xl font-black">{money(routeCost)}</p>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -494,6 +522,17 @@ export default function AnalyticsPage() {
                   The first chrome parcel is commercially visible but not release
                   ready. The main blockers remain document completion, approval
                   clearance and plant readiness.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  Finance Signal
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  Current Live v1 margin is calculated from concentrate revenue
+                  less feedstock, transport-to-plant and tolling costs on
+                  feedstock tonnage.
                 </p>
               </div>
 

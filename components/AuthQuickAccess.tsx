@@ -45,10 +45,11 @@ export default function AuthQuickAccess() {
     return (
       <div className="fixed left-4 right-4 top-4 z-50 mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-3xl border border-white/10 bg-[#080d18]/95 p-2 shadow-2xl backdrop-blur md:left-6 md:right-6">
         <div className="min-w-0 px-3">
-          <p className="hidden truncate text-xs font-bold uppercase tracking-[0.22em] text-[#d7ad32] sm:block">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#d7ad32]">
             Signed in
           </p>
-          <p className="max-w-[150px] truncate text-xs font-bold text-slate-300 sm:max-w-[260px]">
+
+          <p className="hidden max-w-[260px] truncate text-xs font-bold text-slate-300 sm:block">
             {email}
           </p>
         </div>

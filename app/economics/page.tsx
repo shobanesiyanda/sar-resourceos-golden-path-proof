@@ -74,7 +74,9 @@ function Stat(p: { label: string; value: string; note?: string; gold?: boolean }
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <p className="text-xs uppercase tracking-[0.25em] text-slate-500">{p.label}</p>
-      <p className={`mt-2 text-3xl font-black ${p.gold ? "text-[#f5d778]" : "text-white"}`}>{p.value}</p>
+      <p className={`mt-2 text-3xl font-black ${p.gold ? "text-[#f5d778]" : "text-white"}`}>
+        {p.value}
+      </p>
       {p.note ? <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p> : null}
     </div>
   );
@@ -105,11 +107,29 @@ function SelectField(p: { label: string; value: string; options: string[]; help:
         className="mt-3 w-full rounded-2xl border border-white/10 bg-[#050914] px-4 py-4 text-xl font-black text-white outline-none focus:border-[#d7ad32]"
       >
         {p.options.map((item) => (
-          <option key={item} value={item} className="bg-[#050914] text-white">{item}</option>
+          <option key={item} value={item} className="bg-[#050914] text-white">
+            {item}
+          </option>
         ))}
       </select>
       <span className="mt-2 block text-sm leading-6 text-slate-400">{p.help}</span>
     </label>
+  );
+}
+
+function WarningCard(p: { resource: string; material: string; yieldPercent: string; price: string }) {
+  return (
+    <div className="rounded-2xl border border-[#d7ad32]/30 bg-[#d7ad32]/10 p-4">
+      <p className="text-xs font-black uppercase tracking-[0.3em] text-[#f5d778]">Assumption Basis</p>
+      <h3 className="mt-2 text-xl font-black text-white">Verify before commercial release</h3>
+      <p className="mt-3 text-sm leading-7 text-slate-300">
+        Resource: <b>{p.resource}</b>. Material: <b>{p.material}</b>. Current starter yield:{" "}
+        <b>{p.yieldPercent}%</b>. Starter price: <b>R {p.price}/t</b>.
+      </p>
+      <p className="mt-3 text-sm leading-7 text-slate-400">
+        Verify assay results, yield, supplier price, transport, tolling, buyer price and assay charges before release.
+      </p>
+    </div>
   );
 }
 
@@ -301,13 +321,10 @@ export default function EconomicsPage() {
       estimated_route_surplus: surplus,
       estimated_route_margin_percent: margin,
       economics_basis:
-        "Resource-specific defaults applied from selected resource. Feedstock required calculated automatically from target product tons and expected yield. Feedstock assay and final product assay are separated and included in route cost.",
+        "Resource-specific defaults applied. Feedstock required calculated automatically. Feedstock assay and final product assay are separated and included in route cost. Verify all assumptions before release.",
     };
 
-    const { error: saveError } = await supabase
-      .from("parcels")
-      .update(payload)
-      .eq("id", parcelId);
+    const { error: saveError } = await supabase.from("parcels").update(payload).eq("id", parcelId);
 
     if (saveError) {
       setError(saveError.message);
@@ -320,11 +337,21 @@ export default function EconomicsPage() {
   }
 
   if (loading) {
-    return <main className="min-h-screen bg-[#050914] px-5 py-28 text-white"><Card label="SAR ResourceOS" title="Loading economics..." /></main>;
+    return (
+      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
+        <Card label="SAR ResourceOS" title="Loading economics..." />
+      </main>
+    );
   }
 
   if (error && !parcelId) {
-    return <main className="min-h-screen bg-[#050914] px-5 py-28 text-white"><Card label="SAR ResourceOS" title="Economics module error"><p className="mt-3 text-red-200">{error}</p></Card></main>;
+    return (
+      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
+        <Card label="SAR ResourceOS" title="Economics module error">
+          <p className="mt-3 text-red-200">{error}</p>
+        </Card>
+      </main>
+    );
   }
 
   const resourceOptions = RESOURCE_MAP[form.category] || ["Other"];
@@ -333,7 +360,9 @@ export default function EconomicsPage() {
     <main className="min-h-screen bg-[#050914] text-white">
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
         <Card label="SAR ResourceOS" title="Resource Economics Calculator">
-          <p className="mt-3 text-sm leading-7 text-slate-300">Resource defaults now change by commodity. You can still override every number manually.</p>
+          <p className="mt-3 text-sm leading-7 text-slate-300">
+            Resource defaults now change by commodity. You can still override every number manually.
+          </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/dashboard" className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]">Back to Dashboard</Link>
             <Link href="/finance" className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300">Finance</Link>
@@ -364,12 +393,18 @@ export default function EconomicsPage() {
 
         <section className="grid gap-6 xl:grid-cols-2">
           <Card label="Input Controls" title="Set resource and economics">
-            {!isAdmin ? <div className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 p-4"><p className="font-black text-red-200">Admin access required</p></div> : null}
+            {!isAdmin ? (
+              <div className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 p-4">
+                <p className="font-black text-red-200">Admin access required</p>
+              </div>
+            ) : null}
 
             <div className="mt-5 space-y-4">
               <SelectField label="Resource Category" value={form.category} options={Object.keys(RESOURCE_MAP)} onChange={(v) => setField("category", v)} help="Broad commodity class." />
               <SelectField label="Resource / Commodity" value={form.resource} options={resourceOptions} onChange={(v) => setField("resource", v)} help="Changing this applies default assumptions." />
               <SelectField label="Material Type" value={form.material} options={MATERIAL_TYPES} onChange={(v) => setField("material", v)} help="Material form entering or leaving the route." />
+
+              <WarningCard resource={form.resource} material={form.material} yieldPercent={form.yield} price={form.price} />
 
               <Field label="Target / Yielded Product Tons" value={form.target} onChange={(v) => setField("target", v)} help="The product tons you want to produce or sell." />
               <Field label="Expected Yield %" value={form.yield} onChange={(v) => setField("yield", v)} help="Default changes by resource. You can override it." />
@@ -385,7 +420,12 @@ export default function EconomicsPage() {
               <Field label="Final Product Assay Cost / Batch" value={form.concentrateAssayRate} onChange={(v) => setField("concentrateAssayRate", v)} help="Final product assay cost per batch." />
               <Field label="Final Product Assay Batches" value={form.concentrateAssayBatches} onChange={(v) => setField("concentrateAssayBatches", v)} help="Number of final product assay batches." />
 
-              <button type="button" onClick={save} disabled={!isAdmin || saving} className="w-full rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-4 text-base font-black text-[#07101c] disabled:cursor-not-allowed disabled:opacity-50">
+              <button
+                type="button"
+                onClick={save}
+                disabled={!isAdmin || saving}
+                className="w-full rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-4 text-base font-black text-[#07101c] disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 {saving ? "Saving..." : "Save Resource Economics"}
               </button>
 
@@ -413,9 +453,11 @@ export default function EconomicsPage() {
         </section>
 
         <Card label="Control Note" title="Resource assumptions basis">
-          <p className="mt-3 text-sm leading-7 text-slate-300">Resource-specific defaults are starter assumptions only. They are not live market prices. Changing resource applies a default yield, price, feedstock cost, transport cost, tolling cost and assay basis. Manual override remains available.</p>
+          <p className="mt-3 text-sm leading-7 text-slate-300">
+            Resource-specific defaults are starter assumptions only. They are not live market prices. Manual override remains available.
+          </p>
         </Card>
       </div>
     </main>
   );
-    }
+}

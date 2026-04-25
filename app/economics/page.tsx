@@ -19,6 +19,8 @@ type Parcel = {
   expected_price_per_ton: number | null;
   indicative_revenue: number | null;
   feedstock_tons: number | null;
+  expected_yield_percent: number | null;
+  expected_concentrate_tons: number | null;
   feedstock_cost_per_ton: number | null;
   transport_to_plant_cost_per_ton: number | null;
   tolling_cost_per_ton: number | null;
@@ -33,6 +35,8 @@ type Parcel = {
 
 type EconomicsForm = {
   feedstock_tons: string;
+  expected_yield_percent: string;
+  expected_price_per_ton: string;
   feedstock_cost_per_ton: string;
   transport_to_plant_cost_per_ton: string;
   tolling_cost_per_ton: string;
@@ -58,6 +62,18 @@ function toNumber(value: string) {
   const clean = value.replace(",", ".").trim();
   const parsed = Number(clean);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function marginState(margin: number) {
+  if (margin < 18) return "Below Target";
+  if (margin <= 25) return "Target Band";
+  return "Strong Route";
+}
+
+function marginClass(margin: number) {
+  if (margin < 18) return "border-red-400/40 bg-red-500/15 text-red-200";
+  if (margin <= 25) return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+  return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
 }
 
 function Card({
@@ -96,10 +112,16 @@ function StatBox({
       <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
         {label}
       </p>
-      <p className={`mt-2 text-3xl font-black ${gold ? "text-[#f5d778]" : "text-white"}`}>
+      <p
+        className={`mt-2 text-3xl font-black ${
+          gold ? "text-[#f5d778]" : "text-white"
+        }`}
+      >
         {value}
       </p>
-      {note ? <p className="mt-2 text-sm leading-6 text-slate-400">{note}</p> : null}
+      {note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">{note}</p>
+      ) : null}
     </div>
   );
 }
@@ -128,7 +150,11 @@ function InputBox({
         className="mt-3 w-full rounded-2xl border border-white/10 bg-[#050914] px-4 py-4 text-2xl font-black text-white outline-none focus:border-[#d7ad32]"
       />
 
-      {help ? <span className="mt-2 block text-sm leading-6 text-slate-400">{help}</span> : null}
+      {help ? (
+        <span className="mt-2 block text-sm leading-6 text-slate-400">
+          {help}
+        </span>
+      ) : null}
     </label>
   );
 }
@@ -146,6 +172,8 @@ export default function EconomicsPage() {
 
   const [form, setForm] = useState<EconomicsForm>({
     feedstock_tons: "",
+    expected_yield_percent: "",
+    expected_price_per_ton: "",
     feedstock_cost_per_ton: "",
     transport_to_plant_cost_per_ton: "",
     tolling_cost_per_ton: "",
@@ -180,7 +208,7 @@ export default function EconomicsPage() {
       const { data: parcelData, error: parcelError } = await supabase
         .from("parcels")
         .select(
-          "id, parcel_code, commodity, accepted_tons, expected_price_per_ton, indicative_revenue, feedstock_tons, feedstock_cost_per_ton, transport_to_plant_cost_per_ton, tolling_cost_per_ton, estimated_feedstock_cost, estimated_transport_cost, estimated_tolling_cost, estimated_route_cost, estimated_route_surplus, estimated_route_margin_percent, economics_basis"
+          "id, parcel_code, commodity, accepted_tons, expected_price_per_ton, indicative_revenue, feedstock_tons, expected_yield_percent, expected_concentrate_tons, feedstock_cost_per_ton, transport_to_plant_cost_per_ton, tolling_cost_per_ton, estimated_feedstock_cost, estimated_transport_cost, estimated_tolling_cost, estimated_route_cost, estimated_route_surplus, estimated_route_margin_percent, economics_basis"
         )
         .eq("parcel_code", "PAR-CHR-2026-0001")
         .single();
@@ -191,11 +219,19 @@ export default function EconomicsPage() {
         return;
       }
 
+      const startingYield =
+        parcelData.expected_yield_percent ??
+        (parcelData.feedstock_tons && parcelData.feedstock_tons > 0
+          ? (parcelData.accepted_tons / parcelData.feedstock_tons) * 100
+          : 0);
+
       setProfile(profileData);
       setParcel(parcelData);
 
       setForm({
         feedstock_tons: String(parcelData.feedstock_tons ?? ""),
+        expected_yield_percent: String(startingYield),
+        expected_price_per_ton: String(parcelData.expected_price_per_ton ?? ""),
         feedstock_cost_per_ton: String(parcelData.feedstock_cost_per_ton ?? ""),
         transport_to_plant_cost_per_ton: String(
           parcelData.transport_to_plant_cost_per_ton ?? ""
@@ -209,14 +245,15 @@ export default function EconomicsPage() {
     load();
   }, [supabase]);
 
-  const concentrateTons = Number(parcel?.accepted_tons ?? 0);
-  const pricePerTon = Number(parcel?.expected_price_per_ton ?? 0);
-  const revenue = Number(parcel?.indicative_revenue ?? concentrateTons * pricePerTon);
-
   const feedstockTons = toNumber(form.feedstock_tons);
+  const yieldPercent = toNumber(form.expected_yield_percent);
+  const pricePerTon = toNumber(form.expected_price_per_ton);
   const feedstockRate = toNumber(form.feedstock_cost_per_ton);
   const transportRate = toNumber(form.transport_to_plant_cost_per_ton);
   const tollingRate = toNumber(form.tolling_cost_per_ton);
+
+  const concentrateTons = feedstockTons * (yieldPercent / 100);
+  const revenue = concentrateTons * pricePerTon;
 
   const feedstockCost = feedstockTons * feedstockRate;
   const transportCost = feedstockTons * transportRate;
@@ -234,6 +271,11 @@ export default function EconomicsPage() {
 
     const payload = {
       feedstock_tons: feedstockTons,
+      expected_yield_percent: yieldPercent,
+      expected_concentrate_tons: concentrateTons,
+      accepted_tons: concentrateTons,
+      expected_price_per_ton: pricePerTon,
+      indicative_revenue: revenue,
       feedstock_cost_per_ton: feedstockRate,
       transport_to_plant_cost_per_ton: transportRate,
       tolling_cost_per_ton: tollingRate,
@@ -244,7 +286,7 @@ export default function EconomicsPage() {
       estimated_route_surplus: routeSurplus,
       estimated_route_margin_percent: routeMargin,
       economics_basis:
-        "Revenue calculated on concentrate tons. Feedstock, transport-to-plant and tolling costs calculated on feedstock tons.",
+        "Revenue calculated on yielded concentrate tons. Yielded concentrate tons calculated from feedstock tons and expected yield percentage. Feedstock, transport-to-plant and tolling costs calculated on feedstock tons.",
     };
 
     const { data, error: updateError } = await supabase
@@ -252,7 +294,7 @@ export default function EconomicsPage() {
       .update(payload)
       .eq("id", parcel.id)
       .select(
-        "id, parcel_code, commodity, accepted_tons, expected_price_per_ton, indicative_revenue, feedstock_tons, feedstock_cost_per_ton, transport_to_plant_cost_per_ton, tolling_cost_per_ton, estimated_feedstock_cost, estimated_transport_cost, estimated_tolling_cost, estimated_route_cost, estimated_route_surplus, estimated_route_margin_percent, economics_basis"
+        "id, parcel_code, commodity, accepted_tons, expected_price_per_ton, indicative_revenue, feedstock_tons, expected_yield_percent, expected_concentrate_tons, feedstock_cost_per_ton, transport_to_plant_cost_per_ton, tolling_cost_per_ton, estimated_feedstock_cost, estimated_transport_cost, estimated_tolling_cost, estimated_route_cost, estimated_route_surplus, estimated_route_margin_percent, economics_basis"
       )
       .single();
 
@@ -263,7 +305,7 @@ export default function EconomicsPage() {
     }
 
     setParcel(data);
-    setMessage("Parcel economics saved to Supabase.");
+    setMessage("Yield and parcel economics saved to Supabase.");
     setSaving(false);
   }
 
@@ -286,15 +328,15 @@ export default function EconomicsPage() {
   }
 
   const isAdmin = profile?.role === "admin";
+  const state = marginState(routeMargin);
 
   return (
     <main className="min-h-screen bg-[#050914] text-white">
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-        <Card label="SAR ResourceOS" title="Editable Parcel Economics">
+        <Card label="SAR ResourceOS" title="Editable Yield & Parcel Economics">
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            Update feedstock tons, feedstock cost, transport cost and tolling cost
-            directly from the app. Revenue remains based on concentrate tons and
-            expected selling price.
+            Update feedstock tons, expected yield, concentrate output, selling
+            price and feedstock-based route costs directly from the app.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -322,14 +364,34 @@ export default function EconomicsPage() {
         </Card>
 
         <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatBox label="Parcel" value={parcel?.parcel_code ?? "Pending"} note={parcel?.commodity ?? "Commodity pending"} />
-          <StatBox label="Concentrate Tons" value={tons(concentrateTons)} />
-          <StatBox label="Revenue" value={money(revenue)} note={`${tons(concentrateTons)}t × ${money(pricePerTon)}/t`} />
-          <StatBox label="Current Margin" value={percent(routeMargin)} gold />
+          <StatBox
+            label="Parcel"
+            value={parcel?.parcel_code ?? "Pending"}
+            note={parcel?.commodity ?? "Commodity pending"}
+          />
+          <StatBox label="Feedstock Tons" value={tons(feedstockTons)} />
+          <StatBox label="Yielded Concentrate" value={tons(concentrateTons)} />
+          <StatBox label="Revenue" value={money(revenue)} gold />
+        </section>
+
+        <section className="mb-6 grid gap-4 md:grid-cols-3">
+          <div className={`rounded-3xl border p-5 ${marginClass(routeMargin)}`}>
+            <p className="text-xs font-bold uppercase tracking-[0.25em]">
+              Margin Control State
+            </p>
+            <p className="mt-3 text-3xl font-black">{state}</p>
+            <p className="mt-2 text-sm leading-6">
+              Below 18% = review/block. 18%–25% = target band. Above 25% =
+              strong route.
+            </p>
+          </div>
+
+          <StatBox label="Route Margin" value={percent(routeMargin)} gold />
+          <StatBox label="Indicative Surplus" value={money(routeSurplus)} gold />
         </section>
 
         <section className="grid gap-6 xl:grid-cols-2">
-          <Card label="Input Controls" title="Edit route economics">
+          <Card label="Input Controls" title="Edit yield and route economics">
             {!isAdmin ? (
               <div className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 p-4">
                 <p className="font-black text-red-200">Admin access required</p>
@@ -343,21 +405,41 @@ export default function EconomicsPage() {
               <InputBox
                 label="Feedstock Tons"
                 value={form.feedstock_tons}
-                onChange={(value) => setForm((old) => ({ ...old, feedstock_tons: value }))}
-                help="Raw feedstock tons used for feedstock, transport and tolling cost calculations."
+                onChange={(value) =>
+                  setForm((old) => ({ ...old, feedstock_tons: value }))
+                }
+                help="Raw feedstock tons loaded into the route."
               />
 
               <InputBox
-                label="Feedstock Cost / Ton"
+                label="Expected Yield %"
+                value={form.expected_yield_percent}
+                onChange={(value) =>
+                  setForm((old) => ({ ...old, expected_yield_percent: value }))
+                }
+                help="Expected concentrate output percentage from feedstock tons."
+              />
+
+              <InputBox
+                label="Selling Price / Concentrate Ton"
+                value={form.expected_price_per_ton}
+                onChange={(value) =>
+                  setForm((old) => ({ ...old, expected_price_per_ton: value }))
+                }
+                help="Selling price per yielded concentrate ton."
+              />
+
+              <InputBox
+                label="Feedstock Cost / Feedstock Ton"
                 value={form.feedstock_cost_per_ton}
                 onChange={(value) =>
                   setForm((old) => ({ ...old, feedstock_cost_per_ton: value }))
                 }
-                help="Cost per ton paid or budgeted for feedstock."
+                help="Cost per feedstock ton."
               />
 
               <InputBox
-                label="Transport To Plant Cost / Ton"
+                label="Transport To Plant Cost / Feedstock Ton"
                 value={form.transport_to_plant_cost_per_ton}
                 onChange={(value) =>
                   setForm((old) => ({
@@ -369,9 +451,11 @@ export default function EconomicsPage() {
               />
 
               <InputBox
-                label="Tolling Cost / Ton"
+                label="Tolling Cost / Feedstock Ton"
                 value={form.tolling_cost_per_ton}
-                onChange={(value) => setForm((old) => ({ ...old, tolling_cost_per_ton: value }))}
+                onChange={(value) =>
+                  setForm((old) => ({ ...old, tolling_cost_per_ton: value }))
+                }
                 help="Plant tolling or processing cost per feedstock ton."
               />
 
@@ -381,7 +465,7 @@ export default function EconomicsPage() {
                 disabled={!isAdmin || saving}
                 className="w-full rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-4 text-base font-black text-[#07101c] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {saving ? "Saving..." : "Save Economics to Supabase"}
+                {saving ? "Saving..." : "Save Yield & Economics to Supabase"}
               </button>
 
               {message ? (
@@ -400,9 +484,36 @@ export default function EconomicsPage() {
 
           <Card label="Live Calculation Preview" title="Calculated route result">
             <div className="mt-5 space-y-4">
-              <StatBox label="Feedstock Cost" value={money(feedstockCost)} note={`${money(feedstockRate)}/t × ${tons(feedstockTons)}t feedstock`} />
-              <StatBox label="Transport Cost" value={money(transportCost)} note={`${money(transportRate)}/t × ${tons(feedstockTons)}t feedstock`} />
-              <StatBox label="Tolling Cost" value={money(tollingCost)} note={`${money(tollingRate)}/t × ${tons(feedstockTons)}t feedstock`} />
+              <StatBox
+                label="Yielded Concentrate Tons"
+                value={tons(concentrateTons)}
+                note={`${tons(feedstockTons)}t feedstock × ${percent(yieldPercent)} yield`}
+              />
+
+              <StatBox
+                label="Indicative Revenue"
+                value={money(revenue)}
+                note={`${tons(concentrateTons)}t concentrate × ${money(pricePerTon)}/t`}
+              />
+
+              <StatBox
+                label="Feedstock Cost"
+                value={money(feedstockCost)}
+                note={`${money(feedstockRate)}/t × ${tons(feedstockTons)}t feedstock`}
+              />
+
+              <StatBox
+                label="Transport Cost"
+                value={money(transportCost)}
+                note={`${money(transportRate)}/t × ${tons(feedstockTons)}t feedstock`}
+              />
+
+              <StatBox
+                label="Tolling Cost"
+                value={money(tollingCost)}
+                note={`${money(tollingRate)}/t × ${tons(feedstockTons)}t feedstock`}
+              />
+
               <StatBox label="Total Route Cost" value={money(routeCost)} />
               <StatBox label="Indicative Surplus" value={money(routeSurplus)} gold />
               <StatBox label="Route Margin" value={percent(routeMargin)} gold />
@@ -412,13 +523,13 @@ export default function EconomicsPage() {
 
         <Card label="Control Note" title="Economics basis">
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            Revenue is calculated on concentrate tons. Feedstock, transport-to-plant
-            and tolling costs are calculated on feedstock tons. This page saves the
-            recalculated values back to the Supabase parcels table so Finance,
-            Analytics and Route Builder use the updated numbers.
+            Revenue is now calculated on yielded concentrate tons. Yielded
+            concentrate tons are calculated from feedstock tons and expected
+            yield percentage. Feedstock, transport-to-plant and tolling costs are
+            calculated on feedstock tons.
           </p>
         </Card>
       </div>
     </main>
   );
-  }
+      }

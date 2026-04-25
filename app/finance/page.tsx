@@ -212,19 +212,29 @@ export default function FinancePage() {
     );
   }
 
-  const acceptedTons = Number(parcel?.accepted_tons ?? 0);
+  const concentrateTons = Number(parcel?.accepted_tons ?? 0);
   const pricePerTon = Number(parcel?.expected_price_per_ton ?? 0);
 
-  const revenue =
-    parcel?.indicative_revenue ?? acceptedTons * pricePerTon;
+  const revenue = parcel?.indicative_revenue ?? concentrateTons * pricePerTon;
 
-  const transportCostPerTon = Number(route?.transport_cost_per_ton ?? 0);
-  const tollingCostPerTon = Number(route?.tolling_cost_per_ton ?? 0);
+  /**
+   * Live v1 operating assumptions.
+   * Later these must move into Supabase parcel economics fields.
+   *
+   * Current first-parcel basis:
+   * 3 × 36t feedstock trucks = 108t feedstock
+   * producing 33.900t concentrate.
+   */
+  const feedstockTons = 108;
+  const feedstockCostPerTon = 150;
+  const transportToPlantCostPerTon = Number(route?.transport_cost_per_ton ?? 150);
+  const tollingCostPerTon = Number(route?.tolling_cost_per_ton ?? 350);
 
-  const transportCost = transportCostPerTon * acceptedTons;
-  const tollingCost = tollingCostPerTon * acceptedTons;
-  const routeCost = transportCost + tollingCost;
+  const feedstockCost = feedstockTons * feedstockCostPerTon;
+  const transportCost = feedstockTons * transportToPlantCostPerTon;
+  const tollingCost = feedstockTons * tollingCostPerTon;
 
+  const routeCost = feedstockCost + transportCost + tollingCost;
   const routeSurplus = revenue - routeCost;
   const routeMargin = revenue > 0 ? (routeSurplus / revenue) * 100 : 0;
 
@@ -247,9 +257,9 @@ export default function FinancePage() {
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
         <Card label="SAR ResourceOS" title="Finance / Exposure / Margin">
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            Live finance-control page for first parcel revenue, route exposure,
-            transport and tolling cost, indicative surplus, margin and handoff
-            readiness.
+            Live finance-control page for first parcel revenue, feedstock cost,
+            route exposure, transport cost, tolling cost, indicative surplus,
+            margin and handoff readiness.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -289,16 +299,16 @@ export default function FinancePage() {
 
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Accepted Tons
+              Concentrate Tons
             </p>
-            <p className="mt-3 text-4xl font-black">{tons(acceptedTons)}</p>
+            <p className="mt-3 text-4xl font-black">{tons(concentrateTons)}</p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Price / Ton
+              Feedstock Tons
             </p>
-            <p className="mt-3 text-3xl font-black">{money(pricePerTon)}</p>
+            <p className="mt-3 text-4xl font-black">{tons(feedstockTons)}</p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
@@ -350,7 +360,7 @@ export default function FinancePage() {
                 </p>
                 <p className="mt-2 text-4xl font-black">{money(revenue)}</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  {tons(acceptedTons)}t × {money(pricePerTon)}/t
+                  {tons(concentrateTons)}t concentrate × {money(pricePerTon)}/t
                 </p>
               </div>
 
@@ -365,15 +375,25 @@ export default function FinancePage() {
             </div>
           </Card>
 
-          <Card label="Exposure" title="Route cost exposure">
+          <Card label="Exposure" title="Feedstock-based route cost exposure">
             <div className="mt-5 space-y-4">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                  Feedstock Cost
+                </p>
+                <p className="mt-2 text-3xl font-black">{money(feedstockCost)}</p>
+                <p className="mt-2 text-sm text-slate-400">
+                  {money(feedstockCostPerTon)}/t × {tons(feedstockTons)}t feedstock
+                </p>
+              </div>
+
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
                   Transport Cost
                 </p>
                 <p className="mt-2 text-3xl font-black">{money(transportCost)}</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  {money(transportCostPerTon)}/t × {tons(acceptedTons)}t
+                  {money(transportToPlantCostPerTon)}/t × {tons(feedstockTons)}t feedstock
                 </p>
               </div>
 
@@ -383,13 +403,13 @@ export default function FinancePage() {
                 </p>
                 <p className="mt-2 text-3xl font-black">{money(tollingCost)}</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  {money(tollingCostPerTon)}/t × {tons(acceptedTons)}t
+                  {money(tollingCostPerTon)}/t × {tons(feedstockTons)}t feedstock
                 </p>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Route Cost
+                  Total Route Cost
                 </p>
                 <p className="mt-2 text-3xl font-black">{money(routeCost)}</p>
               </div>
@@ -423,10 +443,10 @@ export default function FinancePage() {
                   Control Note
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  This is an indicative route view only. It currently deducts
-                  transport and tolling from loaded parcel revenue. Feedstock,
-                  funding cost, assay adjustment, overhead and settlement items
-                  can be added in the next finance pass.
+                  This corrected Live v1 view calculates sales on concentrate
+                  tons, but calculates feedstock, transport and tolling costs on
+                  feedstock tons. Feedstock tons are currently a fixed Live v1
+                  assumption and should later move into Supabase.
                 </p>
               </div>
             </div>
@@ -476,8 +496,9 @@ export default function FinancePage() {
             </p>
             <p className="mt-3 text-sm leading-6 text-slate-400">
               The finance page is currently a live read-only exposure and margin
-              view. The next phase can add finance approvals, settlement records,
-              funding drawdowns, payment release controls and parcel-level P&L.
+              view. The next phase should add finance approvals, settlement
+              records, funding drawdowns, payment release controls and
+              parcel-level P&amp;L.
             </p>
           </div>
         </Card>

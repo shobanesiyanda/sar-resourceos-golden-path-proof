@@ -26,6 +26,11 @@ const liveLinks = [
     fullLabel: "Approvals",
     href: "/approvals",
   },
+  {
+    shortLabel: "Parties",
+    fullLabel: "Counterparties",
+    href: "/counterparties",
+  },
 ];
 
 export default function AuthQuickAccess() {
@@ -133,4 +138,4 @@ export default function AuthQuickAccess() {
       </div>
     </div>
   );
-                                        }
+          }

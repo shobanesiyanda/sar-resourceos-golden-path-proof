@@ -17,6 +17,11 @@ const liveLinks = [
     href: "/dashboard",
   },
   {
+    shortLabel: "Route",
+    fullLabel: "Route Builder",
+    href: "/route-builder",
+  },
+  {
     shortLabel: "Docs",
     fullLabel: "Documents",
     href: "/documents",
@@ -138,4 +143,4 @@ export default function AuthQuickAccess() {
       </div>
     </div>
   );
-          }
+}

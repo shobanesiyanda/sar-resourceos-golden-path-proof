@@ -89,3 +89,14 @@ svg {
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+/* Global spacing below fixed AuthQuickAccess header */
+main {
+  padding-top: 7.5rem;
+}
+
+@media (max-width: 640px) {
+  main {
+    padding-top: 8.5rem;
+  }
+  }

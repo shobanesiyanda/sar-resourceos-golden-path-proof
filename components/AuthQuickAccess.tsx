@@ -32,6 +32,11 @@ const liveLinks = [
     href: "/finance",
   },
   {
+    shortLabel: "Analytics",
+    fullLabel: "Analytics",
+    href: "/analytics",
+  },
+  {
     shortLabel: "Docs",
     fullLabel: "Documents",
     href: "/documents",

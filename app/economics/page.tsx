@@ -275,7 +275,6 @@ export default function EconomicsPage() {
       expected_concentrate_tons: concentrateTons,
       accepted_tons: concentrateTons,
       expected_price_per_ton: pricePerTon,
-      indicative_revenue: revenue,
       feedstock_cost_per_ton: feedstockRate,
       transport_to_plant_cost_per_ton: transportRate,
       tolling_cost_per_ton: tollingRate,
@@ -487,31 +486,41 @@ export default function EconomicsPage() {
               <StatBox
                 label="Yielded Concentrate Tons"
                 value={tons(concentrateTons)}
-                note={`${tons(feedstockTons)}t feedstock × ${percent(yieldPercent)} yield`}
+                note={`${tons(feedstockTons)}t feedstock × ${percent(
+                  yieldPercent
+                )} yield`}
               />
 
               <StatBox
                 label="Indicative Revenue"
                 value={money(revenue)}
-                note={`${tons(concentrateTons)}t concentrate × ${money(pricePerTon)}/t`}
+                note={`${tons(concentrateTons)}t concentrate × ${money(
+                  pricePerTon
+                )}/t`}
               />
 
               <StatBox
                 label="Feedstock Cost"
                 value={money(feedstockCost)}
-                note={`${money(feedstockRate)}/t × ${tons(feedstockTons)}t feedstock`}
+                note={`${money(feedstockRate)}/t × ${tons(
+                  feedstockTons
+                )}t feedstock`}
               />
 
               <StatBox
                 label="Transport Cost"
                 value={money(transportCost)}
-                note={`${money(transportRate)}/t × ${tons(feedstockTons)}t feedstock`}
+                note={`${money(transportRate)}/t × ${tons(
+                  feedstockTons
+                )}t feedstock`}
               />
 
               <StatBox
                 label="Tolling Cost"
                 value={money(tollingCost)}
-                note={`${money(tollingRate)}/t × ${tons(feedstockTons)}t feedstock`}
+                note={`${money(tollingRate)}/t × ${tons(
+                  feedstockTons
+                )}t feedstock`}
               />
 
               <StatBox label="Total Route Cost" value={money(routeCost)} />
@@ -523,13 +532,14 @@ export default function EconomicsPage() {
 
         <Card label="Control Note" title="Economics basis">
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            Revenue is now calculated on yielded concentrate tons. Yielded
-            concentrate tons are calculated from feedstock tons and expected
-            yield percentage. Feedstock, transport-to-plant and tolling costs are
-            calculated on feedstock tons.
+            Revenue is calculated by Supabase from accepted concentrate tons and
+            selling price. This page updates the yielded concentrate tons,
+            accepted tons, yield percentage, selling price and feedstock-based
+            route costs. It does not write directly to the generated revenue
+            column.
           </p>
         </Card>
       </div>
     </main>
   );
-      }
+  }

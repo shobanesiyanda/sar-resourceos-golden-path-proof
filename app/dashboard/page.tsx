@@ -67,7 +67,9 @@ function Badge({ state }: { state: string }) {
       : "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
 
   return (
-    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${style}`}>
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${style}`}
+    >
       {state}
     </span>
   );
@@ -154,7 +156,9 @@ export default function DashboardPage() {
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
             SAR ResourceOS
           </p>
-          <h1 className="mt-3 text-2xl font-black">Loading live Supabase data...</h1>
+          <h1 className="mt-3 text-2xl font-black">
+            Loading live Supabase data...
+          </h1>
           <p className="mt-3 text-sm text-slate-400">
             Loading profile, parcel, route chain and counterparties.
           </p>
@@ -177,20 +181,29 @@ export default function DashboardPage() {
     );
   }
 
-  const supplier = counterparties.find((item) => item.counterparty_type === "Supplier");
-  const washPlant = counterparties.find((item) => item.counterparty_type === "Wash Plant");
+  const supplier = counterparties.find(
+    (item) => item.counterparty_type === "Supplier"
+  );
+  const washPlant = counterparties.find(
+    (item) => item.counterparty_type === "Wash Plant"
+  );
   const buyer = counterparties.find((item) => item.counterparty_type === "Buyer");
-  const transporter = counterparties.find((item) => item.counterparty_type === "Transporter");
+  const transporter = counterparties.find(
+    (item) => item.counterparty_type === "Transporter"
+  );
 
   const revenue =
     parcel?.indicative_revenue ??
-    Number(parcel?.accepted_tons ?? 0) * Number(parcel?.expected_price_per_ton ?? 0);
+    Number(parcel?.accepted_tons ?? 0) *
+      Number(parcel?.expected_price_per_ton ?? 0);
 
   const opportunityCards = [
     {
       title: "Parcel Intake",
       state: parcel?.control_state ?? "Pending",
-      note: `${parcel?.parcel_code ?? "No parcel"} • ${tons(parcel?.accepted_tons)}t`,
+      note: `${parcel?.parcel_code ?? "No parcel"} • ${tons(
+        parcel?.accepted_tons
+      )}t`,
     },
     {
       title: "Supplier Verification",
@@ -245,13 +258,15 @@ export default function DashboardPage() {
           </h1>
 
           <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-300 md:text-base">
-            Live Supabase-backed dashboard for chrome parcel control, route readiness,
-            counterparties, approvals and finance handoff.
+            Live Supabase-backed dashboard for chrome parcel control, route
+            readiness, counterparties, approvals and finance handoff.
           </p>
 
           <div className="mt-5 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Role</div>
+              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
+                Role
+              </div>
               <div className="mt-2 font-black capitalize">{profile?.role}</div>
             </div>
 
@@ -259,16 +274,22 @@ export default function DashboardPage() {
               <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
                 Commodity
               </div>
-              <div className="mt-2 font-black text-[#d7ad32]">{parcel?.commodity}</div>
+              <div className="mt-2 font-black text-[#d7ad32]">
+                {parcel?.commodity}
+              </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Mode</div>
+              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
+                Mode
+              </div>
               <div className="mt-2 font-black">Live v1</div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Status</div>
+              <div className="text-xs uppercase tracking-[0.22em] text-slate-500">
+                Status
+              </div>
               <div className="mt-2">
                 <Badge state={parcel?.control_state ?? "Pending"} />
               </div>
@@ -278,17 +299,27 @@ export default function DashboardPage() {
 
         <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Lead Parcel</p>
-            <div className="mt-3 text-2xl font-black">{parcel?.parcel_code}</div>
-            <p className="mt-2 text-sm text-slate-400">{parcel?.product_description}</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+              Lead Parcel
+            </p>
+            <div className="mt-3 text-2xl font-black">
+              {parcel?.parcel_code}
+            </div>
+            <p className="mt-2 text-sm text-slate-400">
+              {parcel?.product_description}
+            </p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
               Accepted Tons
             </p>
-            <div className="mt-3 text-4xl font-black">{tons(parcel?.accepted_tons)}</div>
-            <p className="mt-2 text-sm text-slate-400">Loaded from Supabase parcels.</p>
+            <div className="mt-3 text-4xl font-black">
+              {tons(parcel?.accepted_tons)}
+            </div>
+            <p className="mt-2 text-sm text-slate-400">
+              Loaded from Supabase parcels.
+            </p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
@@ -297,12 +328,15 @@ export default function DashboardPage() {
             </p>
             <div className="mt-3 text-3xl font-black">{money(revenue)}</div>
             <p className="mt-2 text-sm text-slate-400">
-              {tons(parcel?.accepted_tons)}t × {money(parcel?.expected_price_per_ton)}/t
+              {tons(parcel?.accepted_tons)}t ×{" "}
+              {money(parcel?.expected_price_per_ton)}/t
             </p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Operator</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+              Operator
+            </p>
             <div className="mt-3 text-2xl font-black">
               {parcel?.operator_name ?? profile?.full_name}
             </div>
@@ -317,7 +351,9 @@ export default function DashboardPage() {
             <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
               Opportunity Cards
             </p>
-            <h2 className="mt-2 text-2xl font-black">Open commercial workstreams</h2>
+            <h2 className="mt-2 text-2xl font-black">
+              Open commercial workstreams
+            </h2>
 
             <div className="mt-5 grid gap-4 md:grid-cols-3 xl:grid-cols-1">
               {opportunityCards.map((card) => (
@@ -329,7 +365,9 @@ export default function DashboardPage() {
                     <h3 className="font-black">{card.title}</h3>
                     <Badge state={card.state} />
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-400">{card.note}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-400">
+                    {card.note}
+                  </p>
                 </div>
               ))}
             </div>
@@ -370,13 +408,21 @@ export default function DashboardPage() {
 
           <div className="mt-5 grid gap-4 md:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Origin</p>
-              <p className="mt-2 font-black">{routeChain?.origin_location ?? "Pending"}</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                Origin
+              </p>
+              <p className="mt-2 font-black">
+                {routeChain?.origin_location ?? "Pending"}
+              </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Plant</p>
-              <p className="mt-2 font-black">{routeChain?.plant_location ?? "Pending"}</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                Plant
+              </p>
+              <p className="mt-2 font-black">
+                {routeChain?.plant_location ?? "Pending"}
+              </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -389,7 +435,9 @@ export default function DashboardPage() {
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">Status</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                Status
+              </p>
               <div className="mt-2">
                 <Badge state={routeChain?.status ?? "Pending"} />
               </div>
@@ -402,7 +450,9 @@ export default function DashboardPage() {
             <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
               Finance / Exposure / Margin
             </p>
-            <h2 className="mt-2 text-2xl font-black">First parcel finance view</h2>
+            <h2 className="mt-2 text-2xl font-black">
+              First parcel finance view
+            </h2>
 
             <div className="mt-5 space-y-4">
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -465,4 +515,4 @@ export default function DashboardPage() {
       </div>
     </main>
   );
-      }
+  }

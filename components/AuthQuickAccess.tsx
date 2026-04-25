@@ -99,7 +99,7 @@ export default function AuthQuickAccess() {
   return (
     <div className="fixed left-3 right-3 top-6 z-50 mx-auto max-w-5xl rounded-full border border-white/10 bg-[#080d18]/95 p-1.5 shadow-2xl backdrop-blur">
       <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap">
-        <div className="shrink-0 rounded-full px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#d7ad32] sm:px-4 sm:py-3 sm:text-xs">
+        <div className="shrink-0 rounded-full px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#d7ad32] sm:px-4 sm:py-3 sm:text-xs sm:tracking-[0.25em]">
           Signed in
         </div>
 
@@ -110,7 +110,7 @@ export default function AuthQuickAccess() {
             <Link
               key={item.href}
               href={item.href}
-              className={`shrink-0 rounded-full border px-4 py-2.5 text-xs font-black sm:px-5 sm:py-3 sm:text-sm ${
+              className={`shrink-0 rounded-full border px-3.5 py-2.5 text-xs font-black sm:px-5 sm:py-3 sm:text-sm ${
                 active
                   ? "border-[#d7ad32]/60 bg-[#d7ad32] text-[#07101c]"
                   : "border-white/10 bg-white/[0.03] text-slate-200"
@@ -125,11 +125,12 @@ export default function AuthQuickAccess() {
         <button
           type="button"
           onClick={handleSignOut}
-          className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs font-black text-slate-200 sm:px-5 sm:py-3 sm:text-sm"
+          className="shrink-0 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs font-black text-slate-200 sm:px-5 sm:py-3 sm:text-sm"
         >
-          Sign out
+          <span className="sm:hidden">Out</span>
+          <span className="hidden sm:inline">Sign out</span>
         </button>
       </div>
     </div>
   );
-    }
+                                        }

@@ -1,4 +1,4 @@
-"use client";
+   "use client";
 
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
@@ -99,6 +99,34 @@ function StateBadge({ state }: { state: string }) {
   );
 }
 
+function MobileModuleSwitcher() {
+  return (
+    <section className="mb-6 lg:hidden">
+      <div className="rounded-3xl border border-white/10 bg-[#080d18] p-4 shadow-2xl">
+        <p className="mb-3 text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
+          Modules
+        </p>
+
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {sidebarItems.map((item) => (
+            <button
+              key={item}
+              className={`shrink-0 rounded-full border px-4 py-3 text-sm font-black ${
+                item === "Dashboard"
+                  ? "border-[#d7ad32]/60 bg-[#d7ad32] text-[#07101c]"
+                  : "border-white/10 bg-white/[0.03] text-slate-300"
+              }`}
+              type="button"
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function DashboardPage() {
   const supabase = createClient();
   const [checking, setChecking] = useState(true);
@@ -122,7 +150,7 @@ export default function DashboardPage() {
 
   if (checking) {
     return (
-      <main className="min-h-screen bg-[#050914] px-5 py-10 text-white">
+      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
         <div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-[#080d18] p-6 shadow-2xl">
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
             SAR ResourceOS
@@ -139,9 +167,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050914] pt-24 text-white md:pt-6">
+    <main className="min-h-screen bg-[#050914] pt-28 text-white md:pt-28 lg:pt-24">
       <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6 md:px-6">
-        {/* Locked sidebar shell */}
+        {/* Locked desktop sidebar */}
         <aside className="hidden w-72 shrink-0 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl lg:block">
           <div className="mb-6 border-b border-white/10 pb-5">
             <div className="text-3xl font-black text-[#d7ad32]">SAR</div>
@@ -169,8 +197,11 @@ export default function DashboardPage() {
 
         {/* Main content */}
         <section className="min-w-0 flex-1">
+          {/* Mobile module switcher */}
+          <MobileModuleSwitcher />
+
           {/* Topbar */}
-          <div className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+          <div className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl md:p-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
@@ -220,12 +251,12 @@ export default function DashboardPage() {
 
           {/* Today’s Control Summary */}
           <section className="mb-6">
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
                   Today’s Control Summary
                 </p>
-                <h2 className="mt-2 text-2xl font-black">
+                <h2 className="mt-2 text-2xl font-black md:text-3xl">
                   Active route control state
                 </h2>
               </div>
@@ -299,7 +330,7 @@ export default function DashboardPage() {
                     key={card.title}
                     className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <h3 className="text-lg font-black">{card.title}</h3>
                       <StateBadge state={card.state} />
                     </div>
@@ -325,8 +356,16 @@ export default function DashboardPage() {
               <div className="mt-5 space-y-4">
                 {[
                   ["Supplier", "Held", "Source evidence and terms pending."],
-                  ["Wash Plant", "Blocked", "Tolling and recovery not approved."],
-                  ["Buyer", "Pending", "Offtake link present, final pack pending."],
+                  [
+                    "Wash Plant",
+                    "Blocked",
+                    "Tolling and recovery not approved.",
+                  ],
+                  [
+                    "Buyer",
+                    "Pending",
+                    "Offtake link present, final pack pending.",
+                  ],
                   ["Finance", "Pending", "Settlement handoff not ready."],
                 ].map(([title, state, note]) => (
                   <div
@@ -360,7 +399,7 @@ export default function DashboardPage() {
 
             <div className="grid gap-4 xl:grid-cols-[1.4fr_0.6fr]">
               <div className="min-h-[280px] rounded-3xl border border-white/10 bg-[#050914] p-5">
-                <div className="flex h-full min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-[#d7ad32]/30 bg-[radial-gradient(circle_at_center,rgba(215,173,50,0.18),transparent_45%)]">
+                <div className="flex h-full min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-[#d7ad32]/30 bg-[radial-gradient(circle_at_center,rgba(215,173,50,0.18),transparent_45%)] p-5">
                   <div className="text-center">
                     <p className="text-sm font-black uppercase tracking-[0.35em] text-[#d7ad32]">
                       Heat Map Placeholder
@@ -453,4 +492,4 @@ export default function DashboardPage() {
       </div>
     </main>
   );
-    }
+}

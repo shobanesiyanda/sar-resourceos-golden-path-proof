@@ -8,7 +8,7 @@ const nav = [
   { label: "Dashboard", short: "Dash", href: "/dashboard", live: true },
   { label: "Opportunities", short: "Leads", href: "/economics", live: true },
   { label: "Counterparties", short: "Parties", href: "/counterparties", live: true },
-  { label: "Route Builder", short: "Route", href: "/route", live: true },
+  { label: "Route Builder", short: "Route", href: "/route-builder", live: true },
   { label: "Operations", short: "Ops", href: "/operations", live: true },
   { label: "Tolling & Plants", short: "Plants", href: "/dashboard#plants", live: false },
   { label: "Documents", short: "Docs", href: "/documents", live: true },
@@ -21,7 +21,7 @@ const nav = [
 const mobileNav = [
   { label: "Dash", href: "/dashboard" },
   { label: "Leads", href: "/economics" },
-  { label: "Route", href: "/route" },
+  { label: "Route", href: "/route-builder" },
   { label: "Ops", href: "/operations" },
   { label: "More", href: "/dashboard#more" },
 ];
@@ -43,7 +43,7 @@ function isMobileActive(pathname: string, href: string) {
   const base = href.split("#")[0];
 
   if (href.includes("#more")) {
-    return !["/dashboard", "/economics", "/route", "/operations"].includes(path);
+    return !["/dashboard", "/economics", "/route-builder", "/operations"].includes(path);
   }
 
   return path === base || path.startsWith(`${base}/`);
@@ -155,7 +155,9 @@ export default function ResourceShell({
             </p>
             <h2 className="mt-2 text-3xl font-black">{title}</h2>
             {subtitle ? (
-              <p className="mt-3 text-sm leading-7 text-slate-400">{subtitle}</p>
+              <p className="mt-3 text-sm leading-7 text-slate-400">
+                {subtitle}
+              </p>
             ) : null}
           </section>
 

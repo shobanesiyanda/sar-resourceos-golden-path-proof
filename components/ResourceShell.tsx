@@ -5,31 +5,48 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 
 const nav = [
-  { label: "Dashboard", short: "Dash", href: "/dashboard" },
-  { label: "Opportunities", short: "Leads", href: "/economics" },
-  { label: "Counterparties", short: "Parties", href: "/counterparties" },
-  { label: "Route Builder", short: "Route", href: "/route-builder" },
-  { label: "Operations", short: "Ops", href: "/operations" },
-  { label: "Tolling & Plants", short: "Plants", href: "/route-builder" },
-  { label: "Documents", short: "Docs", href: "/documents" },
-  { label: "Approvals", short: "Approvals", href: "/approvals" },
-  { label: "Finance", short: "Finance", href: "/finance" },
-  { label: "Analytics", short: "Analytics", href: "/analytics" },
-  { label: "Admin", short: "Admin", href: "/dashboard" },
+  { label: "Dashboard", short: "Dash", href: "/dashboard", live: true },
+  { label: "Opportunities", short: "Leads", href: "/economics", live: true },
+  { label: "Counterparties", short: "Parties", href: "/counterparties", live: true },
+  { label: "Route Builder", short: "Route", href: "/route", live: true },
+  { label: "Operations", short: "Ops", href: "/operations", live: true },
+  { label: "Tolling & Plants", short: "Plants", href: "/dashboard#plants", live: false },
+  { label: "Documents", short: "Docs", href: "/documents", live: true },
+  { label: "Approvals", short: "Approvals", href: "/approvals", live: true },
+  { label: "Finance", short: "Finance", href: "/finance", live: true },
+  { label: "Analytics", short: "Analytics", href: "/analytics", live: true },
+  { label: "Admin", short: "Admin", href: "/dashboard#admin", live: false },
 ];
 
 const mobileNav = [
   { label: "Dash", href: "/dashboard" },
   { label: "Leads", href: "/economics" },
-  { label: "Route", href: "/route-builder" },
+  { label: "Route", href: "/route" },
   { label: "Ops", href: "/operations" },
-  { label: "More", href: "#more" },
+  { label: "More", href: "/dashboard#more" },
 ];
 
-function active(pathname: string, href: string) {
-  if (href === "/dashboard") return pathname === "/" || pathname === "/dashboard";
-  if (href.startsWith("#")) return false;
-  return pathname === href || pathname.startsWith(`${href}/`);
+function cleanPath(pathname: string) {
+  if (pathname === "/") return "/dashboard";
+  return pathname;
+}
+
+function isActive(pathname: string, href: string, live: boolean) {
+  if (!live) return false;
+  const path = cleanPath(pathname);
+  const base = href.split("#")[0];
+  return path === base || path.startsWith(`${base}/`);
+}
+
+function isMobileActive(pathname: string, href: string) {
+  const path = cleanPath(pathname);
+  const base = href.split("#")[0];
+
+  if (href.includes("#more")) {
+    return !["/dashboard", "/economics", "/route", "/operations"].includes(path);
+  }
+
+  return path === base || path.startsWith(`${base}/`);
 }
 
 export default function ResourceShell({
@@ -66,19 +83,27 @@ export default function ResourceShell({
 
         <nav className="mt-5 space-y-2">
           {nav.map((item) => {
-            const isActive = active(pathname, item.href);
+            const active = isActive(pathname, item.href, item.live);
+
             return (
               <Link
                 key={item.label}
                 href={item.href}
                 className={[
                   "block rounded-2xl border px-4 py-3 text-sm font-black transition",
-                  isActive
+                  active
                     ? "border-[#d7ad32] bg-[#d7ad32] text-[#07101c]"
-                    : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-[#d7ad32]/50 hover:text-white",
+                    : item.live
+                    ? "border-white/10 bg-white/[0.03] text-slate-300 hover:border-[#d7ad32]/50 hover:text-white"
+                    : "border-white/5 bg-white/[0.02] text-slate-600",
                 ].join(" ")}
               >
-                {item.label}
+                <span>{item.label}</span>
+                {!item.live ? (
+                  <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-slate-600">
+                    later
+                  </span>
+                ) : null}
               </Link>
             );
           })}
@@ -93,16 +118,17 @@ export default function ResourceShell({
       </aside>
 
       <div className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#050914]/95 px-3 py-3 shadow-2xl backdrop-blur-xl md:hidden">
-        <div className="flex items-center gap-2 overflow-x-auto rounded-full border border-white/10 bg-[#080d18] p-2 scrollbar-hide">
+        <div className="flex items-center gap-2 overflow-x-auto rounded-full border border-white/10 bg-[#080d18] p-2">
           {mobileNav.map((item) => {
-            const isActive = active(pathname, item.href);
+            const active = isMobileActive(pathname, item.href);
+
             return (
               <Link
                 key={item.label}
                 href={item.href}
                 className={[
-                  "shrink-0 rounded-full border px-4 py-3 text-sm font-black",
-                  isActive
+                  "shrink-0 rounded-full border px-5 py-3 text-sm font-black",
+                  active
                     ? "border-[#d7ad32] bg-[#d7ad32] text-[#07101c]"
                     : "border-white/10 bg-white/[0.03] text-slate-200",
                 ].join(" ")}
@@ -111,9 +137,10 @@ export default function ResourceShell({
               </Link>
             );
           })}
+
           <button
             onClick={signOut}
-            className="shrink-0 rounded-full border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-black text-red-100"
+            className="shrink-0 rounded-full border border-red-400/30 bg-red-500/10 px-5 py-3 text-sm font-black text-red-100"
           >
             Out
           </button>

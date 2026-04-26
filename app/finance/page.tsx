@@ -1,117 +1,114 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { createClient } from "../../lib/supabase/client";
+import ResourceShell from "../../components/ResourceShell";
 
-type Profile = {
-  full_name: string;
-  company_name: string | null;
-  role: string;
-  is_active: boolean;
-};
+const PARCEL_CODE = "PAR-CHR-2026-0001";
 
 type Parcel = {
   id: string;
   parcel_code: string;
-  commodity: string;
-  product_description: string | null;
-  accepted_tons: number;
+  commodity: string | null;
+  resource_category: string | null;
+  resource_type: string | null;
+  material_type: string | null;
+  accepted_tons: number | null;
+  expected_concentrate_tons: number | null;
+  feedstock_tons: number | null;
+  expected_yield_percent: number | null;
   expected_price_per_ton: number | null;
   indicative_revenue: number | null;
-  control_state: string;
-  operator_name: string | null;
-  company_name: string | null;
-  feedstock_tons: number | null;
   feedstock_cost_per_ton: number | null;
   transport_to_plant_cost_per_ton: number | null;
   tolling_cost_per_ton: number | null;
   estimated_feedstock_cost: number | null;
   estimated_transport_cost: number | null;
   estimated_tolling_cost: number | null;
+  feedstock_assay_cost_per_batch: number | null;
+  feedstock_assay_batches: number | null;
+  estimated_feedstock_assay_cost: number | null;
+  concentrate_assay_cost_per_batch: number | null;
+  concentrate_assay_batches: number | null;
+  estimated_concentrate_assay_cost: number | null;
+  estimated_total_assay_cost: number | null;
   estimated_route_cost: number | null;
   estimated_route_surplus: number | null;
   estimated_route_margin_percent: number | null;
   economics_basis: string | null;
 };
 
-type RouteChain = {
-  route_code: string;
-  route_name: string | null;
-  origin_location: string | null;
-  plant_location: string | null;
-  delivery_location: string | null;
-  status: string;
-  notes: string | null;
-};
-
-type DocumentRecord = {
-  document_code: string;
-  document_type: string;
-  title: string;
-  status: string;
-  notes: string | null;
-};
-
-type ApprovalRecord = {
-  approval_code: string;
-  approval_type: string;
-  status: string;
-  decision_note: string | null;
-};
-
-function money(value: number | null | undefined) {
+function money(v: number | null | undefined) {
   return new Intl.NumberFormat("en-ZA", {
     style: "currency",
     currency: "ZAR",
     maximumFractionDigits: 0,
-  }).format(value ?? 0);
+  }).format(Number(v || 0));
 }
 
-function tons(value: number | null | undefined) {
-  return Number(value ?? 0).toFixed(3);
+function tons(v: number | null | undefined) {
+  return Number(v || 0).toFixed(3);
 }
 
-function percent(value: number | null | undefined) {
-  return `${Number(value ?? 0).toFixed(1)}%`;
+function pct(v: number | null | undefined) {
+  return `${Number(v || 0).toFixed(1)}%`;
 }
 
-function Badge({ state }: { state: string }) {
-  const style =
-    state === "Blocked"
-      ? "border-red-400/40 bg-red-500/15 text-red-200"
-      : state === "Held"
-      ? "border-orange-400/40 bg-orange-500/15 text-orange-200"
-      : state === "Approved" || state === "Complete" || state === "Active"
-      ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200"
-      : "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+function marginState(m: number) {
+  if (m < 18) return "Below Target";
+  if (m <= 25) return "Target Band";
+  return "Strong Route";
+}
 
+function marginClass(m: number) {
+  if (m < 18) return "border-red-400/40 bg-red-500/15 text-red-200";
+  if (m <= 25) return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+  return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
+}
+
+function financeState(m: number) {
+  if (m < 18) return "Blocked";
+  return "Pending Gates";
+}
+
+function Card(p: { label: string; title: string; children?: React.ReactNode }) {
   return (
-    <span
-      className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${style}`}
-    >
-      {state}
-    </span>
+    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+      <p className="text-xs font-black uppercase tracking-[0.3em] text-[#d7ad32]">
+        {p.label}
+      </p>
+      <h3 className="mt-2 text-2xl font-black">{p.title}</h3>
+      {p.children}
+    </section>
   );
 }
 
-function Card({
-  label,
-  title,
-  children,
-}: {
-  label: string;
-  title: string;
-  children?: React.ReactNode;
-}) {
+function Stat(p: { label: string; value: string; note?: string; gold?: boolean }) {
   return (
-    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-      <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-        {label}
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {p.label}
       </p>
-      <h2 className="mt-2 text-2xl font-black">{title}</h2>
-      {children}
-    </section>
+      <p
+        className={`mt-2 text-3xl font-black ${
+          p.gold ? "text-[#f5d778]" : "text-white"
+        }`}
+      >
+        {p.value}
+      </p>
+      {p.note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function Row(p: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-white/10 py-3">
+      <p className="text-sm text-slate-400">{p.label}</p>
+      <p className="text-right text-sm font-black text-white">{p.value}</p>
+    </div>
   );
 }
 
@@ -119,79 +116,43 @@ export default function FinancePage() {
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [error, setError] = useState("");
   const [parcel, setParcel] = useState<Parcel | null>(null);
-  const [route, setRoute] = useState<RouteChain | null>(null);
-  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
-  const [approvals, setApprovals] = useState<ApprovalRecord[]>([]);
 
   useEffect(() => {
     async function load() {
-      setLoading(true);
-      setError(null);
+      const { data: auth } = await supabase.auth.getUser();
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (!auth.user) {
         window.location.href = "/login";
         return;
       }
 
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, company_name, role, is_active")
-        .eq("id", user.id)
+        .select("role, is_active")
+        .eq("id", auth.user.id)
         .single();
 
-      if (profileError || !profileData || profileData.is_active !== true) {
+      if (!profile || profile.is_active !== true) {
         setError("Profile not found or inactive.");
         setLoading(false);
         return;
       }
 
-      const { data: parcelData, error: parcelError } = await supabase
+      const { data, error: parcelError } = await supabase
         .from("parcels")
-        .select(
-          "id, parcel_code, commodity, product_description, accepted_tons, expected_price_per_ton, indicative_revenue, control_state, operator_name, company_name, feedstock_tons, feedstock_cost_per_ton, transport_to_plant_cost_per_ton, tolling_cost_per_ton, estimated_feedstock_cost, estimated_transport_cost, estimated_tolling_cost, estimated_route_cost, estimated_route_surplus, estimated_route_margin_percent, economics_basis"
-        )
-        .eq("parcel_code", "PAR-CHR-2026-0001")
+        .select("*")
+        .eq("parcel_code", PARCEL_CODE)
         .single();
 
-      if (parcelError || !parcelData) {
+      if (parcelError || !data) {
         setError("Parcel not found.");
         setLoading(false);
         return;
       }
 
-      const { data: routeData } = await supabase
-        .from("route_chains")
-        .select(
-          "route_code, route_name, origin_location, plant_location, delivery_location, status, notes"
-        )
-        .eq("route_code", "ROUTE-CHR-2026-0001")
-        .maybeSingle();
-
-      const { data: documentData } = await supabase
-        .from("documents")
-        .select("document_code, document_type, title, status, notes")
-        .eq("parcel_id", parcelData.id)
-        .order("document_code", { ascending: true });
-
-      const { data: approvalData } = await supabase
-        .from("approvals")
-        .select("approval_code, approval_type, status, decision_note")
-        .eq("parcel_id", parcelData.id)
-        .order("approval_code", { ascending: true });
-
-      setProfile(profileData);
-      setParcel(parcelData);
-      setRoute(routeData ?? null);
-      setDocuments(documentData ?? []);
-      setApprovals(approvalData ?? []);
+      setParcel(data as Parcel);
       setLoading(false);
     }
 
@@ -200,318 +161,168 @@ export default function FinancePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <Card label="SAR ResourceOS" title="Loading finance control..." />
-      </main>
+      <ResourceShell title="Finance Control" subtitle="Loading finance...">
+        <Card label="Loading" title="Reading Supabase finance data..." />
+      </ResourceShell>
     );
   }
 
-  if (error) {
+  if (error || !parcel) {
     return (
-      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <section className="rounded-3xl border border-red-400/30 bg-[#080d18] p-6 text-white">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-red-200">
-            SAR ResourceOS
+      <ResourceShell title="Finance Control" subtitle="Finance module error">
+        <Card label="Error" title="Could not load finance">
+          <p className="mt-3 text-red-200">
+            {error || "Could not load finance page."}
           </p>
-          <h1 className="mt-3 text-2xl font-black">Finance module error</h1>
-          <p className="mt-3 text-slate-300">{error}</p>
-        </section>
-      </main>
+        </Card>
+      </ResourceShell>
     );
   }
 
-  const concentrateTons = Number(parcel?.accepted_tons ?? 0);
-  const pricePerTon = Number(parcel?.expected_price_per_ton ?? 0);
-  const revenue = Number(parcel?.indicative_revenue ?? concentrateTons * pricePerTon);
+  const productTons = parcel.expected_concentrate_tons ?? parcel.accepted_tons ?? 0;
+  const feedstockTons = parcel.feedstock_tons ?? 0;
+  const price = parcel.expected_price_per_ton ?? 0;
+  const revenue = parcel.indicative_revenue ?? productTons * price;
 
-  const feedstockTons = Number(parcel?.feedstock_tons ?? 0);
-  const feedstockCostPerTon = Number(parcel?.feedstock_cost_per_ton ?? 0);
-  const transportToPlantCostPerTon = Number(
-    parcel?.transport_to_plant_cost_per_ton ?? 0
-  );
-  const tollingCostPerTon = Number(parcel?.tolling_cost_per_ton ?? 0);
+  const routeCost =
+    parcel.estimated_route_cost ??
+    Number(parcel.estimated_feedstock_cost || 0) +
+      Number(parcel.estimated_transport_cost || 0) +
+      Number(parcel.estimated_tolling_cost || 0) +
+      Number(parcel.estimated_total_assay_cost || 0);
 
-  const feedstockCost = Number(
-    parcel?.estimated_feedstock_cost ?? feedstockTons * feedstockCostPerTon
-  );
-  const transportCost = Number(
-    parcel?.estimated_transport_cost ?? feedstockTons * transportToPlantCostPerTon
-  );
-  const tollingCost = Number(
-    parcel?.estimated_tolling_cost ?? feedstockTons * tollingCostPerTon
-  );
-
-  const routeCost = Number(
-    parcel?.estimated_route_cost ?? feedstockCost + transportCost + tollingCost
-  );
-  const routeSurplus = Number(parcel?.estimated_route_surplus ?? revenue - routeCost);
-  const routeMargin = Number(
-    parcel?.estimated_route_margin_percent ??
-      (revenue > 0 ? (routeSurplus / revenue) * 100 : 0)
-  );
-
-  const blockedDocuments = documents.filter(
-    (item) => item.status === "Blocked" || item.status === "Pending"
-  );
-
-  const blockedApprovals = approvals.filter(
-    (item) => item.status === "Blocked" || item.status === "Pending"
-  );
-
-  const financeBlocked =
-    parcel?.control_state === "Blocked" ||
-    route?.status === "Blocked" ||
-    blockedDocuments.length > 0 ||
-    blockedApprovals.length > 0;
+  const surplus = parcel.estimated_route_surplus ?? revenue - routeCost;
+  const margin =
+    parcel.estimated_route_margin_percent ??
+    (revenue > 0 ? (surplus / revenue) * 100 : 0);
 
   return (
-    <main className="min-h-screen bg-[#050914] pt-28 text-white">
-      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-        <Card label="SAR ResourceOS" title="Finance / Exposure / Margin">
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            Live finance-control page reading parcel economics directly from
-            Supabase: revenue, feedstock cost, route exposure, transport cost,
-            tolling cost, indicative surplus, margin and handoff readiness.
+    <ResourceShell
+      title="Finance Control"
+      subtitle="Read-only exposure, assay-adjusted route cost, surplus, margin and finance handoff view."
+    >
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Parcel" value={parcel.parcel_code} />
+        <Stat label="Resource" value={parcel.resource_type || parcel.commodity || "Not Set"} gold />
+        <Stat label="Category" value={parcel.resource_category || "Not Set"} />
+        <Stat label="Material" value={parcel.material_type || "Not Set"} />
+      </section>
+
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Product Tons" value={tons(productTons)} />
+        <Stat
+          label="Feedstock Required"
+          value={tons(feedstockTons)}
+          note={`${tons(productTons)}t at ${pct(parcel.expected_yield_percent)} yield`}
+          gold
+        />
+        <Stat label="Selling Price" value={`${money(price)}/t`} />
+        <Stat label="Revenue" value={money(revenue)} gold />
+      </section>
+
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          label="Feedstock Cost"
+          value={money(parcel.estimated_feedstock_cost)}
+          note={`${money(parcel.feedstock_cost_per_ton)}/t × ${tons(feedstockTons)}t`}
+        />
+        <Stat
+          label="Transport Cost"
+          value={money(parcel.estimated_transport_cost)}
+          note={`${money(parcel.transport_to_plant_cost_per_ton)}/t × ${tons(feedstockTons)}t`}
+        />
+        <Stat
+          label="Tolling Cost"
+          value={money(parcel.estimated_tolling_cost)}
+          note={`${money(parcel.tolling_cost_per_ton)}/t × ${tons(feedstockTons)}t`}
+        />
+        <Stat label="Total Assay Cost" value={money(parcel.estimated_total_assay_cost)} gold />
+      </section>
+
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          label="Feedstock Assay"
+          value={money(parcel.estimated_feedstock_assay_cost)}
+          note={`${money(parcel.feedstock_assay_cost_per_batch)} × ${parcel.feedstock_assay_batches || 0} batches`}
+        />
+        <Stat
+          label="Final Product Assay"
+          value={money(parcel.estimated_concentrate_assay_cost)}
+          note={`${money(parcel.concentrate_assay_cost_per_batch)} × ${parcel.concentrate_assay_batches || 0} batches`}
+        />
+        <Stat label="Route Cost" value={money(routeCost)} />
+        <Stat label="Surplus" value={money(surplus)} gold />
+      </section>
+
+      <section className="mb-6 grid gap-4 md:grid-cols-3">
+        <div className={`rounded-3xl border p-5 ${marginClass(margin)}`}>
+          <p className="text-xs font-bold uppercase tracking-[0.25em]">
+            Margin Control State
           </p>
+          <p className="mt-3 text-3xl font-black">{marginState(margin)}</p>
+          <p className="mt-2 text-sm leading-6">
+            Target control band is 18%–25%. Below 18% remains under review.
+          </p>
+        </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link
-              href="/dashboard"
-              className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
-            >
-              Back to Dashboard
-            </Link>
+        <Stat label="Route Margin" value={pct(margin)} gold />
 
-            <Link
-              href="/operations"
-              className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300"
-            >
-              Operations
-            </Link>
+        <div className="rounded-3xl border border-red-400/40 bg-red-500/15 p-5 text-red-200">
+          <p className="text-xs font-bold uppercase tracking-[0.25em]">
+            Finance Handoff
+          </p>
+          <p className="mt-3 text-3xl font-black">{financeState(margin)}</p>
+          <p className="mt-2 text-sm leading-6">
+            No finance release until documents, approvals, route, counterparties and operations gates clear.
+          </p>
+        </div>
+      </section>
 
-            <Link
-              href="/route-builder"
-              className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300"
-            >
-              Route Builder
-            </Link>
+      <section className="grid gap-6 xl:grid-cols-2">
+        <Card label="Finance Exposure" title="Cost and margin breakdown">
+          <div className="mt-4">
+            <Row label="Revenue" value={money(revenue)} />
+            <Row label="Feedstock cost" value={money(parcel.estimated_feedstock_cost)} />
+            <Row label="Transport cost" value={money(parcel.estimated_transport_cost)} />
+            <Row label="Tolling cost" value={money(parcel.estimated_tolling_cost)} />
+            <Row label="Feedstock assay cost" value={money(parcel.estimated_feedstock_assay_cost)} />
+            <Row label="Final product assay cost" value={money(parcel.estimated_concentrate_assay_cost)} />
+            <Row label="Total assay cost" value={money(parcel.estimated_total_assay_cost)} />
+            <Row label="Total route cost" value={money(routeCost)} />
+            <Row label="Indicative surplus" value={money(surplus)} />
+            <Row label="Route margin" value={pct(margin)} />
           </div>
         </Card>
 
-        <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Parcel
+        <Card label="Control Rule" title="Do not release finance yet">
+          <div className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 p-4">
+            <p className="text-xl font-black text-red-200">
+              Finance handoff remains controlled.
             </p>
-            <p className="mt-3 text-2xl font-black">{parcel?.parcel_code}</p>
-            <p className="mt-2 text-sm font-semibold text-[#d7ad32]">
-              {parcel?.commodity}
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Concentrate Tons
-            </p>
-            <p className="mt-3 text-4xl font-black">{tons(concentrateTons)}</p>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Feedstock Tons
-            </p>
-            <p className="mt-3 text-4xl font-black">{tons(feedstockTons)}</p>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Finance State
-            </p>
-            <div className="mt-3">
-              <Badge state={financeBlocked ? "Blocked" : "Approved"} />
-            </div>
-            <p className="mt-2 text-sm text-slate-400">
-              {financeBlocked ? "Handoff blocked." : "Handoff ready."}
+            <p className="mt-3 text-sm leading-7 text-slate-300">
+              Do not release settlement, purchase funding, dispatch finance or route payment unless all release gates are cleared and the margin basis is commercially approved.
             </p>
           </div>
-        </section>
 
-        <Card
-          label="Finance Release Gate"
-          title={financeBlocked ? "Finance handoff blocked" : "Finance handoff ready"}
-        >
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Control Rule
-                </p>
-                <h3 className="mt-2 text-xl font-black">
-                  {financeBlocked
-                    ? "Do not release settlement or finance handoff yet."
-                    : "Finance handoff may proceed."}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-slate-400">
-                  Finance handoff only becomes ready when route, document,
-                  approval and dispatch release gates are no longer Pending or
-                  Blocked.
-                </p>
-              </div>
-
-              <Badge state={financeBlocked ? "Blocked" : "Approved"} />
-            </div>
-          </div>
-        </Card>
-
-        <section className="grid gap-6 xl:grid-cols-2">
-          <Card label="Revenue" title="First parcel revenue view">
-            <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Indicative Revenue
-                </p>
-                <p className="mt-2 text-4xl font-black">{money(revenue)}</p>
-                <p className="mt-2 text-sm text-slate-400">
-                  {tons(concentrateTons)}t concentrate × {money(pricePerTon)}/t
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Product
-                </p>
-                <p className="mt-2 text-xl font-black">
-                  {parcel?.product_description ?? "Product description pending"}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card label="Exposure" title="Supabase parcel economics">
-            <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Feedstock Cost
-                </p>
-                <p className="mt-2 text-3xl font-black">{money(feedstockCost)}</p>
-                <p className="mt-2 text-sm text-slate-400">
-                  {money(feedstockCostPerTon)}/t × {tons(feedstockTons)}t feedstock
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Transport Cost
-                </p>
-                <p className="mt-2 text-3xl font-black">{money(transportCost)}</p>
-                <p className="mt-2 text-sm text-slate-400">
-                  {money(transportToPlantCostPerTon)}/t × {tons(feedstockTons)}t feedstock
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Tolling Cost
-                </p>
-                <p className="mt-2 text-3xl font-black">{money(tollingCost)}</p>
-                <p className="mt-2 text-sm text-slate-400">
-                  {money(tollingCostPerTon)}/t × {tons(feedstockTons)}t feedstock
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Total Route Cost
-                </p>
-                <p className="mt-2 text-3xl font-black">{money(routeCost)}</p>
-              </div>
-            </div>
-          </Card>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-2">
-          <Card label="Margin" title="Indicative route surplus">
-            <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Surplus Before Other Costs
-                </p>
-                <p className="mt-2 text-4xl font-black text-[#f5d778]">
-                  {money(routeSurplus)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Route Margin
-                </p>
-                <p className="mt-2 text-4xl font-black text-[#f5d778]">
-                  {percent(routeMargin)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Economics Basis
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  {parcel?.economics_basis ??
-                    "Revenue is calculated on concentrate tons. Feedstock, transport and tolling are calculated on feedstock tons."}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card label="Open Finance Blockers" title="Items preventing handoff">
-            <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Document Blockers
-                </p>
-                <p className="mt-2 text-3xl font-black text-[#f5d778]">
-                  {blockedDocuments.length}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Approval Blockers
-                </p>
-                <p className="mt-2 text-3xl font-black text-red-200">
-                  {blockedApprovals.length}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Next Action
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Clear supplier KYC/source evidence, plant tolling quote,
-                  transport support, buyer offtake pack and finance approval
-                  before settlement handoff.
-                </p>
-              </div>
-            </div>
-          </Card>
-        </section>
-
-        <Card label="Operator" title={profile?.full_name ?? "Operator"}>
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Company
+          <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
+              Economics Basis
             </p>
-            <p className="mt-2 text-xl font-black">
-              {profile?.company_name ?? "Shobane African Resources"}
-            </p>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              The finance page now reads parcel economics from Supabase. The
-              next phase can add editable economics inputs, approval locks,
-              settlement records and payment release controls.
+            <p className="mt-3 text-sm leading-7 text-slate-300">
+              {parcel.economics_basis || "No economics basis note captured yet."}
             </p>
           </div>
         </Card>
-      </div>
-    </main>
+      </section>
+
+      <Card label="Next Finance Actions" title="Clear before handoff">
+        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Documents" value="Required" note="Supplier, plant, transport, buyer and assay support must be complete." />
+          <Stat label="Approvals" value="Required" note="Supplier, plant and finance approvals must clear." />
+          <Stat label="Margin" value={marginState(margin)} note="Route must meet target or be approved by exception." gold />
+          <Stat label="Release State" value={financeState(margin)} note="Finance remains controlled until all gates clear." />
+        </div>
+      </Card>
+    </ResourceShell>
   );
-  }
+    }

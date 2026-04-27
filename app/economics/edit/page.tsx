@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ResourceShell from "../../../components/ResourceShell";
-import EconomicsEditTools from "../../../components/EconomicsEditTools";
+import { EconomicsEditTools } from "../../../components/EconomicsEditTools";
 import { createClient } from "../../../lib/supabase/client";
 
 type SessionState = "checking" | "signed_in" | "signed_out";
@@ -42,12 +42,6 @@ export default function EconomicsEditPage() {
     let active = true;
 
     async function checkSessionSafely() {
-      /*
-        Important:
-        Do NOT redirect immediately on page load.
-        Mobile browsers can take a moment to restore the Supabase session.
-      */
-
       const { data } = await supabase.auth.getSession();
 
       if (!active) return;
@@ -57,10 +51,6 @@ export default function EconomicsEditPage() {
         return;
       }
 
-      /*
-        Give Supabase one short recovery check before declaring signed out.
-        This prevents the page from kicking the user out during mobile session hydration.
-      */
       window.setTimeout(async () => {
         const retry = await supabase.auth.getSession();
 
@@ -116,9 +106,7 @@ export default function EconomicsEditPage() {
             <button
               type="button"
               onClick={() =>
-                router.push(
-                  "/login?returnTo=/economics/edit"
-                )
+                router.push("/login?returnTo=/economics/edit")
               }
               className="w-full rounded-full bg-[#d7ad32] px-6 py-5 text-lg font-black text-[#07101c]"
             >

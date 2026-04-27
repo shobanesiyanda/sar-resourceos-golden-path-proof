@@ -1,57 +1,198 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "../../lib/supabase/client";
 import ResourceShell from "../../components/ResourceShell";
-import {
-  MATERIAL_TYPES,
-  RESOURCE_MAP,
-  defaultsFor,
-} from "../../lib/resourceDefaults";
-import {
-  Card,
-  Field,
-  FormState,
-  SelectField,
-  Stat,
-  WarningCard,
-  feed,
-  marginClass,
-  marginState,
-  money,
-  n,
-  pct,
-  tons,
-} from "../../components/EconomicsBlocks";
 
 const PARCEL_CODE = "PAR-CHR-2026-0001";
 
+type Gate = {
+  parcel_id: string | null;
+  parcel_code: string | null;
+  resource_category: string | null;
+  resource_type: string | null;
+  material_type: string | null;
+  product_tons: number | null;
+  feedstock_tons: number | null;
+  expected_yield_percent: number | null;
+  expected_price_per_ton: number | null;
+  indicative_revenue: number | null;
+  estimated_route_cost: number | null;
+  estimated_route_surplus: number | null;
+  estimated_route_margin_percent: number | null;
+  estimated_total_assay_cost: number | null;
+  total_documents: number | null;
+  cleared_documents: number | null;
+  pending_documents: number | null;
+  blocked_documents: number | null;
+  total_approvals: number | null;
+  cleared_approvals: number | null;
+  pending_approvals: number | null;
+  blocked_approvals: number | null;
+  total_counterparties: number | null;
+  cleared_counterparties: number | null;
+  pending_counterparties: number | null;
+  blocked_counterparties: number | null;
+  total_routes: number | null;
+  cleared_routes: number | null;
+  pending_routes: number | null;
+  blocked_routes: number | null;
+  margin_blocker: number | null;
+  margin_state: string | null;
+  hard_blockers: number | null;
+  pending_blockers: number | null;
+  total_open_blockers: number | null;
+  release_state: string | null;
+  release_decision: string | null;
+};
+
+function n(v: number | null | undefined) {
+  return Number(v || 0);
+}
+
+function money(v: number | null | undefined) {
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency: "ZAR",
+    maximumFractionDigits: 0,
+  }).format(n(v));
+}
+
+function tons(v: number | null | undefined) {
+  return n(v).toFixed(3);
+}
+
+function pct(v: number | null | undefined) {
+  return `${n(v).toFixed(1)}%`;
+}
+
+function stateClass(state: string | null | undefined) {
+  const s = String(state || "").toLowerCase();
+  if (s.includes("ready") || s.includes("clear") || s.includes("strong")) {
+    return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
+  }
+  if (s.includes("pending") || s.includes("target")) {
+    return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+  }
+  return "border-red-400/40 bg-red-500/15 text-red-200";
+}
+
+function Card(p: { label: string; title: string; children?: React.ReactNode }) {
+  return (
+    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+      <p className="text-xs font-black uppercase tracking-[0.3em] text-[#d7ad32]">
+        {p.label}
+      </p>
+      <h3 className="mt-2 text-2xl font-black">{p.title}</h3>
+      {p.children}
+    </section>
+  );
+}
+
+function Stat(p: {
+  label: string;
+  value: string;
+  note?: string;
+  gold?: boolean;
+  state?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {p.label}
+      </p>
+
+      {p.state ? (
+        <div className="mt-3">
+          <span
+            className={`inline-flex rounded-full border px-3 py-1 text-sm font-black ${stateClass(
+              p.state
+            )}`}
+          >
+            {p.value}
+          </span>
+        </div>
+      ) : (
+        <p
+          className={`mt-2 text-3xl font-black ${
+            p.gold ? "text-[#f5d778]" : "text-white"
+          }`}
+        >
+          {p.value}
+        </p>
+      )}
+
+      {p.note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function GateLine(p: { label: string; blocked: number; pending: number }) {
+  const blocked = n(p.blocked);
+  const pending = n(p.pending);
+  const state = blocked > 0 ? "Blocked" : pending > 0 ? "Pending" : "Clear";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {p.label}
+      </p>
+      <div className="mt-3">
+        <span
+          className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${stateClass(
+            state
+          )}`}
+        >
+          {state}
+        </span>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-slate-400">
+        {blocked > 0
+          ? `${blocked} hard blocker(s).`
+          : pending > 0
+          ? `${pending} pending blocker(s).`
+          : "No open blocker."}
+      </p>
+    </div>
+  );
+}
+
+function LeadStep(p: {
+  step: string;
+  title: string;
+  status: string;
+  note: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            {p.step}
+          </p>
+          <h4 className="mt-2 text-xl font-black">{p.title}</h4>
+        </div>
+        <span
+          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${stateClass(
+            p.status
+          )}`}
+        >
+          {p.status}
+        </span>
+      </div>
+      <p className="mt-3 text-sm leading-7 text-slate-400">{p.note}</p>
+    </div>
+  );
+}
+
 export default function EconomicsPage() {
   const supabase = createClient();
-
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [parcelId, setParcelId] = useState("");
-  const [parcelCode, setParcelCode] = useState(PARCEL_CODE);
-  const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-
-  const [form, setForm] = useState<FormState>({
-    category: "Ferrous Metals",
-    resource: "Chrome",
-    material: "ROM / Tailings / Feedstock",
-    target: "",
-    yield: "",
-    price: "",
-    feedstock: "",
-    transport: "",
-    tolling: "",
-    feedstockAssayRate: "0",
-    feedstockAssayBatches: "0",
-    concentrateAssayRate: "0",
-    concentrateAssayBatches: "0",
-  });
+  const [gate, setGate] = useState<Gate | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -74,414 +215,190 @@ export default function EconomicsPage() {
         return;
       }
 
-      const { data: parcel, error: parcelError } = await supabase
-        .from("parcels")
+      const { data, error: gateError } = await supabase
+        .from("release_gate_summary")
         .select("*")
         .eq("parcel_code", PARCEL_CODE)
         .single();
 
-      if (parcelError || !parcel) {
-        setError("Parcel not found.");
+      if (gateError || !data) {
+        setError(gateError?.message || "Release gate summary not found.");
         setLoading(false);
         return;
       }
 
-      const category = parcel.resource_category || "Ferrous Metals";
-      const options = RESOURCE_MAP[category] || RESOURCE_MAP["Ferrous Metals"];
-      const resource =
-        parcel.resource_type && options.includes(parcel.resource_type)
-          ? parcel.resource_type
-          : options[0];
-
-      const defs = defaultsFor(resource);
-
-      const startingYield =
-        parcel.expected_yield_percent ??
-        (parcel.feedstock_tons && parcel.feedstock_tons > 0
-          ? (parcel.accepted_tons / parcel.feedstock_tons) * 100
-          : defs.yield);
-
-      setIsAdmin(profile.role === "admin");
-      setParcelId(parcel.id);
-      setParcelCode(parcel.parcel_code || PARCEL_CODE);
-
-      setForm({
-        category,
-        resource,
-        material: parcel.material_type || defs.material,
-        target: String(
-          parcel.expected_concentrate_tons ?? parcel.accepted_tons ?? 0
-        ),
-        yield: String(startingYield),
-        price: String(parcel.expected_price_per_ton ?? defs.price),
-        feedstock: String(parcel.feedstock_cost_per_ton ?? defs.feedstock),
-        transport: String(
-          parcel.transport_to_plant_cost_per_ton ?? defs.transport
-        ),
-        tolling: String(parcel.tolling_cost_per_ton ?? defs.tolling),
-        feedstockAssayRate: String(
-          parcel.feedstock_assay_cost_per_batch ?? defs.feedstockAssayRate
-        ),
-        feedstockAssayBatches: String(
-          parcel.feedstock_assay_batches ?? defs.feedstockAssayBatches
-        ),
-        concentrateAssayRate: String(
-          parcel.concentrate_assay_cost_per_batch ??
-            defs.concentrateAssayRate
-        ),
-        concentrateAssayBatches: String(
-          parcel.concentrate_assay_batches ?? defs.concentrateAssayBatches
-        ),
-      });
-
+      setGate(data as Gate);
       setLoading(false);
     }
 
     load();
   }, [supabase]);
 
-  const target = n(form.target);
-  const y = n(form.yield);
-  const price = n(form.price);
-  const feedRate = n(form.feedstock);
-  const transRate = n(form.transport);
-  const tollRate = n(form.tolling);
-  const feedAssayRate = n(form.feedstockAssayRate);
-  const feedAssayBatches = n(form.feedstockAssayBatches);
-  const prodAssayRate = n(form.concentrateAssayRate);
-  const prodAssayBatches = n(form.concentrateAssayBatches);
-
-  const feedTons = feed(target, y);
-  const revenue = target * price;
-  const feedCost = feedTons * feedRate;
-  const transCost = feedTons * transRate;
-  const tollCost = feedTons * tollRate;
-  const feedAssayCost = feedAssayRate * feedAssayBatches;
-  const prodAssayCost = prodAssayRate * prodAssayBatches;
-  const assayCost = feedAssayCost + prodAssayCost;
-  const routeCost = feedCost + transCost + tollCost + assayCost;
-  const surplus = revenue - routeCost;
-  const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
-
-  function applyDefaults(resource: string, category?: string) {
-    const defs = defaultsFor(resource);
-
-    setForm((old) => ({
-      ...old,
-      category: category || old.category,
-      resource,
-      material: defs.material,
-      yield: defs.yield,
-      price: defs.price,
-      feedstock: defs.feedstock,
-      transport: defs.transport,
-      tolling: defs.tolling,
-      feedstockAssayRate: defs.feedstockAssayRate,
-      feedstockAssayBatches: defs.feedstockAssayBatches,
-      concentrateAssayRate: defs.concentrateAssayRate,
-      concentrateAssayBatches: defs.concentrateAssayBatches,
-    }));
-  }
-
-  function setField(key: keyof FormState, value: string) {
-    if (key === "category") {
-      applyDefaults(RESOURCE_MAP[value]?.[0] || "Other", value);
-      return;
-    }
-
-    if (key === "resource") {
-      applyDefaults(value);
-      return;
-    }
-
-    setForm((old) => ({ ...old, [key]: value }));
-  }
-
-  async function save() {
-    if (!parcelId) return;
-
-    setSaving(true);
-    setNotice("");
-    setError("");
-
-    const payload = {
-      resource_category: form.category,
-      resource_type: form.resource,
-      material_type: form.material,
-      commodity: form.resource,
-      feedstock_tons: feedTons,
-      expected_yield_percent: y,
-      expected_concentrate_tons: target,
-      accepted_tons: target,
-      expected_price_per_ton: price,
-      feedstock_cost_per_ton: feedRate,
-      transport_to_plant_cost_per_ton: transRate,
-      tolling_cost_per_ton: tollRate,
-      estimated_feedstock_cost: feedCost,
-      estimated_transport_cost: transCost,
-      estimated_tolling_cost: tollCost,
-      feedstock_assay_cost_per_batch: feedAssayRate,
-      feedstock_assay_batches: feedAssayBatches,
-      estimated_feedstock_assay_cost: feedAssayCost,
-      concentrate_assay_cost_per_batch: prodAssayRate,
-      concentrate_assay_batches: prodAssayBatches,
-      estimated_concentrate_assay_cost: prodAssayCost,
-      estimated_total_assay_cost: assayCost,
-      estimated_route_cost: routeCost,
-      estimated_route_surplus: surplus,
-      estimated_route_margin_percent: margin,
-      economics_basis:
-        "Resource-specific defaults applied. Feedstock required calculated automatically. Feedstock assay and final product assay are separated and included in route cost.",
-    };
-
-    const { error: saveError } = await supabase
-      .from("parcels")
-      .update(payload)
-      .eq("id", parcelId);
-
-    if (saveError) {
-      setError(saveError.message);
-      setSaving(false);
-      return;
-    }
-
-    setNotice("Resource economics saved to Supabase.");
-    setSaving(false);
-  }
-
   if (loading) {
     return (
-      <ResourceShell title="Lead Economics" subtitle="Loading lead economics...">
-        <Card label="Loading" title="Reading Supabase economics..." />
+      <ResourceShell title="Lead Economics" subtitle="Loading central lead summary...">
+        <Card label="Loading" title="Reading release_gate_summary..." />
       </ResourceShell>
     );
   }
 
-  if (error && !parcelId) {
+  if (error || !gate) {
     return (
-      <ResourceShell title="Lead Economics" subtitle="Economics module error">
-        <Card label="Error" title="Could not load economics">
-          <p className="mt-3 text-red-200">{error}</p>
+      <ResourceShell title="Lead Economics" subtitle="Lead economics module error">
+        <Card label="Error" title="Could not load lead economics">
+          <p className="mt-3 text-red-200">{error || "Could not load lead economics."}</p>
         </Card>
       </ResourceShell>
     );
   }
 
-  const resourceOptions = RESOURCE_MAP[form.category] || ["Other"];
+  const leadBlocked = n(gate.total_open_blockers) > 0;
+  const leadState = leadBlocked ? "Blocked" : "Ready";
+  const commercialStatus =
+    n(gate.margin_blocker) > 0
+      ? "Below Target"
+      : leadBlocked
+      ? "Commercially Visible"
+      : "Ready for Review";
 
   return (
     <ResourceShell
       title="Lead Economics"
-      subtitle="Commercial screening engine for resource leads, feedstock required, yield, assay cost, route cost, surplus and margin."
+      subtitle="Commercial screening engine now powered by the central release_gate_summary view."
     >
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Parcel" value={parcelCode} />
-        <Stat label="Resource" value={form.resource} gold />
-        <Stat label="Material" value={form.material} />
-        <Stat label="Decision" value={marginState(margin)} />
+        <Stat label="Parcel" value={gate.parcel_code || PARCEL_CODE} />
+        <Stat label="Resource" value={gate.resource_type || "Not Set"} gold />
+        <Stat label="Category" value={gate.resource_category || "Not Set"} />
+        <Stat label="Material" value={gate.material_type || "Not Set"} />
       </section>
 
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Target Product Tons" value={tons(target)} />
-        <Stat
-          label="Feedstock Required"
-          value={tons(feedTons)}
-          note={`${tons(target)}t ÷ ${pct(y)} yield`}
-          gold
-        />
-        <Stat label="Revenue" value={money(revenue)} gold />
-        <Stat label="Route Cost" value={money(routeCost)} />
+        <Stat label="Lead State" value={leadState} state={leadState} />
+        <Stat label="Commercial Status" value={commercialStatus} />
+        <Stat label="Release Decision" value={gate.release_decision || "Hold / Review"} />
+        <Stat label="Open Blockers" value={String(n(gate.total_open_blockers))} />
       </section>
 
-      <section className="mb-6 grid gap-4 md:grid-cols-3">
-        <div className={`rounded-3xl border p-5 ${marginClass(margin)}`}>
-          <p className="text-xs font-bold uppercase tracking-[0.25em]">
-            Margin Control State
-          </p>
-          <p className="mt-3 text-3xl font-black">{marginState(margin)}</p>
-          <p className="mt-2 text-sm leading-6">
-            Below 18% = review/block. 18%–25% = target band. Above 25% =
-            strong route.
-          </p>
+      <Card label="Lead Economics Screening" title="Commercial starting point">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Product Tons" value={tons(gate.product_tons)} />
+          <Stat
+            label="Feedstock Required"
+            value={tons(gate.feedstock_tons)}
+            note={`${pct(gate.expected_yield_percent)} expected yield`}
+            gold
+          />
+          <Stat label="Selling Price" value={`${money(gate.expected_price_per_ton)}/t`} />
+          <Stat label="Revenue" value={money(gate.indicative_revenue)} gold />
+          <Stat label="Route Cost" value={money(gate.estimated_route_cost)} />
+          <Stat label="Assay Cost" value={money(gate.estimated_total_assay_cost)} />
+          <Stat label="Surplus" value={money(gate.estimated_route_surplus)} gold />
+          <Stat label="Route Margin" value={pct(gate.estimated_route_margin_percent)} gold />
         </div>
 
-        <Stat label="Route Margin" value={pct(margin)} gold />
-        <Stat label="Indicative Surplus" value={money(surplus)} gold />
-      </section>
+        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(gate.margin_state)}`}>
+          <p className="text-xs font-black uppercase tracking-[0.25em]">
+            Margin state
+          </p>
+          <p className="mt-2 text-2xl font-black">
+            {gate.margin_state || "Not Set"}
+          </p>
+          <p className="mt-2 text-sm leading-7">
+            Lead economics must be commercially screened before route spend,
+            supplier engagement, plant commitment, dispatch or finance handoff.
+          </p>
+        </div>
+      </Card>
 
-      <section className="grid gap-6 xl:grid-cols-2">
-        <Card label="Input Controls" title="Set resource and economics">
-          {!isAdmin ? (
-            <div className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 p-4">
-              <p className="font-black text-red-200">Admin access required</p>
-            </div>
-          ) : null}
+      <Card label="Lead Control Result" title="Central release gate summary">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Release State" value={gate.release_state || "Blocked"} state={gate.release_state || "Blocked"} />
+          <Stat label="Hard Blockers" value={String(n(gate.hard_blockers))} />
+          <Stat label="Pending Blockers" value={String(n(gate.pending_blockers))} />
+          <Stat label="Total Open" value={String(n(gate.total_open_blockers))} />
+        </div>
 
-          <div className="mt-5 space-y-4">
-            <SelectField
-              label="Resource Category"
-              value={form.category}
-              options={Object.keys(RESOURCE_MAP)}
-              onChange={(v) => setField("category", v)}
-              help="Broad commodity class."
-            />
+        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(gate.release_state)}`}>
+          <p className="text-xs font-black uppercase tracking-[0.25em]">
+            Release decision
+          </p>
+          <p className="mt-2 text-2xl font-black">
+            {gate.release_decision || "Hold / Review"}
+          </p>
+          <p className="mt-2 text-sm leading-6">
+            Lead Economics now reads the same central release decision as Dashboard,
+            Analytics, Finance, Route Builder and Operations.
+          </p>
+        </div>
+      </Card>
 
-            <SelectField
-              label="Resource / Commodity"
-              value={form.resource}
-              options={resourceOptions}
-              onChange={(v) => setField("resource", v)}
-              help="Changing this applies default assumptions."
-            />
+      <Card label="Readiness Gates" title="What blocks this lead from release">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <GateLine label="Documents" blocked={n(gate.blocked_documents)} pending={n(gate.pending_documents)} />
+          <GateLine label="Approvals" blocked={n(gate.blocked_approvals)} pending={n(gate.pending_approvals)} />
+          <GateLine label="Counterparties" blocked={n(gate.blocked_counterparties)} pending={n(gate.pending_counterparties)} />
+          <GateLine label="Routes" blocked={n(gate.blocked_routes)} pending={n(gate.pending_routes)} />
+        </div>
+      </Card>
 
-            <SelectField
-              label="Material Type"
-              value={form.material}
-              options={MATERIAL_TYPES}
-              onChange={(v) => setField("material", v)}
-              help="Material form entering or leaving the route."
-            />
+      <Card label="Lead Intake Discipline" title="Screen before route commitment">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <LeadStep
+            step="1. Resource"
+            title="Confirm commodity and material"
+            status={gate.resource_type && gate.material_type ? "Ready" : "Pending"}
+            note="Resource category, resource type and material type must be captured before economics are relied on."
+          />
+          <LeadStep
+            step="2. Yield"
+            title="Validate recovery basis"
+            status={n(gate.expected_yield_percent) > 0 ? "Review" : "Blocked"}
+            note="Yield must be supported by sample history, assay, plant recovery basis or verified supplier/plant evidence."
+          />
+          <LeadStep
+            step="3. Pricing"
+            title="Confirm buyer price"
+            status={n(gate.expected_price_per_ton) > 0 ? "Review" : "Blocked"}
+            note="Selling price must be tied to buyer/offtake support, FOT/FOB basis, grade band and payment terms."
+          />
+          <LeadStep
+            step="4. Route Cost"
+            title="Confirm cost stack"
+            status={n(gate.estimated_route_cost) > 0 ? "Review" : "Blocked"}
+            note="Feedstock, transport, tolling, assay and route charges must be verified before route commitment."
+          />
+          <LeadStep
+            step="5. Evidence"
+            title="Complete release documents"
+            status={n(gate.blocked_documents) > 0 ? "Blocked" : "Review"}
+            note="Supplier, plant, transport, buyer, assay and movement evidence must be complete before release."
+          />
+          <LeadStep
+            step="6. Decision"
+            title="Hold until gates clear"
+            status={leadBlocked ? "Blocked" : "Ready"}
+            note="Lead may be commercially visible, but it must not move to uncontrolled route spend or finance release."
+          />
+        </div>
+      </Card>
 
-            <WarningCard
-              resource={form.resource}
-              material={form.material}
-              yieldPercent={form.yield}
-              price={form.price}
-            />
-
-            <Field
-              label="Target / Yielded Product Tons"
-              value={form.target}
-              onChange={(v) => setField("target", v)}
-              help="The product tons you want to produce or sell."
-            />
-
-            <Field
-              label="Expected Yield %"
-              value={form.yield}
-              onChange={(v) => setField("yield", v)}
-              help="Default changes by resource. You can override it."
-            />
-
-            <Stat
-              label="Auto Feedstock Required"
-              value={tons(feedTons)}
-              note={`${tons(target)}t ÷ ${pct(y)} yield`}
-              gold
-            />
-
-            <Field
-              label="Selling Price / Product Ton"
-              value={form.price}
-              onChange={(v) => setField("price", v)}
-              help="Default changes by resource. You can override it."
-            />
-
-            <Field
-              label="Feedstock Cost / Feedstock Ton"
-              value={form.feedstock}
-              onChange={(v) => setField("feedstock", v)}
-              help="Cost per required feedstock ton."
-            />
-
-            <Field
-              label="Transport To Plant Cost / Feedstock Ton"
-              value={form.transport}
-              onChange={(v) => setField("transport", v)}
-              help="Transport cost per required feedstock ton."
-            />
-
-            <Field
-              label="Tolling Cost / Feedstock Ton"
-              value={form.tolling}
-              onChange={(v) => setField("tolling", v)}
-              help="Plant tolling or processing cost per required feedstock ton."
-            />
-
-            <Field
-              label="Feedstock Assay Cost / Batch"
-              value={form.feedstockAssayRate}
-              onChange={(v) => setField("feedstockAssayRate", v)}
-              help="ROM, tailings or feedstock assay cost per batch."
-            />
-
-            <Field
-              label="Feedstock Assay Batches"
-              value={form.feedstockAssayBatches}
-              onChange={(v) => setField("feedstockAssayBatches", v)}
-              help="Number of feedstock assay batches."
-            />
-
-            <Field
-              label="Final Product Assay Cost / Batch"
-              value={form.concentrateAssayRate}
-              onChange={(v) => setField("concentrateAssayRate", v)}
-              help="Final product assay cost per batch."
-            />
-
-            <Field
-              label="Final Product Assay Batches"
-              value={form.concentrateAssayBatches}
-              onChange={(v) => setField("concentrateAssayBatches", v)}
-              help="Number of final product assay batches."
-            />
-
-            <button
-              type="button"
-              onClick={save}
-              disabled={!isAdmin || saving}
-              className="w-full rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-4 text-base font-black text-[#07101c] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving ? "Saving..." : "Save Lead Economics"}
-            </button>
-
-            {notice ? (
-              <p className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm font-bold text-emerald-200">
-                {notice}
-              </p>
-            ) : null}
-
-            {error ? (
-              <p className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-bold text-red-200">
-                {error}
-              </p>
-            ) : null}
-          </div>
-        </Card>
-
-        <Card label="Live Preview" title="Resource-adjusted route result">
-          <div className="mt-5 space-y-4">
-            <Stat label="Target Product Tons" value={tons(target)} />
-            <Stat
-              label="Feedstock Required"
-              value={tons(feedTons)}
-              note={`${tons(target)}t ÷ ${pct(y)} yield`}
-              gold
-            />
-            <Stat
-              label="Revenue"
-              value={money(revenue)}
-              note={`${tons(target)}t × ${money(price)}/t`}
-            />
-            <Stat label="Feedstock Cost" value={money(feedCost)} />
-            <Stat label="Transport Cost" value={money(transCost)} />
-            <Stat label="Tolling Cost" value={money(tollCost)} />
-            <Stat label="Total Assay Cost" value={money(assayCost)} gold />
-            <Stat label="Total Route Cost" value={money(routeCost)} />
-            <Stat label="Indicative Surplus" value={money(surplus)} gold />
-            <Stat label="Route Margin" value={pct(margin)} gold />
-          </div>
-        </Card>
-      </section>
-
-      <Card label="Control Note" title="Lead economics basis">
-        <p className="mt-3 text-sm leading-7 text-slate-300">
-          Resource-specific defaults are starter assumptions only. Manual
-          override remains available. A lead should not proceed to route
-          verification until economics are commercially acceptable or approved
-          by exception.
-        </p>
+      <Card label="Next Lead Actions" title="Move only through controlled modules">
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link href="/dashboard" className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]">
+            Back to Dashboard
+          </Link>
+          <Link href="/route-builder" className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white">
+            Route Builder
+          </Link>
+          <Link href="/documents" className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white">
+            Documents
+          </Link>
+          <Link href="/approvals" className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white">
+            Approvals
+          </Link>
+        </div>
       </Card>
     </ResourceShell>
   );
-  }
+              }

@@ -3,10 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ResourceShell from "../../../components/ResourceShell";
-import EconomicsEditTools from "../../../components/EconomicsEditTools";
+import * as EconomicsEditToolsModule from "../../../components/EconomicsEditTools";
 import { createClient } from "../../../lib/supabase/client";
 
 type SessionState = "checking" | "signed_in" | "signed_out";
+
+const EconomicsEditTools = (
+  (EconomicsEditToolsModule as any).default ||
+  (EconomicsEditToolsModule as any).EconomicsEditTools
+) as React.ComponentType;
 
 function AccessCard({
   title,
@@ -121,5 +126,19 @@ export default function EconomicsEditPage() {
     );
   }
 
+  if (!EconomicsEditTools) {
+    return (
+      <ResourceShell
+        title="Edit Lead Economics"
+        subtitle="Economics edit component could not be loaded."
+      >
+        <AccessCard
+          title="Component export error"
+          text="EconomicsEditTools exists, but it is not exporting a usable React component."
+        />
+      </ResourceShell>
+    );
+  }
+
   return <EconomicsEditTools />;
-      }
+                        }

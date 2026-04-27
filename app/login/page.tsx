@@ -1,19 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 
 type AuthMode = "password" | "magic";
+type AuthState = "checking" | "signed_in" | "signed_out";
+
+function NavPill({
+  href,
+  label,
+  active,
+  danger,
+}: {
+  href: string;
+  label: string;
+  active?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={
+        active
+          ? "shrink-0 rounded-full bg-[#d7ad32] px-6 py-4 text-base font-black text-[#07101c]"
+          : danger
+          ? "shrink-0 rounded-full border border-red-400/30 bg-red-500/10 px-6 py-4 text-base font-black text-red-100"
+          : "shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-6 py-4 text-base font-black text-slate-200"
+      }
+    >
+      {label}
+    </Link>
+  );
+}
+
+function statusLabel(state: AuthState) {
+  if (state === "checking") return "Checking";
+  if (state === "signed_in") return "Signed In";
+  return "Access";
+}
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [mode, setMode] = useState<AuthMode>("password");
-  const [checking, setChecking] = useState(true);
-  const [signedIn, setSignedIn] = useState(false);
+  const [authState, setAuthState] = useState<AuthState>("checking");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,20 +56,29 @@ export default function LoginPage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
+  const returnTo = useMemo(() => {
+    const fromQuery = searchParams.get("returnTo");
+    if (fromQuery && fromQuery.startsWith("/")) return fromQuery;
+    return "/dashboard";
+  }, [searchParams]);
+
   useEffect(() => {
     async function checkSession() {
-      const { data } = await supabase.auth.getUser();
-
-      if (data.user) {
-        setSignedIn(true);
-      } else {
-        setSignedIn(false);
-      }
-
-      setChecking(false);
+      const { data } = await supabase.auth.getSession();
+      setAuthState(data.session ? "signed_in" : "signed_out");
     }
 
     checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthState(session ? "signed_in" : "signed_out");
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [supabase]);
 
   async function signInWithPassword() {
@@ -63,8 +106,8 @@ export default function LoginPage() {
     }
 
     setNotice("Signed in successfully.");
-    setSignedIn(true);
-    router.push("/dashboard");
+    setAuthState("signed_in");
+    router.push(returnTo);
   }
 
   async function sendMagicLink() {
@@ -82,7 +125,7 @@ export default function LoginPage() {
 
     const redirectTo =
       typeof window !== "undefined"
-        ? `${window.location.origin}/dashboard`
+        ? `${window.location.origin}${returnTo}`
         : undefined;
 
     const { error: magicError } = await supabase.auth.signInWithOtp({
@@ -102,55 +145,62 @@ export default function LoginPage() {
     setWorking(false);
   }
 
+  const signedIn = authState === "signed_in";
+
   return (
     <main className="min-h-screen bg-[#050914] text-white">
       <div className="sticky top-0 z-50 border-b border-slate-800 bg-[#050914]/95 px-4 py-4 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto rounded-full border border-slate-800 bg-slate-950/60 p-2">
           <div className="shrink-0 px-4 py-3">
             <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
-              {checking ? "Checking" : signedIn ? "Signed In" : "Access"}
+              {statusLabel(authState)}
             </p>
           </div>
 
-          <Link
-            href="/dashboard"
-            className="shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-5 py-3 text-sm font-black text-slate-200"
-          >
-            Dash
-          </Link>
-
-          <Link
-            href="/operations"
-            className="shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-5 py-3 text-sm font-black text-slate-200"
-          >
-            Ops
-          </Link>
-
-          <Link
-            href="/route-builder"
-            className="shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-5 py-3 text-sm font-black text-slate-200"
-          >
-            Route
-          </Link>
-
-          <Link
-            href="/finance"
-            className="shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-5 py-3 text-sm font-black text-slate-200"
-          >
-            Finance
-          </Link>
+          {signedIn ? (
+            <>
+              <NavPill href="/dashboard" label="Dash" />
+              <NavPill href="/leads" label="Leads" />
+              <NavPill href="/route-builder" label="Route" />
+              <NavPill href="/operations" label="Ops" />
+              <NavPill href="/finance" label="Finance" />
+              <NavPill href="/analytics" label="Analytics" />
+              <NavPill href="/documents" label="Docs" />
+              <NavPill href="/logout" label="Out" danger />
+            </>
+          ) : (
+            <>
+              <NavPill href="/login" label="Login" active />
+              <NavPill href="/login" label="Request Access" />
+            </>
+          )}
         </nav>
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 py-8">
-        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
-          <h1 className="text-3xl font-black leading-tight text-white">
-            SAR ResourceOS Login
+      <div className="mx-auto flex min-h-[calc(100vh-96px)] max-w-3xl items-center px-4 py-8">
+        <section className="w-full rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+            SAR ResourceOS
+          </p>
+
+          <h1 className="mt-5 text-4xl font-black leading-tight text-white">
+            Secure internal access.
           </h1>
 
-          <p className="mt-4 text-sm font-black uppercase leading-7 tracking-[0.25em] text-[#d7ad32]">
-            Secure access to the live resource parcel control system
+          <p className="mt-5 text-lg font-black leading-7 text-white">
+            Authorised users only.
           </p>
+
+          {returnTo !== "/dashboard" ? (
+            <div className="mt-6 rounded-3xl border border-[#d7ad32]/30 bg-[#d7ad32]/10 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+                Return Path
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                After sign-in, you will return to: {returnTo}
+              </p>
+            </div>
+          ) : null}
 
           <div className="mt-8 flex gap-3">
             <button
@@ -210,9 +260,7 @@ export default function LoginPage() {
             <button
               type="button"
               disabled={working}
-              onClick={
-                mode === "password" ? signInWithPassword : sendMagicLink
-              }
+              onClick={mode === "password" ? signInWithPassword : sendMagicLink}
               className="w-full rounded-full bg-[#d7ad32] px-6 py-5 text-lg font-black text-[#07101c] disabled:opacity-50"
             >
               {working
@@ -238,21 +286,18 @@ export default function LoginPage() {
               </div>
             ) : null}
           </div>
-        </section>
 
-        {!signedIn ? (
-          <section className="mt-6 rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
+          <div className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
             <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
               Access Notice
             </p>
-            <p className="mt-3 text-sm leading-7 text-slate-400">
-              The system now shows “Access” when no user session is active.
-              “Signed In” only appears after Supabase confirms an authenticated
-              user.
+            <p className="mt-3 text-base leading-7 text-slate-400">
+              Internal module navigation is hidden until Supabase confirms an
+              active user session.
             </p>
-          </section>
-        ) : null}
+          </div>
+        </section>
       </div>
     </main>
   );
-    }
+                   }

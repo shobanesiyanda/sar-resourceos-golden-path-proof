@@ -4,132 +4,159 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "../lib/supabase/client";
 
+type AuthState = "checking" | "signed_in" | "signed_out";
+
+function statusLabel(state: AuthState) {
+  if (state === "checking") return "Checking";
+  if (state === "signed_in") return "Signed In";
+  return "Access";
+}
+
+function NavPill({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={
+        active
+          ? "shrink-0 rounded-full bg-[#d7ad32] px-6 py-4 text-base font-black text-[#07101c]"
+          : "shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-6 py-4 text-base font-black text-slate-200"
+      }
+    >
+      {label}
+    </Link>
+  );
+}
+
+function InfoCard({
+  label,
+  title,
+  text,
+}: {
+  label: string;
+  title: string;
+  text: string;
+}) {
+  return (
+    <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
+      <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+        {label}
+      </p>
+      <h2 className="mt-3 text-2xl font-black leading-tight text-white">
+        {title}
+      </h2>
+      <p className="mt-3 text-base leading-7 text-slate-400">{text}</p>
+    </section>
+  );
+}
+
 export default function HomePage() {
   const supabase = createClient();
-  const [email, setEmail] = useState<string | null>(null);
-  const [checking, setChecking] = useState(true);
+
+  const [authState, setAuthState] = useState<AuthState>("checking");
 
   useEffect(() => {
-    async function loadUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      setEmail(user?.email ?? null);
-      setChecking(false);
+    async function checkAuth() {
+      const { data } = await supabase.auth.getUser();
+      setAuthState(data.user ? "signed_in" : "signed_out");
     }
 
-    loadUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setEmail(session?.user?.email ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    checkAuth();
   }, [supabase]);
 
+  const signedIn = authState === "signed_in";
+
   return (
-    <main className="min-h-screen bg-[#050914] px-5 py-24 text-white">
-      <section className="mx-auto max-w-5xl">
-        <div className="rounded-3xl border border-white/10 bg-[#080d18] p-6 shadow-2xl md:p-10">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
+    <main className="min-h-screen bg-[#050914] text-white">
+      <div className="sticky top-0 z-50 border-b border-slate-800 bg-[#050914]/95 px-4 py-4 backdrop-blur">
+        <nav className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto rounded-full border border-slate-800 bg-slate-950/60 p-2">
+          <div className="shrink-0 px-4 py-3">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+              {statusLabel(authState)}
+            </p>
+          </div>
+
+          <NavPill href="/dashboard" label="Dash" active={signedIn} />
+          <NavPill href="/operations" label="Ops" />
+          <NavPill href="/route-builder" label="Route" />
+          <NavPill href="/finance" label="Finance" />
+          <NavPill href="/analytics" label="Analytics" />
+        </nav>
+      </div>
+
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-8">
+        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
             SAR ResourceOS
           </p>
 
-          <h1 className="mt-4 max-w-4xl text-4xl font-black leading-tight md:text-6xl">
-            Secure chrome transaction control system.
+          <h1 className="mt-5 text-5xl font-black leading-tight text-white">
+            Secure resource transaction control system.
           </h1>
 
-          <p className="mt-5 max-w-3xl text-base leading-8 text-slate-300 md:text-lg">
+          <p className="mt-6 text-lg leading-8 text-slate-300">
             SAR ResourceOS is the internal operating environment for controlled
             resource opportunity intake, counterparty verification, route
             economics, execution readiness, parcel movement, reconciliation,
             approvals and finance handoff.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            {checking ? null : email ? (
+          <div className="mt-10 space-y-4">
+            <Link
+              href={signedIn ? "/dashboard" : "/login"}
+              className="inline-flex w-full justify-center rounded-full bg-[#d7ad32] px-6 py-5 text-lg font-black text-[#07101c]"
+            >
+              {signedIn ? "Open Dashboard" : "Login"}
+            </Link>
+
+            {!signedIn ? (
               <Link
-                href="/dashboard"
-                className="rounded-full border border-[#d7ad32]/50 bg-[#d7ad32] px-6 py-4 text-center text-sm font-black text-[#07101c]"
+                href="/login"
+                className="inline-flex w-full justify-center rounded-full border border-slate-700 bg-slate-900/40 px-6 py-5 text-lg font-black text-slate-200"
               >
-                Open Dashboard
+                Request / Create Access
               </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="rounded-full border border-[#d7ad32]/50 bg-[#d7ad32] px-6 py-4 text-center text-sm font-black text-[#07101c]"
-                >
-                  Login
-                </Link>
-
-                <Link
-                  href="/signup"
-                  className="rounded-full border border-white/10 bg-white/[0.04] px-6 py-4 text-center text-sm font-black text-slate-200"
-                >
-                  Request / Create Access
-                </Link>
-              </>
-            )}
+            ) : null}
           </div>
-        </div>
+        </section>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#d7ad32]">
-              Controlled Access
-            </p>
-            <h2 className="mt-3 text-xl font-black">Authorised users only</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              Access is restricted to approved operators and internal users.
-              Live operational controls are not exposed publicly.
-            </p>
-          </div>
+        <section className="grid gap-4 md:grid-cols-3">
+          <InfoCard
+            label="Controlled Access"
+            title="Authorised users only"
+            text="Access is restricted to approved operators and internal users. Live operational controls are not exposed publicly."
+          />
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#d7ad32]">
-              Transaction Control
-            </p>
-            <h2 className="mt-3 text-xl font-black">
-              Route to finance handoff
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              The live dashboard is available only after secure login and
-              Supabase session verification.
-            </p>
-          </div>
+          <InfoCard
+            label="Transaction Control"
+            title="Route to finance handoff"
+            text="The live dashboard is available only after secure login and Supabase session verification."
+          />
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#d7ad32]">
-              Shobane African Resources
-            </p>
-            <h2 className="mt-3 text-xl font-black">
-              Internal operating system
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              Built for controlled chrome parcel execution, route discipline,
-              evidence tracking, approvals and finance readiness.
-            </p>
-          </div>
-        </div>
+          <InfoCard
+            label="Shobane African Resources"
+            title="Internal operating system"
+            text="Built for controlled resource opportunity execution, route discipline, evidence tracking, approvals and finance readiness."
+          />
+        </section>
 
-        <div className="mt-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
+        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
             Access Notice
           </p>
-          <p className="mt-3 text-sm leading-7 text-slate-400">
-            This platform is an internal operating environment of Shobane
-            African Resources. Unauthorised access is not permitted. Users must
-            sign in before accessing transaction dashboards, parcel controls,
-            counterparty information or finance handoff workflows.
+          <p className="mt-3 text-base leading-7 text-slate-400">
+            The homepage now shows “Access” when no Supabase user session is
+            active. “Signed In” only appears after authentication is confirmed.
           </p>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
-        }
+      }

@@ -90,10 +90,10 @@ export default function MorePage() {
           Use modules through controlled navigation.
         </h3>
         <p className="mt-3 text-sm leading-7 text-slate-300">
-          This page fixes mobile discovery for secondary modules. It does not change
-          permissions, release rules, finance logic or approval authority.
+          This page fixes mobile discovery for secondary modules. It does not
+          change permissions, release rules, finance logic or approval authority.
         </p>
       </section>
     </ResourceShell>
   );
-  }
+}

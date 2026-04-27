@@ -43,8 +43,10 @@ function cleanPath(pathname: string) {
 
 function isActive(pathname: string, href: string, live: boolean) {
   if (!live) return false;
+
   const path = cleanPath(pathname);
   const base = href.split("#")[0];
+
   return path === base || path.startsWith(`${base}/`);
 }
 
@@ -80,7 +82,7 @@ export default function ResourceShell({
 
   return (
     <div className="min-h-screen bg-[#050914] text-white">
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 border-r border-white/10 bg-[#050914] p-5 md:block">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 overflow-y-auto border-r border-white/10 bg-[#050914] p-5 md:block">
         <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
           <p className="text-xs font-black uppercase tracking-[0.35em] text-[#d7ad32]">
             SAR ResourceOS
@@ -128,7 +130,7 @@ export default function ResourceShell({
       </aside>
 
       <div className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#050914]/95 px-3 py-3 shadow-2xl backdrop-blur-xl md:hidden">
-        <div className="flex items-center gap-2 overflow-x-auto rounded-full border border-white/10 bg-[#080d18] p-2 scrollbar-hide">
+        <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto rounded-full border border-white/10 bg-[#080d18] p-2">
           {mobileNav.map((item) => {
             const active = isMobileActive(pathname, item.href);
 

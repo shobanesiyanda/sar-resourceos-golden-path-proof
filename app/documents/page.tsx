@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
+import { stageLabel, stateLabel } from "../../lib/displayLabels";
 
 const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
 
@@ -42,13 +43,6 @@ type DocumentRow = {
 
 function displayParcelCode(parcel: ParcelRow | null) {
   return parcel?.working_parcel_code || parcel?.parcel_code || SEED_PARCEL_CODE;
-}
-
-function stateText(value: string | null | undefined) {
-  if (!value) return "Blocked";
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function Card({
@@ -106,7 +100,8 @@ function Stat({
 }
 
 function DocumentCard({ doc }: { doc: DocumentRow }) {
-  const status = stateText(doc.status);
+  const status = stateLabel(doc.status);
+
   const good =
     status.toLowerCase().includes("approved") ||
     status.toLowerCase().includes("complete") ||
@@ -209,14 +204,14 @@ export default function DocumentsPage() {
         <Stat label="Parcel" value={code} />
         <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
         <Stat label="Material" value={parcel?.material_type || "ROM"} />
-        <Stat label="Documents State" value={stateText(gate?.documents_state)} />
+        <Stat label="Documents State" value={stateLabel(gate?.documents_state)} />
       </section>
 
       <Card label="Document Readiness" title="Evidence pack status">
         <div className="space-y-4">
           <Stat label="Commodity Class" value={parcel?.commodity_class || "Hard Commodities"} />
           <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
-          <Stat label="Stage" value={parcel?.material_stage || "raw_feedstock"} />
+          <Stat label="Stage" value={stageLabel(parcel?.material_stage)} />
           <Stat label="Documents Complete" value={`${complete}/${required}`} gold />
           <Stat label="Open Items" value={Math.max(required - complete, 0)} />
           <Stat label="Blocked Items" value={blockers} />
@@ -245,11 +240,11 @@ export default function DocumentsPage() {
 
       <Card label="Central Release Link" title="Documents control the release gate">
         <div className="space-y-4">
-          <Stat label="Release State" value={stateText(gate?.release_state)} />
+          <Stat label="Release State" value={stateLabel(gate?.release_state)} />
           <Stat label="Release Decision" value={gate?.release_decision || "Hold / Gates Blocked"} />
-          <Stat label="Approvals State" value={stateText(gate?.approvals_state)} />
-          <Stat label="Counterparties State" value={stateText(gate?.counterparties_state)} />
-          <Stat label="Routes State" value={stateText(gate?.routes_state)} />
+          <Stat label="Approvals State" value={stateLabel(gate?.approvals_state)} />
+          <Stat label="Counterparties State" value={stateLabel(gate?.counterparties_state)} />
+          <Stat label="Routes State" value={stateLabel(gate?.routes_state)} />
 
           <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
             <p className="text-xs font-black uppercase tracking-[0.25em] text-red-200">
@@ -268,4 +263,4 @@ export default function DocumentsPage() {
       </Card>
     </ResourceShell>
   );
-  }
+      }

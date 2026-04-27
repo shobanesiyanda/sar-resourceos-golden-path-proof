@@ -83,11 +83,23 @@ export default function HomePage() {
             </p>
           </div>
 
-          <NavPill href="/dashboard" label="Dash" active={signedIn} />
-          <NavPill href="/operations" label="Ops" />
-          <NavPill href="/route-builder" label="Route" />
-          <NavPill href="/finance" label="Finance" />
-          <NavPill href="/analytics" label="Analytics" />
+          {signedIn ? (
+            <>
+              <NavPill href="/dashboard" label="Dash" active />
+              <NavPill href="/leads" label="Leads" />
+              <NavPill href="/route-builder" label="Route" />
+              <NavPill href="/operations" label="Ops" />
+              <NavPill href="/finance" label="Finance" />
+              <NavPill href="/analytics" label="Analytics" />
+              <NavPill href="/documents" label="Docs" />
+              <NavPill href="/logout" label="Out" />
+            </>
+          ) : (
+            <>
+              <NavPill href="/login" label="Login" active />
+              <NavPill href="/login" label="Request Access" />
+            </>
+          )}
         </nav>
       </div>
 
@@ -152,11 +164,11 @@ export default function HomePage() {
             Access Notice
           </p>
           <p className="mt-3 text-base leading-7 text-slate-400">
-            The homepage now shows “Access” when no Supabase user session is
-            active. “Signed In” only appears after authentication is confirmed.
+            Internal module navigation is hidden until a Supabase user session
+            is active.
           </p>
         </section>
       </div>
     </main>
   );
-      }
+}

@@ -192,7 +192,7 @@ export default function LeadsPage() {
   return (
     <ResourceShell
       title="Lead Economics"
-      subtitle="Commercial screening engine reading the stored working parcel code and structured price-basis fields."
+      subtitle="Commercial screening engine reading working parcel code, commodity class, material stage and structured price-basis fields."
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Stat label="Parcel" value={code} />

@@ -22,10 +22,13 @@ function AccessCard({
       <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
         Access Control
       </p>
+
       <h2 className="mt-3 text-2xl font-black leading-tight text-white">
         {title}
       </h2>
+
       <p className="mt-3 text-base leading-7 text-slate-400">{text}</p>
+
       {action ? <div className="mt-5">{action}</div> : null}
     </section>
   );
@@ -105,9 +108,9 @@ export default function EconomicsEditPage() {
           action={
             <button
               type="button"
-              onClick={() =>
-                router.push("/login?returnTo=/economics/edit")
-              }
+              onClick={() => {
+                router.push("/login?returnTo=/economics/edit");
+              }}
               className="w-full rounded-full bg-[#d7ad32] px-6 py-5 text-lg font-black text-[#07101c]"
             >
               Login to Continue

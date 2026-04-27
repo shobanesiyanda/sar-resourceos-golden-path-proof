@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
+import { stageLabel, stateLabel } from "../../lib/displayLabels";
 
 const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
 
@@ -78,13 +79,6 @@ function pct(value: number | null | undefined) {
 function tons(value: number | null | undefined) {
   const n = Number(value || 0);
   return n.toFixed(3);
-}
-
-function stateText(value: string | null | undefined) {
-  if (!value) return "Blocked";
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function Card({
@@ -173,7 +167,7 @@ function GateFamily({
           </p>
         </div>
         <span className="rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200">
-          {stateText(state)}
+          {stateLabel(state)}
         </span>
       </div>
 
@@ -234,8 +228,10 @@ export default function AnalyticsPage() {
   const effectivePrice =
     parcel?.effective_price_per_ton || parcel?.expected_price_per_ton || 0;
   const revenue = productTons * effectivePrice;
+
   const margin =
     gate?.route_margin_percent ?? parcel?.estimated_route_margin_percent ?? 0;
+
   const releaseDecision = gate?.release_decision || "Hold / Gates Blocked";
 
   return (
@@ -248,17 +244,30 @@ export default function AnalyticsPage() {
         <Stat label="Open Blockers" value={gate?.open_blockers ?? 0} />
         <Stat label="Hard Blockers" value={gate?.hard_blockers ?? 0} />
         <Stat label="Pending Blockers" value={gate?.pending_blockers ?? 0} />
-        <Stat label="Release State" value={stateText(gate?.release_state)} />
+        <Stat label="Release State" value={stateLabel(gate?.release_state)} />
       </section>
 
       <Card label="Commercial Analytics" title="Revenue and tonnage signal">
         <div className="space-y-4">
           <Stat label="Parcel" value={code} />
-          <Stat label="Class" value={parcel?.commodity_class || "Hard Commodities"} />
-          <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
-          <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
+          <Stat
+            label="Class"
+            value={parcel?.commodity_class || "Hard Commodities"}
+          />
+          <Stat
+            label="Resource"
+            value={parcel?.resource_type || "Chrome"}
+            gold
+          />
+          <Stat
+            label="Category"
+            value={parcel?.resource_category || "Ferrous Metals"}
+          />
           <Stat label="Material" value={parcel?.material_type || "ROM"} />
-          <Stat label="Stage" value={parcel?.material_stage || "raw_feedstock"} />
+          <Stat
+            label="Stage"
+            value={stageLabel(parcel?.material_stage)}
+          />
           <Stat label="Product Quantity" value={tons(productTons)} />
           <Stat label="Route Quantity" value={tons(parcel?.feedstock_tons)} gold />
           <Stat label="Effective Price" value={`${money(effectivePrice)}/t`} />
@@ -269,8 +278,15 @@ export default function AnalyticsPage() {
       <Card label="Exposure Analytics" title="Supabase parcel economics">
         <div className="space-y-4">
           <Stat label="Route Cost" value={money(parcel?.estimated_route_cost)} />
-          <Stat label="Verification / Quality Cost" value={money(parcel?.estimated_total_assay_cost)} />
-          <Stat label="Surplus" value={money(parcel?.estimated_route_surplus)} gold />
+          <Stat
+            label="Verification / Quality Cost"
+            value={money(parcel?.estimated_total_assay_cost)}
+          />
+          <Stat
+            label="Surplus"
+            value={money(parcel?.estimated_route_surplus)}
+            gold
+          />
           <Stat label="Margin" value={pct(margin)} gold />
           <Stat label="Margin State" value={gate?.margin_state || "Not captured"} />
           <Stat label="Price Basis" value={parcel?.price_basis || "Not captured"} />

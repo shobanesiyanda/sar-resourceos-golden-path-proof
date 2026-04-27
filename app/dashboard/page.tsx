@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
+import { stageLabel, stateLabel } from "../../lib/displayLabels";
 
 const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
 
@@ -49,13 +50,6 @@ function money(value: number | null | undefined) {
 function pct(value: number | null | undefined) {
   const n = Number(value || 0);
   return `${n.toFixed(1)}%`;
-}
-
-function titleCaseState(value: string | null | undefined) {
-  if (!value) return "Blocked";
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function Pill({ value }: { value: string }) {
@@ -172,9 +166,9 @@ export default function DashboardPage() {
   }
 
   const code = displayParcelCode(parcel);
-  const releaseState = titleCaseState(gate?.release_state);
-  const leadDecision =
-    gate?.release_decision || "Hold / Gates Blocked";
+  const releaseState = stateLabel(gate?.release_state);
+  const leadDecision = gate?.release_decision || "Hold / Gates Blocked";
+
   const margin =
     gate?.route_margin_percent ??
     parcel?.estimated_route_margin_percent ??
@@ -195,11 +189,24 @@ export default function DashboardPage() {
       <Card label="Lead / Opportunity" title="Current lead summary">
         <div className="space-y-4">
           <Stat label="Parcel" value={code} />
-          <Stat label="Class" value={parcel?.commodity_class || "Hard Commodities"} />
-          <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
-          <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
+          <Stat
+            label="Class"
+            value={parcel?.commodity_class || "Hard Commodities"}
+          />
+          <Stat
+            label="Resource"
+            value={parcel?.resource_type || "Chrome"}
+            gold
+          />
+          <Stat
+            label="Category"
+            value={parcel?.resource_category || "Ferrous Metals"}
+          />
           <Stat label="Material" value={parcel?.material_type || "ROM"} />
-          <Stat label="Stage" value={parcel?.material_stage || "raw_feedstock"} />
+          <Stat
+            label="Stage"
+            value={stageLabel(parcel?.material_stage)}
+          />
         </div>
       </Card>
 
@@ -221,7 +228,11 @@ export default function DashboardPage() {
             gold
           />
           <Stat label="Route Cost" value={money(parcel?.estimated_route_cost)} />
-          <Stat label="Surplus" value={money(parcel?.estimated_route_surplus)} gold />
+          <Stat
+            label="Surplus"
+            value={money(parcel?.estimated_route_surplus)}
+            gold
+          />
           <Stat label="Margin" value={pct(margin)} gold />
         </div>
       </Card>
@@ -243,4 +254,4 @@ export default function DashboardPage() {
       </Card>
     </ResourceShell>
   );
-}
+  }

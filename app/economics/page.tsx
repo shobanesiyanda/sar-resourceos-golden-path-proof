@@ -22,22 +22,6 @@ type Gate = {
   estimated_route_surplus: number | null;
   estimated_route_margin_percent: number | null;
   estimated_total_assay_cost: number | null;
-  total_documents: number | null;
-  cleared_documents: number | null;
-  pending_documents: number | null;
-  blocked_documents: number | null;
-  total_approvals: number | null;
-  cleared_approvals: number | null;
-  pending_approvals: number | null;
-  blocked_approvals: number | null;
-  total_counterparties: number | null;
-  cleared_counterparties: number | null;
-  pending_counterparties: number | null;
-  blocked_counterparties: number | null;
-  total_routes: number | null;
-  cleared_routes: number | null;
-  pending_routes: number | null;
-  blocked_routes: number | null;
   margin_blocker: number | null;
   margin_state: string | null;
   hard_blockers: number | null;
@@ -69,12 +53,15 @@ function pct(v: number | null | undefined) {
 
 function stateClass(state: string | null | undefined) {
   const s = String(state || "").toLowerCase();
+
   if (s.includes("ready") || s.includes("clear") || s.includes("strong")) {
     return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
   }
+
   if (s.includes("pending") || s.includes("target")) {
     return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
   }
+
   return "border-red-400/40 bg-red-500/15 text-red-200";
 }
 
@@ -130,66 +117,138 @@ function Stat(p: {
   );
 }
 
-function GateLine(p: { label: string; blocked: number; pending: number }) {
-  const blocked = n(p.blocked);
-  const pending = n(p.pending);
-  const state = blocked > 0 ? "Blocked" : pending > 0 ? "Pending" : "Clear";
+function RecommendationPanel({ gate }: { gate: Gate }) {
+  const revenue = n(gate.indicative_revenue);
+  const surplus = n(gate.estimated_route_surplus);
+  const productTons = n(gate.product_tons);
+  const feedstockTons = n(gate.feedstock_tons);
+  const price = n(gate.expected_price_per_ton);
+  const routeCost = n(gate.estimated_route_cost);
+  const assayCost = n(gate.estimated_total_assay_cost);
 
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-        {p.label}
-      </p>
-      <div className="mt-3">
-        <span
-          className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${stateClass(
-            state
-          )}`}
-        >
-          {state}
-        </span>
-      </div>
-      <p className="mt-3 text-sm leading-6 text-slate-400">
-        {blocked > 0
-          ? `${blocked} hard blocker(s).`
-          : pending > 0
-          ? `${pending} pending blocker(s).`
-          : "No open blocker."}
-      </p>
-    </div>
-  );
-}
+  const minTargetMargin = 18;
+  const preferredTargetMargin = 20;
 
-function LeadStep(p: {
-  step: string;
-  title: string;
-  status: string;
-  note: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-            {p.step}
+  const minTargetSurplus = revenue * (minTargetMargin / 100);
+  const preferredTargetSurplus = revenue * (preferredTargetMargin / 100);
+
+  const minGap = Math.max(0, minTargetSurplus - surplus);
+  const preferredGap = Math.max(0, preferredTargetSurplus - surplus);
+
+  const minPriceIncrease = productTons > 0 ? minGap / productTons : 0;
+  const preferredPriceIncrease = productTons > 0 ? preferredGap / productTons : 0;
+
+  const minBuyerPrice = price + minPriceIncrease;
+  const preferredBuyerPrice = price + preferredPriceIncrease;
+
+  const feedstockReduction = feedstockTons > 0 ? minGap / feedstockTons : 0;
+  const maxRouteCost = revenue - assayCost - minTargetSurplus;
+
+  const assayRecoveredSurplus = surplus + assayCost;
+  const assayRecoveryGap = Math.max(0, minTargetSurplus - assayRecoveredSurplus);
+  const assayRecoveryPriceIncrease =
+    productTons > 0 ? assayRecoveryGap / productTons : 0;
+  const assayRecoveryBuyerPrice = price + assayRecoveryPriceIncrease;
+
+  if (n(gate.estimated_route_margin_percent) >= minTargetMargin) {
+    return (
+      <Card label="Margin Decision" title="Margin is inside or above minimum target">
+        <div className="mt-5 rounded-3xl border border-emerald-400/30 bg-emerald-500/10 p-5 text-emerald-200">
+          <p className="text-xl font-black">No margin correction required.</p>
+          <p className="mt-3 text-sm leading-7">
+            Current margin is {pct(gate.estimated_route_margin_percent)}. Continue
+            with evidence, approvals, route and finance gates before release.
           </p>
-          <h4 className="mt-2 text-xl font-black">{p.title}</h4>
         </div>
-        <span
-          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${stateClass(
-            p.status
-          )}`}
-        >
-          {p.status}
-        </span>
+      </Card>
+    );
+  }
+
+  return (
+    <Card label="Margin Improvement Required" title="Hold / renegotiate before release">
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Current Margin" value={pct(gate.estimated_route_margin_percent)} />
+        <Stat label="Minimum Target" value={`${minTargetMargin.toFixed(1)}%`} gold />
+        <Stat label="Preferred Target" value={`${preferredTargetMargin.toFixed(1)}%`} gold />
+        <Stat label="Decision" value="Hold / Renegotiate" state="Blocked" />
       </div>
-      <p className="mt-3 text-sm leading-7 text-slate-400">{p.note}</p>
-    </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Current Surplus" value={money(surplus)} />
+        <Stat label="18% Target Surplus" value={money(minTargetSurplus)} gold />
+        <Stat label="Gap To 18%" value={money(minGap)} />
+        <Stat label="Gap To 20%" value={money(preferredGap)} />
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-2xl border border-[#d7ad32]/30 bg-[#d7ad32]/10 p-4">
+          <p className="text-xs uppercase tracking-[0.25em] text-[#f5d778]">
+            1. Buyer Price Target
+          </p>
+          <p className="mt-2 text-2xl font-black">Minimum {money(minBuyerPrice)}/t</p>
+          <p className="mt-2 text-sm leading-6 text-slate-300">
+            Current buyer price is {money(price)}/t. Increase by about{" "}
+            {money(minPriceIncrease)}/t to reach 18%.
+          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Preferred 20% target: {money(preferredBuyerPrice)}/t.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            2. Feedstock Cost Target
+          </p>
+          <p className="mt-2 text-2xl font-black">{money(feedstockReduction)}/t saving</p>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Reduce feedstock cost by about {money(feedstockReduction)} per feedstock
+            ton across {tons(feedstockTons)} tons.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            3. Route Cost Cap
+          </p>
+          <p className="mt-2 text-2xl font-black">{money(maxRouteCost)}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Current route cost is {money(routeCost)}. Reduce route cost by{" "}
+            {money(minGap)} to reach 18%, excluding assay.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            4. Combined Correction
+          </p>
+          <p className="mt-2 text-2xl font-black">{money(minGap)} total</p>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Suggested split: plant/tolling {money(minGap * 0.48)}, transport{" "}
+            {money(minGap * 0.32)}, feedstock {money(minGap * 0.2)}.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 xl:col-span-2">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            5. Assay / Handling Recovery
+          </p>
+          <p className="mt-2 text-2xl font-black">
+            Buyer price target becomes {money(assayRecoveryBuyerPrice)}/t
+          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            If buyer/plant absorbs {money(assayCost)} assay/handling, remaining
+            gap to 18% is {money(assayRecoveryGap)}. Required buyer price increase
+            drops to about {money(assayRecoveryPriceIncrease)}/t.
+          </p>
+        </div>
+      </div>
+    </Card>
   );
 }
 
 export default function EconomicsPage() {
   const supabase = createClient();
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [gate, setGate] = useState<Gate | null>(null);
@@ -246,7 +305,9 @@ export default function EconomicsPage() {
     return (
       <ResourceShell title="Lead Economics" subtitle="Lead economics module error">
         <Card label="Error" title="Could not load lead economics">
-          <p className="mt-3 text-red-200">{error || "Could not load lead economics."}</p>
+          <p className="mt-3 text-red-200">
+            {error || "Could not load lead economics."}
+          </p>
         </Card>
       </ResourceShell>
     );
@@ -254,17 +315,11 @@ export default function EconomicsPage() {
 
   const leadBlocked = n(gate.total_open_blockers) > 0;
   const leadState = leadBlocked ? "Blocked" : "Ready";
-  const commercialStatus =
-    n(gate.margin_blocker) > 0
-      ? "Below Target"
-      : leadBlocked
-      ? "Commercially Visible"
-      : "Ready for Review";
 
   return (
     <ResourceShell
       title="Lead Economics"
-      subtitle="Commercial screening engine now powered by the central release_gate_summary view."
+      subtitle="Commercial screening engine powered by release_gate_summary, with editable inputs separated into a controlled edit page."
     >
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Stat label="Parcel" value={gate.parcel_code || PARCEL_CODE} />
@@ -275,9 +330,9 @@ export default function EconomicsPage() {
 
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Stat label="Lead State" value={leadState} state={leadState} />
-        <Stat label="Commercial Status" value={commercialStatus} />
         <Stat label="Release Decision" value={gate.release_decision || "Hold / Review"} />
         <Stat label="Open Blockers" value={String(n(gate.total_open_blockers))} />
+        <Stat label="Route Margin" value={pct(gate.estimated_route_margin_percent)} gold />
       </section>
 
       <Card label="Lead Economics Screening" title="Commercial starting point">
@@ -293,112 +348,36 @@ export default function EconomicsPage() {
           <Stat label="Revenue" value={money(gate.indicative_revenue)} gold />
           <Stat label="Route Cost" value={money(gate.estimated_route_cost)} />
           <Stat label="Assay Cost" value={money(gate.estimated_total_assay_cost)} />
-          <Stat label="Surplus" value={money(gate.estimated_route_surplus)} gold />
-          <Stat label="Route Margin" value={pct(gate.estimated_route_margin_percent)} gold />
+          <Stat label="Surplus After Assay" value={money(gate.estimated_route_surplus)} gold />
+          <Stat label="Margin State" value={gate.margin_state || "Not Set"} state={gate.margin_state || "Blocked"} />
         </div>
 
-        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(gate.margin_state)}`}>
-          <p className="text-xs font-black uppercase tracking-[0.25em]">
-            Margin state
-          </p>
-          <p className="mt-2 text-2xl font-black">
-            {gate.margin_state || "Not Set"}
-          </p>
-          <p className="mt-2 text-sm leading-7">
-            Lead economics must be commercially screened before route spend,
-            supplier engagement, plant commitment, dispatch or finance handoff.
-          </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/economics/edit"
+            className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
+          >
+            Edit Lead Economics
+          </Link>
+          <Link
+            href="/dashboard"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Back to Dashboard
+          </Link>
         </div>
       </Card>
 
-      <Card label="Lead Control Result" title="Central release gate summary">
+      <RecommendationPanel gate={gate} />
+
+      <Card label="Release Gate Summary" title="Central control result">
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Stat label="Release State" value={gate.release_state || "Blocked"} state={gate.release_state || "Blocked"} />
           <Stat label="Hard Blockers" value={String(n(gate.hard_blockers))} />
           <Stat label="Pending Blockers" value={String(n(gate.pending_blockers))} />
           <Stat label="Total Open" value={String(n(gate.total_open_blockers))} />
         </div>
-
-        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(gate.release_state)}`}>
-          <p className="text-xs font-black uppercase tracking-[0.25em]">
-            Release decision
-          </p>
-          <p className="mt-2 text-2xl font-black">
-            {gate.release_decision || "Hold / Review"}
-          </p>
-          <p className="mt-2 text-sm leading-6">
-            Lead Economics now reads the same central release decision as Dashboard,
-            Analytics, Finance, Route Builder and Operations.
-          </p>
-        </div>
-      </Card>
-
-      <Card label="Readiness Gates" title="What blocks this lead from release">
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <GateLine label="Documents" blocked={n(gate.blocked_documents)} pending={n(gate.pending_documents)} />
-          <GateLine label="Approvals" blocked={n(gate.blocked_approvals)} pending={n(gate.pending_approvals)} />
-          <GateLine label="Counterparties" blocked={n(gate.blocked_counterparties)} pending={n(gate.pending_counterparties)} />
-          <GateLine label="Routes" blocked={n(gate.blocked_routes)} pending={n(gate.pending_routes)} />
-        </div>
-      </Card>
-
-      <Card label="Lead Intake Discipline" title="Screen before route commitment">
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <LeadStep
-            step="1. Resource"
-            title="Confirm commodity and material"
-            status={gate.resource_type && gate.material_type ? "Ready" : "Pending"}
-            note="Resource category, resource type and material type must be captured before economics are relied on."
-          />
-          <LeadStep
-            step="2. Yield"
-            title="Validate recovery basis"
-            status={n(gate.expected_yield_percent) > 0 ? "Review" : "Blocked"}
-            note="Yield must be supported by sample history, assay, plant recovery basis or verified supplier/plant evidence."
-          />
-          <LeadStep
-            step="3. Pricing"
-            title="Confirm buyer price"
-            status={n(gate.expected_price_per_ton) > 0 ? "Review" : "Blocked"}
-            note="Selling price must be tied to buyer/offtake support, FOT/FOB basis, grade band and payment terms."
-          />
-          <LeadStep
-            step="4. Route Cost"
-            title="Confirm cost stack"
-            status={n(gate.estimated_route_cost) > 0 ? "Review" : "Blocked"}
-            note="Feedstock, transport, tolling, assay and route charges must be verified before route commitment."
-          />
-          <LeadStep
-            step="5. Evidence"
-            title="Complete release documents"
-            status={n(gate.blocked_documents) > 0 ? "Blocked" : "Review"}
-            note="Supplier, plant, transport, buyer, assay and movement evidence must be complete before release."
-          />
-          <LeadStep
-            step="6. Decision"
-            title="Hold until gates clear"
-            status={leadBlocked ? "Blocked" : "Ready"}
-            note="Lead may be commercially visible, but it must not move to uncontrolled route spend or finance release."
-          />
-        </div>
-      </Card>
-
-      <Card label="Next Lead Actions" title="Move only through controlled modules">
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link href="/dashboard" className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]">
-            Back to Dashboard
-          </Link>
-          <Link href="/route-builder" className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white">
-            Route Builder
-          </Link>
-          <Link href="/documents" className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white">
-            Documents
-          </Link>
-          <Link href="/approvals" className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white">
-            Approvals
-          </Link>
-        </div>
       </Card>
     </ResourceShell>
   );
-              }
+    }

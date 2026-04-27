@@ -38,6 +38,82 @@ export type EditForm = {
   concentrateAssayBatches: string;
 };
 
+function stageWords(stage: MaterialStage) {
+  if (stage === "finished_product") {
+    return {
+      feedstockCostLabel: "Acquisition Cost / Product Ton",
+      feedstockCostHelp:
+        "Purchase or acquisition cost per finished product ton. Use 0 only if acquisition cost is handled outside this route model.",
+      transportLabel: "Transport / Security / Handling Cost / Product Ton",
+      transportHelp:
+        "Transport, security, handling, custody or delivery cost per finished product ton.",
+      tollingLabel: "Refining / Processing Cost / Product Ton",
+      tollingHelp:
+        "Refining, processing or conversion cost per finished product ton. Use 0 if no further processing applies.",
+      feedstockAssayLabel: "Source / Ownership Verification Cost / Batch",
+      feedstockAssayHelp:
+        "Verification, source-of-funds, ownership, custody or authentication cost per batch.",
+      finalAssayLabel: "Final Assay / Purity Verification Cost / Batch",
+      finalAssayHelp:
+        "Final assay, purity, certificate, refinery, verification or quality confirmation cost per batch.",
+      routeCostLabel: "Product Route Cost Before Verification",
+      feedstockCostPreview: "Acquisition Cost",
+      transportPreview: "Transport / Security / Handling",
+      tollingPreview: "Refining / Processing",
+      feedstockAssayPreview: "Source Verification Cost",
+      finalAssayPreview: "Final Purity Verification Cost",
+      feedstockRequiredNote: "Finished product basis = product tons",
+    };
+  }
+
+  if (stage === "intermediate_concentrate") {
+    return {
+      feedstockCostLabel: "Product Acquisition Cost / Product Ton",
+      feedstockCostHelp:
+        "Acquisition cost per saleable intermediate product ton. Use 0 if cost is handled outside this model.",
+      transportLabel: "Transport / Handling Cost / Product Ton",
+      transportHelp:
+        "Transport, loading, handling or delivery cost per saleable product ton.",
+      tollingLabel: "Additional Processing Cost / Product Ton",
+      tollingHelp:
+        "Additional processing, upgrade or blending cost per product ton. Use 0 if already saleable.",
+      feedstockAssayLabel: "Source / Product Verification Cost / Batch",
+      feedstockAssayHelp:
+        "Source, grade or product verification cost per batch.",
+      finalAssayLabel: "Final Product Assay Cost / Batch",
+      finalAssayHelp:
+        "Final product assay or quality confirmation cost per batch.",
+      routeCostLabel: "Product Route Cost Before Assay",
+      feedstockCostPreview: "Product Acquisition Cost",
+      transportPreview: "Transport / Handling Cost",
+      tollingPreview: "Additional Processing Cost",
+      feedstockAssayPreview: "Source / Product Verification Cost",
+      finalAssayPreview: "Final Product Assay Cost",
+      feedstockRequiredNote: "Saleable product basis = product tons",
+    };
+  }
+
+  return {
+    feedstockCostLabel: "Feedstock Cost / Feedstock Ton",
+    feedstockCostHelp: "Cost per required feedstock ton.",
+    transportLabel: "Transport To Plant Cost / Feedstock Ton",
+    transportHelp: "Transport cost per required feedstock ton.",
+    tollingLabel: "Tolling Cost / Feedstock Ton",
+    tollingHelp: "Plant tolling or processing cost per required feedstock ton.",
+    feedstockAssayLabel: "Feedstock Assay Cost / Batch",
+    feedstockAssayHelp: "ROM, ore, tailings or feedstock assay cost per batch.",
+    finalAssayLabel: "Final Product Assay Cost / Batch",
+    finalAssayHelp: "Final product assay, verification or quality cost per batch.",
+    routeCostLabel: "Route Cost Before Assay",
+    feedstockCostPreview: "Feedstock Cost",
+    transportPreview: "Transport Cost",
+    tollingPreview: "Tolling Cost",
+    feedstockAssayPreview: "Feedstock Assay Cost",
+    finalAssayPreview: "Final Product Assay Cost",
+    feedstockRequiredNote: "Raw feedstock uses yield recovery",
+  };
+}
+
 export function priceEffective(marketPrice: string, negotiatedPrice: string) {
   const negotiated = n(negotiatedPrice);
   const market = n(marketPrice);
@@ -108,7 +184,7 @@ export function StageNotice({ form }: { form: EditForm }) {
       <p className="mt-2 text-sm leading-6 text-slate-300">
         {form.stage === "raw_feedstock"
           ? "Raw feedstock uses product tons divided by yield."
-          : "Intermediate and finished products use 100% basis: feedstock tons equal product tons."}
+          : "Intermediate and finished products use 100% basis: product tons equal route tons."}
       </p>
     </div>
   );
@@ -136,6 +212,7 @@ export function HeaderStats({
   form: EditForm;
 }) {
   const c = economicsCalc(form);
+  const words = stageWords(form.stage);
 
   return (
     <>
@@ -149,12 +226,16 @@ export function HeaderStats({
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Stat label="Product Tons" value={tons(c.target)} />
         <Stat
-          label="Feedstock Required"
+          label={
+            form.stage === "raw_feedstock"
+              ? "Feedstock Required"
+              : "Route Product Tons"
+          }
           value={tons(c.feedTons)}
           note={
             form.stage === "raw_feedstock"
               ? `${tons(c.target)}t ÷ ${pct(c.y)} yield`
-              : "Saleable/final product stage = 100% basis"
+              : words.feedstockRequiredNote
           }
           gold
         />
@@ -175,12 +256,12 @@ export function HeaderStats({
             {marginState(c.margin)}
           </p>
           <p className="mt-2 text-sm leading-6">
-            Stage logic controls feedstock calculation. Effective price controls revenue.
+            Material stage controls tonnage basis. Effective price controls revenue.
           </p>
         </div>
 
-        <Stat label="Surplus After Assay" value={money(c.surplus)} gold />
-        <Stat label="Total Assay Cost" value={money(c.assayCost)} />
+        <Stat label="Surplus After Verification" value={money(c.surplus)} gold />
+        <Stat label="Total Verification / Assay Cost" value={money(c.assayCost)} />
       </section>
     </>
   );
@@ -208,6 +289,7 @@ export function InputControls({
   save: () => void;
 }) {
   const c = economicsCalc(form);
+  const words = stageWords(form.stage);
 
   return (
     <Card label="Input Controls" title="Set resource and economics">
@@ -257,7 +339,7 @@ export function InputControls({
           label="Target / Product Tons"
           value={form.target}
           onChange={(v) => setField("target", v)}
-          help="The product tons you want to produce or sell."
+          help="The product tons you want to produce, buy, sell or route."
         />
 
         <Field
@@ -272,12 +354,16 @@ export function InputControls({
         />
 
         <Stat
-          label="Auto Feedstock Required"
+          label={
+            form.stage === "raw_feedstock"
+              ? "Auto Feedstock Required"
+              : "Auto Route Product Tons"
+          }
           value={tons(c.feedTons)}
           note={
             form.stage === "raw_feedstock"
               ? `${tons(c.target)}t ÷ ${pct(c.y)} yield`
-              : "100% material-stage basis"
+              : words.feedstockRequiredNote
           }
           gold
         />
@@ -327,52 +413,60 @@ export function InputControls({
         <PricingWarning />
 
         <Field
-          label="Feedstock Cost / Feedstock Ton"
+          label={words.feedstockCostLabel}
           value={form.feedstock}
           onChange={(v) => setField("feedstock", v)}
-          help="For finished products this can be 0 unless acquisition cost is modelled here."
+          help={words.feedstockCostHelp}
         />
 
         <Field
-          label="Transport To Plant Cost / Feedstock Ton"
+          label={words.transportLabel}
           value={form.transport}
           onChange={(v) => setField("transport", v)}
-          help="Transport cost per feedstock/product ton."
+          help={words.transportHelp}
         />
 
         <Field
-          label="Tolling Cost / Feedstock Ton"
+          label={words.tollingLabel}
           value={form.tolling}
           onChange={(v) => setField("tolling", v)}
-          help="Finished products default to 0 beneficiation tolling."
+          help={words.tollingHelp}
         />
 
         <Field
-          label="Feedstock Assay Cost / Batch"
+          label={words.feedstockAssayLabel}
           value={form.feedstockAssayRate}
           onChange={(v) => setField("feedstockAssayRate", v)}
-          help="ROM, ore, tailings or feedstock assay cost per batch."
+          help={words.feedstockAssayHelp}
         />
 
         <Field
-          label="Feedstock Assay Batches"
+          label={
+            form.stage === "finished_product"
+              ? "Source / Verification Batches"
+              : "Feedstock Assay Batches"
+          }
           value={form.feedstockAssayBatches}
           onChange={(v) => setField("feedstockAssayBatches", v)}
-          help="Number of feedstock assay batches."
+          help="Number of source, feedstock, verification or assay batches."
         />
 
         <Field
-          label="Final Product Assay Cost / Batch"
+          label={words.finalAssayLabel}
           value={form.concentrateAssayRate}
           onChange={(v) => setField("concentrateAssayRate", v)}
-          help="Final product assay, verification or quality cost per batch."
+          help={words.finalAssayHelp}
         />
 
         <Field
-          label="Final Product Assay Batches"
+          label={
+            form.stage === "finished_product"
+              ? "Final Verification Batches"
+              : "Final Product Assay Batches"
+          }
           value={form.concentrateAssayBatches}
           onChange={(v) => setField("concentrateAssayBatches", v)}
-          help="Number of final product assay batches."
+          help="Number of final verification, assay or quality batches."
         />
 
         <button
@@ -402,19 +496,25 @@ export function InputControls({
 
 export function LivePreview({ form }: { form: EditForm }) {
   const c = economicsCalc(form);
+  const words = stageWords(form.stage);
 
   return (
     <Card label="Live Preview" title="Effective economics result">
       <div className="mt-5 space-y-4">
         <Stat label="Material Stage" value={stageLabel(form.stage)} />
         <Stat label="Product Tons" value={tons(c.target)} />
+
         <Stat
-          label="Feedstock Required"
+          label={
+            form.stage === "raw_feedstock"
+              ? "Feedstock Required"
+              : "Route Product Tons"
+          }
           value={tons(c.feedTons)}
           note={
             form.stage === "raw_feedstock"
               ? `${tons(c.target)}t ÷ ${pct(c.y)} yield`
-              : "100% material-stage basis"
+              : words.feedstockRequiredNote
           }
           gold
         />
@@ -441,14 +541,14 @@ export function LivePreview({ form }: { form: EditForm }) {
           note={`${tons(c.target)}t × ${money(c.effectivePrice)}/t`}
         />
 
-        <Stat label="Feedstock Cost" value={money(c.feedCost)} />
-        <Stat label="Transport Cost" value={money(c.transCost)} />
-        <Stat label="Tolling Cost" value={money(c.tollCost)} />
-        <Stat label="Route Cost Before Assay" value={money(c.routeCost)} />
-        <Stat label="Feedstock Assay Cost" value={money(c.feedAssayCost)} />
-        <Stat label="Final Product Assay Cost" value={money(c.prodAssayCost)} />
-        <Stat label="Total Assay Cost" value={money(c.assayCost)} gold />
-        <Stat label="Surplus After Assay" value={money(c.surplus)} gold />
+        <Stat label={words.feedstockCostPreview} value={money(c.feedCost)} />
+        <Stat label={words.transportPreview} value={money(c.transCost)} />
+        <Stat label={words.tollingPreview} value={money(c.tollCost)} />
+        <Stat label={words.routeCostLabel} value={money(c.routeCost)} />
+        <Stat label={words.feedstockAssayPreview} value={money(c.feedAssayCost)} />
+        <Stat label={words.finalAssayPreview} value={money(c.prodAssayCost)} />
+        <Stat label="Total Verification / Assay Cost" value={money(c.assayCost)} gold />
+        <Stat label="Surplus After Verification" value={money(c.surplus)} gold />
         <Stat label="Route Margin" value={pct(c.margin)} gold />
       </div>
     </Card>

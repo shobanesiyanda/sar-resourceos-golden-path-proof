@@ -1,20 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "../../lib/supabase/client";
 import ResourceShell from "../../components/ResourceShell";
 
 const PARCEL_CODE = "PAR-CHR-2026-0001";
 
-type Parcel = {
-  id: string;
-  parcel_code: string;
-  commodity: string | null;
+type Gate = {
+  parcel_id: string | null;
+  parcel_code: string | null;
   resource_category: string | null;
   resource_type: string | null;
   material_type: string | null;
-  accepted_tons: number | null;
-  expected_concentrate_tons: number | null;
+  product_tons: number | null;
   feedstock_tons: number | null;
   expected_yield_percent: number | null;
   expected_price_per_ton: number | null;
@@ -22,61 +21,63 @@ type Parcel = {
   estimated_route_cost: number | null;
   estimated_route_surplus: number | null;
   estimated_route_margin_percent: number | null;
+  estimated_total_assay_cost: number | null;
+  total_documents: number | null;
+  cleared_documents: number | null;
+  pending_documents: number | null;
+  blocked_documents: number | null;
+  total_approvals: number | null;
+  cleared_approvals: number | null;
+  pending_approvals: number | null;
+  blocked_approvals: number | null;
+  total_counterparties: number | null;
+  cleared_counterparties: number | null;
+  pending_counterparties: number | null;
+  blocked_counterparties: number | null;
+  total_routes: number | null;
+  cleared_routes: number | null;
+  pending_routes: number | null;
+  blocked_routes: number | null;
+  margin_blocker: number | null;
+  margin_state: string | null;
+  hard_blockers: number | null;
+  pending_blockers: number | null;
+  total_open_blockers: number | null;
+  release_state: string | null;
+  release_decision: string | null;
 };
 
-type StatusRow = { status: string | null };
+function n(v: number | null | undefined) {
+  return Number(v || 0);
+}
 
 function money(v: number | null | undefined) {
   return new Intl.NumberFormat("en-ZA", {
     style: "currency",
     currency: "ZAR",
     maximumFractionDigits: 0,
-  }).format(Number(v || 0));
+  }).format(n(v));
 }
 
 function tons(v: number | null | undefined) {
-  return Number(v || 0).toFixed(3);
+  return n(v).toFixed(3);
 }
 
 function pct(v: number | null | undefined) {
-  return `${Number(v || 0).toFixed(1)}%`;
+  return `${n(v).toFixed(1)}%`;
 }
 
-function openCount(rows: StatusRow[]) {
-  return rows.filter((r) => r.status === "Pending" || r.status === "Blocked")
-    .length;
-}
+function stateClass(state: string | null | undefined) {
+  const s = String(state || "").toLowerCase();
 
-function readyCount(rows: StatusRow[]) {
-  return rows.filter((r) => r.status === "Approved" || r.status === "Complete")
-    .length;
-}
+  if (s.includes("ready") || s.includes("clear") || s.includes("strong")) {
+    return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
+  }
 
-function score(done: number, total: number) {
-  if (total <= 0) return 0;
-  return Math.round((done / total) * 100);
-}
+  if (s.includes("pending") || s.includes("target")) {
+    return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+  }
 
-function marginState(m: number) {
-  if (m < 18) return "Below Target";
-  if (m <= 25) return "Target Band";
-  return "Strong Route";
-}
-
-function controlState(open: number, margin: number) {
-  if (open > 0 || margin < 18) return "Blocked";
-  return "Ready";
-}
-
-function decisionText(open: number, margin: number) {
-  if (margin < 18) return "Commercially visible, not release ready";
-  if (open > 0) return "Economics acceptable, gates still open";
-  return "Ready for controlled release review";
-}
-
-function stateClass(state: string) {
-  if (state === "Ready") return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
-  if (state === "Target Band") return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
   return "border-red-400/40 bg-red-500/15 text-red-200";
 }
 
@@ -92,50 +93,93 @@ function Card(p: { label: string; title: string; children?: React.ReactNode }) {
   );
 }
 
-function Stat(p: { label: string; value: string; note?: string; gold?: boolean }) {
+function Stat(p: {
+  label: string;
+  value: string;
+  note?: string;
+  gold?: boolean;
+  state?: string;
+}) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
         {p.label}
       </p>
-      <p className={`mt-2 text-3xl font-black ${p.gold ? "text-[#f5d778]" : "text-white"}`}>
-        {p.value}
-      </p>
-      {p.note ? <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p> : null}
+
+      {p.state ? (
+        <div className="mt-3">
+          <span
+            className={`inline-flex rounded-full border px-3 py-1 text-sm font-black ${stateClass(
+              p.state
+            )}`}
+          >
+            {p.value}
+          </span>
+        </div>
+      ) : (
+        <p
+          className={`mt-2 text-3xl font-black ${
+            p.gold ? "text-[#f5d778]" : "text-white"
+          }`}
+        >
+          {p.value}
+        </p>
+      )}
+
+      {p.note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p>
+      ) : null}
     </div>
   );
 }
 
-function Gate(p: {
+function GateLine(p: {
   label: string;
-  ready: number;
   total: number;
-  open: number;
+  cleared: number;
+  pending: number;
+  blocked: number;
 }) {
-  const s = score(p.ready, p.total);
-  const blocked = p.open > 0;
+  const total = n(p.total);
+  const cleared = n(p.cleared);
+  const pending = n(p.pending);
+  const blocked = n(p.blocked);
+  const score = total > 0 ? Math.round((cleared / total) * 100) : 0;
+  const state = blocked > 0 ? "Blocked" : pending > 0 ? "Pending" : "Ready";
+
   return (
-    <div
-      className={[
-        "rounded-2xl border p-4",
-        blocked
-          ? "border-red-400/30 bg-red-500/10"
-          : "border-emerald-400/30 bg-emerald-500/10",
-      ].join(" ")}
-    >
-      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-        {p.label}
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            {p.label}
+          </p>
+          <p className="mt-2 text-2xl font-black">
+            {cleared}/{total}
+          </p>
+        </div>
+
+        <span
+          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${stateClass(
+            state
+          )}`}
+        >
+          {state}
+        </span>
+      </div>
+
+      <p className="mt-3 text-sm leading-6 text-slate-400">
+        {blocked > 0
+          ? `${blocked} blocked.`
+          : pending > 0
+          ? `${pending} pending.`
+          : "Gate clear."}
       </p>
-      <p className="mt-2 text-3xl font-black text-white">
-        {p.ready}/{p.total}
-      </p>
-      <p className="mt-2 text-sm leading-6 text-slate-400">
-        {blocked ? `${p.open} item(s) still Pending or Blocked.` : "Gate cleared."}
-      </p>
+
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
         <div
-          className={blocked ? "h-full bg-red-300" : "h-full bg-emerald-300"}
-          style={{ width: `${s}%` }}
+          className={state === "Ready" ? "h-full bg-emerald-300" : "h-full bg-[#d7ad32]"}
+          style={{ width: `${score}%` }}
         />
       </div>
     </div>
@@ -147,11 +191,7 @@ export default function AnalyticsPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [parcel, setParcel] = useState<Parcel | null>(null);
-  const [documents, setDocuments] = useState<StatusRow[]>([]);
-  const [approvals, setApprovals] = useState<StatusRow[]>([]);
-  const [counterparties, setCounterparties] = useState<StatusRow[]>([]);
-  const [routes, setRoutes] = useState<StatusRow[]>([]);
+  const [gate, setGate] = useState<Gate | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -174,42 +214,19 @@ export default function AnalyticsPage() {
         return;
       }
 
-      const { data: parcelData, error: parcelError } = await supabase
-        .from("parcels")
+      const { data, error: gateError } = await supabase
+        .from("release_gate_summary")
         .select("*")
         .eq("parcel_code", PARCEL_CODE)
         .single();
 
-      if (parcelError || !parcelData) {
-        setError("Parcel not found.");
+      if (gateError || !data) {
+        setError(gateError?.message || "Release gate summary not found.");
         setLoading(false);
         return;
       }
 
-      const { data: docs } = await supabase
-        .from("documents")
-        .select("status")
-        .eq("parcel_id", parcelData.id);
-
-      const { data: apps } = await supabase
-        .from("approvals")
-        .select("status")
-        .eq("parcel_id", parcelData.id);
-
-      const { data: parties } = await supabase
-        .from("counterparties")
-        .select("status");
-
-      const { data: routeData } = await supabase
-        .from("route_chains")
-        .select("status")
-        .eq("route_code", "ROUTE-CHR-2026-0001");
-
-      setParcel(parcelData as Parcel);
-      setDocuments((docs as StatusRow[]) || []);
-      setApprovals((apps as StatusRow[]) || []);
-      setCounterparties((parties as StatusRow[]) || []);
-      setRoutes((routeData as StatusRow[]) || []);
+      setGate(data as Gate);
       setLoading(false);
     }
 
@@ -218,131 +235,167 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <ResourceShell title="Analytics Control" subtitle="Loading analytics...">
-        <Card label="Loading" title="Reading Supabase analytics data..." />
+      <ResourceShell
+        title="Analytics Control"
+        subtitle="Loading central release analytics..."
+      >
+        <Card label="Loading" title="Reading release_gate_summary..." />
       </ResourceShell>
     );
   }
 
-  if (error || !parcel) {
+  if (error || !gate) {
     return (
       <ResourceShell title="Analytics Control" subtitle="Analytics module error">
         <Card label="Error" title="Could not load analytics">
-          <p className="mt-3 text-red-200">{error || "Could not load analytics page."}</p>
+          <p className="mt-3 text-red-200">
+            {error || "Could not load analytics."}
+          </p>
         </Card>
       </ResourceShell>
     );
   }
 
-  const productTons = parcel.expected_concentrate_tons ?? parcel.accepted_tons ?? 0;
-  const revenue =
-    parcel.indicative_revenue ||
-    productTons * Number(parcel.expected_price_per_ton || 0);
+  const totalGateItems =
+    n(gate.total_documents) +
+    n(gate.total_approvals) +
+    n(gate.total_counterparties) +
+    n(gate.total_routes) +
+    1;
 
-  const routeCost = Number(parcel.estimated_route_cost || 0);
-  const surplus = Number(parcel.estimated_route_surplus || revenue - routeCost);
-  const margin = Number(
-    parcel.estimated_route_margin_percent ||
-      (revenue > 0 ? (surplus / revenue) * 100 : 0)
-  );
+  const clearedGateItems =
+    n(gate.cleared_documents) +
+    n(gate.cleared_approvals) +
+    n(gate.cleared_counterparties) +
+    n(gate.cleared_routes) +
+    (n(gate.margin_blocker) > 0 ? 0 : 1);
 
-  const docReady = readyCount(documents);
-  const appReady = readyCount(approvals);
-  const partyReady = readyCount(counterparties);
-  const routeReady = readyCount(routes);
-
-  const docOpen = openCount(documents);
-  const appOpen = openCount(approvals);
-  const partyOpen = openCount(counterparties);
-  const routeOpen = openCount(routes);
-
-  const totalItems =
-    documents.length + approvals.length + counterparties.length + routes.length + 1;
-
-  const readyItems =
-    docReady +
-    appReady +
-    partyReady +
-    routeReady +
-    (margin >= 18 ? 1 : 0);
-
-  const openTotal = docOpen + appOpen + partyOpen + routeOpen + (margin < 18 ? 1 : 0);
-  const readiness = score(readyItems, totalItems);
-  const state = controlState(openTotal, margin);
-  const mState = marginState(margin);
+  const readiness =
+    totalGateItems > 0 ? Math.round((clearedGateItems / totalGateItems) * 100) : 0;
 
   return (
     <ResourceShell
       title="Analytics Control"
-      subtitle="Read-only cockpit for readiness, margin signal, blocker count, route economics and release-control interpretation."
+      subtitle="Read-only cockpit now powered by the central release_gate_summary view."
     >
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Readiness Score" value={`${readiness}%`} gold={readiness >= 80} />
-        <Stat label="Open Blockers" value={String(openTotal)} />
-        <Stat label="Route Margin" value={pct(margin)} gold />
-        <Stat label="Control State" value={state} />
+        <Stat label="Readiness Score" value={`${readiness}%`} />
+        <Stat label="Open Blockers" value={String(n(gate.total_open_blockers))} />
+        <Stat label="Hard Blockers" value={String(n(gate.hard_blockers))} />
+        <Stat label="Pending Blockers" value={String(n(gate.pending_blockers))} />
       </section>
 
-      <Card label="Current Position" title={decisionText(openTotal, margin)}>
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          label="Release State"
+          value={gate.release_state || "Blocked"}
+          state={gate.release_state || "Blocked"}
+        />
+        <Stat label="Release Decision" value={gate.release_decision || "Hold / Review"} />
+        <Stat label="Margin State" value={gate.margin_state || "Not Set"} state={gate.margin_state || "Blocked"} />
+        <Stat label="Route Margin" value={pct(gate.estimated_route_margin_percent)} gold />
+      </section>
+
+      <Card label="Commercial Analytics" title="Revenue and tonnage signal">
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Stat label="Parcel" value={parcel.parcel_code} />
-          <Stat label="Resource" value={parcel.resource_type || parcel.commodity || "Not Set"} gold />
-          <Stat label="Material" value={parcel.material_type || "Not Set"} />
-          <Stat label="Feedstock Required" value={tons(parcel.feedstock_tons)} />
+          <Stat label="Parcel" value={gate.parcel_code || PARCEL_CODE} />
+          <Stat label="Resource" value={gate.resource_type || "Not Set"} gold />
+          <Stat label="Material" value={gate.material_type || "Not Set"} />
+          <Stat label="Category" value={gate.resource_category || "Not Set"} />
+          <Stat label="Product Tons" value={tons(gate.product_tons)} />
+          <Stat
+            label="Feedstock Tons"
+            value={tons(gate.feedstock_tons)}
+            note={`${pct(gate.expected_yield_percent)} expected yield`}
+            gold
+          />
+          <Stat label="Price / Ton" value={`${money(gate.expected_price_per_ton)}/t`} />
+          <Stat label="Revenue" value={money(gate.indicative_revenue)} gold />
         </div>
       </Card>
 
-      <Card label="Readiness Analytics" title="Release-gate breakdown">
+      <Card label="Exposure Analytics" title="Supabase parcel economics">
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Gate label="Document Readiness" ready={docReady} total={documents.length} open={docOpen} />
-          <Gate label="Approval Readiness" ready={appReady} total={approvals.length} open={appOpen} />
-          <Gate label="Counterparty Readiness" ready={partyReady} total={counterparties.length} open={partyOpen} />
-          <Gate label="Route Readiness" ready={routeReady} total={routes.length} open={routeOpen} />
-        </div>
-      </Card>
-
-      <Card label="Commercial Analytics" title="Revenue, cost and margin signal">
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Stat label="Product Tons" value={tons(productTons)} />
-          <Stat label="Revenue" value={money(revenue)} gold />
-          <Stat label="Route Cost" value={money(routeCost)} />
-          <Stat label="Surplus" value={money(surplus)} gold />
+          <Stat label="Route Cost" value={money(gate.estimated_route_cost)} />
+          <Stat label="Assay Cost" value={money(gate.estimated_total_assay_cost)} />
+          <Stat label="Surplus" value={money(gate.estimated_route_surplus)} gold />
+          <Stat label="Margin" value={pct(gate.estimated_route_margin_percent)} gold />
         </div>
 
-        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(mState)}`}>
-          <p className="text-xs font-bold uppercase tracking-[0.25em]">
-            Margin Signal
+        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(gate.release_state)}`}>
+          <p className="text-xs font-black uppercase tracking-[0.25em]">
+            Central interpretation
           </p>
-          <p className="mt-3 text-3xl font-black">{mState}</p>
+          <p className="mt-2 text-2xl font-black">
+            {gate.release_decision || "Hold / Review"}
+          </p>
           <p className="mt-2 text-sm leading-6">
-            Target margin control band is 18%–25%. Below target should remain under review or require exception approval.
+            Analytics now reads the same release decision as the dashboard. No
+            separate page-level decision logic is being used here.
           </p>
         </div>
       </Card>
 
-      <Card label="Risk Interpretation" title="What the analytics mean">
+      <Card label="Gate Analytics" title="Readiness by control family">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <GateLine
+            label="Documents"
+            cleared={n(gate.cleared_documents)}
+            total={n(gate.total_documents)}
+            pending={n(gate.pending_documents)}
+            blocked={n(gate.blocked_documents)}
+          />
+          <GateLine
+            label="Approvals"
+            cleared={n(gate.cleared_approvals)}
+            total={n(gate.total_approvals)}
+            pending={n(gate.pending_approvals)}
+            blocked={n(gate.blocked_approvals)}
+          />
+          <GateLine
+            label="Counterparties"
+            cleared={n(gate.cleared_counterparties)}
+            total={n(gate.total_counterparties)}
+            pending={n(gate.pending_counterparties)}
+            blocked={n(gate.blocked_counterparties)}
+          />
+          <GateLine
+            label="Routes"
+            cleared={n(gate.cleared_routes)}
+            total={n(gate.total_routes)}
+            pending={n(gate.pending_routes)}
+            blocked={n(gate.blocked_routes)}
+          />
+        </div>
+      </Card>
+
+      <Card label="Control Interpretation" title="Current position">
         <div className="mt-5 grid gap-4 xl:grid-cols-3">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Current Position
+              Position
             </p>
-            <p className="mt-2 text-2xl font-black text-white">
-              {decisionText(openTotal, margin)}
+            <p className="mt-2 text-2xl font-black">
+              {gate.release_state === "Ready"
+                ? "Commercially ready"
+                : gate.release_state === "Pending"
+                ? "Commercially visible, pending gates"
+                : "Commercially visible, not release ready"}
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              The parcel is commercially visible but cannot release while required gates remain open.
+              Release status is driven by central blockers and margin control.
             </p>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Main Blockers
+              Finance Signal
             </p>
-            <p className="mt-2 text-2xl font-black text-white">
-              {openTotal} open item(s)
+            <p className="mt-2 text-2xl font-black">
+              {n(gate.total_open_blockers) > 0 ? "Do not release" : "Review release"}
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Documents, approvals, counterparty verification, route readiness and margin control are read together.
+              Finance handoff must follow the central release gate result.
             </p>
           </div>
 
@@ -350,21 +403,46 @@ export default function AnalyticsPage() {
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
               Next Practical Action
             </p>
-            <p className="mt-2 text-2xl font-black text-white">
-              Clear release blockers
+            <p className="mt-2 text-2xl font-black">
+              {n(gate.hard_blockers) > 0
+                ? "Clear hard blockers"
+                : n(gate.pending_blockers) > 0
+                ? "Clear pending gates"
+                : "Prepare release review"}
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Prioritise supplier evidence, plant tolling support, transport confirmation, buyer support and finance approval.
+              Work from documents, approvals, counterparties and route readiness.
             </p>
           </div>
         </div>
-      </Card>
 
-      <Card label="Control Note" title="Analytics is advisory until release rules are enforced">
-        <p className="mt-3 text-sm leading-7 text-slate-300">
-          This page currently reads live Supabase records and interprets readiness. The next production phase will enforce release-gate rules, approval authority, audit events and exception controls.
-        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/dashboard"
+            className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
+          >
+            Back to Dashboard
+          </Link>
+          <Link
+            href="/finance"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Open Finance
+          </Link>
+          <Link
+            href="/documents"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Documents
+          </Link>
+          <Link
+            href="/approvals"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Approvals
+          </Link>
+        </div>
       </Card>
     </ResourceShell>
   );
-                     }
+  }

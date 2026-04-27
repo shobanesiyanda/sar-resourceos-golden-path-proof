@@ -3,110 +3,214 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "../../lib/supabase/client";
+import ResourceShell from "../../components/ResourceShell";
 
-type Profile = {
-  full_name: string;
-  company_name: string | null;
-  role: string;
-  is_active: boolean;
-};
+const PARCEL_CODE = "PAR-CHR-2026-0001";
 
-type Parcel = {
-  id: string;
-  parcel_code: string;
-  commodity: string;
-  product_description: string | null;
-  accepted_tons: number;
+type Gate = {
+  parcel_id: string | null;
+  parcel_code: string | null;
+  resource_category: string | null;
+  resource_type: string | null;
+  material_type: string | null;
+  product_tons: number | null;
+  feedstock_tons: number | null;
+  expected_yield_percent: number | null;
   expected_price_per_ton: number | null;
   indicative_revenue: number | null;
-  control_state: string;
-  operator_name: string | null;
-  company_name: string | null;
+  estimated_route_cost: number | null;
+  estimated_route_surplus: number | null;
+  estimated_route_margin_percent: number | null;
+  estimated_total_assay_cost: number | null;
+  total_documents: number | null;
+  cleared_documents: number | null;
+  pending_documents: number | null;
+  blocked_documents: number | null;
+  total_approvals: number | null;
+  cleared_approvals: number | null;
+  pending_approvals: number | null;
+  blocked_approvals: number | null;
+  total_counterparties: number | null;
+  cleared_counterparties: number | null;
+  pending_counterparties: number | null;
+  blocked_counterparties: number | null;
+  total_routes: number | null;
+  cleared_routes: number | null;
+  pending_routes: number | null;
+  blocked_routes: number | null;
+  margin_blocker: number | null;
+  margin_state: string | null;
+  hard_blockers: number | null;
+  pending_blockers: number | null;
+  total_open_blockers: number | null;
+  release_state: string | null;
+  release_decision: string | null;
 };
 
-type RouteChain = {
-  route_code: string;
-  route_name: string | null;
-  origin_location: string | null;
-  plant_location: string | null;
-  delivery_location: string | null;
-  transport_cost_per_ton: number | null;
-  tolling_cost_per_ton: number | null;
-  status: string;
-  notes: string | null;
+type RouteRow = {
+  id?: string;
+  parcel_id?: string | null;
+  status?: string | null;
+  origin?: string | null;
+  source_location?: string | null;
+  loading_point?: string | null;
+  plant?: string | null;
+  plant_location?: string | null;
+  wash_plant?: string | null;
+  destination?: string | null;
+  delivery_location?: string | null;
+  buyer_location?: string | null;
+  buyer?: string | null;
+  transporter?: string | null;
+  route_name?: string | null;
+  notes?: string | null;
 };
 
-type Counterparty = {
-  counterparty_type: string;
-  company_name: string;
-  location: string | null;
-  province: string | null;
-  status: string;
-};
+function n(v: number | null | undefined) {
+  return Number(v || 0);
+}
 
-type DocumentRecord = {
-  document_code: string;
-  document_type: string;
-  title: string;
-  status: string;
-  notes: string | null;
-};
-
-type ApprovalRecord = {
-  approval_code: string;
-  approval_type: string;
-  status: string;
-  decision_note: string | null;
-};
-
-function money(value: number | null | undefined) {
+function money(v: number | null | undefined) {
   return new Intl.NumberFormat("en-ZA", {
     style: "currency",
     currency: "ZAR",
     maximumFractionDigits: 0,
-  }).format(value ?? 0);
+  }).format(n(v));
 }
 
-function tons(value: number | null | undefined) {
-  return Number(value ?? 0).toFixed(3);
+function tons(v: number | null | undefined) {
+  return n(v).toFixed(3);
 }
 
-function Badge({ state }: { state: string }) {
-  const style =
-    state === "Blocked"
-      ? "border-red-400/40 bg-red-500/15 text-red-200"
-      : state === "Held"
-      ? "border-orange-400/40 bg-orange-500/15 text-orange-200"
-      : state === "Approved" || state === "Complete" || state === "Active"
-      ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200"
-      : "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+function pct(v: number | null | undefined) {
+  return `${n(v).toFixed(1)}%`;
+}
 
+function stateClass(state: string | null | undefined) {
+  const s = String(state || "").toLowerCase();
+
+  if (s.includes("ready") || s.includes("clear") || s.includes("strong")) {
+    return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
+  }
+
+  if (s.includes("pending") || s.includes("target")) {
+    return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+  }
+
+  return "border-red-400/40 bg-red-500/15 text-red-200";
+}
+
+function routeValue(...items: Array<string | null | undefined>) {
+  return items.find((x) => x && String(x).trim().length > 0) || "Not captured";
+}
+
+function Card(p: { label: string; title: string; children?: React.ReactNode }) {
   return (
-    <span
-      className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${style}`}
-    >
-      {state}
-    </span>
+    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+      <p className="text-xs font-black uppercase tracking-[0.3em] text-[#d7ad32]">
+        {p.label}
+      </p>
+      <h3 className="mt-2 text-2xl font-black">{p.title}</h3>
+      {p.children}
+    </section>
   );
 }
 
-function Card({
-  label,
-  title,
-  children,
-}: {
+function Stat(p: {
   label: string;
-  title: string;
-  children?: React.ReactNode;
+  value: string;
+  note?: string;
+  gold?: boolean;
+  state?: string;
 }) {
   return (
-    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-      <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-        {label}
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {p.label}
       </p>
-      <h2 className="mt-2 text-2xl font-black">{title}</h2>
-      {children}
-    </section>
+
+      {p.state ? (
+        <div className="mt-3">
+          <span
+            className={`inline-flex rounded-full border px-3 py-1 text-sm font-black ${stateClass(
+              p.state
+            )}`}
+          >
+            {p.value}
+          </span>
+        </div>
+      ) : (
+        <p
+          className={`mt-2 text-3xl font-black ${
+            p.gold ? "text-[#f5d778]" : "text-white"
+          }`}
+        >
+          {p.value}
+        </p>
+      )}
+
+      {p.note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function GateLine(p: { label: string; blocked: number; pending: number }) {
+  const blocked = n(p.blocked);
+  const pending = n(p.pending);
+  const state = blocked > 0 ? "Blocked" : pending > 0 ? "Pending" : "Clear";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {p.label}
+      </p>
+      <div className="mt-3">
+        <span
+          className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${stateClass(
+            state
+          )}`}
+        >
+          {state}
+        </span>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-slate-400">
+        {blocked > 0
+          ? `${blocked} hard blocker(s).`
+          : pending > 0
+          ? `${pending} pending blocker(s).`
+          : "No open blocker."}
+      </p>
+    </div>
+  );
+}
+
+function OperationStep(p: {
+  step: string;
+  title: string;
+  status: string;
+  note: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            {p.step}
+          </p>
+          <h4 className="mt-2 text-xl font-black">{p.title}</h4>
+        </div>
+        <span
+          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${stateClass(
+            p.status
+          )}`}
+        >
+          {p.status}
+        </span>
+      </div>
+      <p className="mt-3 text-sm leading-7 text-slate-400">{p.note}</p>
+    </div>
   );
 }
 
@@ -114,86 +218,56 @@ export default function OperationsPage() {
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [parcel, setParcel] = useState<Parcel | null>(null);
-  const [route, setRoute] = useState<RouteChain | null>(null);
-  const [counterparties, setCounterparties] = useState<Counterparty[]>([]);
-  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
-  const [approvals, setApprovals] = useState<ApprovalRecord[]>([]);
+  const [error, setError] = useState("");
+  const [gate, setGate] = useState<Gate | null>(null);
+  const [route, setRoute] = useState<RouteRow | null>(null);
 
   useEffect(() => {
     async function load() {
-      setLoading(true);
-      setError(null);
+      const { data: auth } = await supabase.auth.getUser();
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (!auth.user) {
         window.location.href = "/login";
         return;
       }
 
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, company_name, role, is_active")
-        .eq("id", user.id)
+        .select("role, is_active")
+        .eq("id", auth.user.id)
         .single();
 
-      if (profileError || !profileData || profileData.is_active !== true) {
+      if (!profile || profile.is_active !== true) {
         setError("Profile not found or inactive.");
         setLoading(false);
         return;
       }
 
-      const { data: parcelData, error: parcelError } = await supabase
-        .from("parcels")
-        .select(
-          "id, parcel_code, commodity, product_description, accepted_tons, expected_price_per_ton, indicative_revenue, control_state, operator_name, company_name"
-        )
-        .eq("parcel_code", "PAR-CHR-2026-0001")
+      const { data: gateData, error: gateError } = await supabase
+        .from("release_gate_summary")
+        .select("*")
+        .eq("parcel_code", PARCEL_CODE)
         .single();
 
-      if (parcelError || !parcelData) {
-        setError("Parcel not found.");
+      if (gateError || !gateData) {
+        setError(gateError?.message || "Release gate summary not found.");
         setLoading(false);
         return;
       }
 
-      const { data: routeData } = await supabase
-        .from("route_chains")
-        .select(
-          "route_code, route_name, origin_location, plant_location, delivery_location, transport_cost_per_ton, tolling_cost_per_ton, status, notes"
-        )
-        .eq("route_code", "ROUTE-CHR-2026-0001")
-        .maybeSingle();
+      setGate(gateData as Gate);
 
-      const { data: counterpartyData } = await supabase
-        .from("counterparties")
-        .select("counterparty_type, company_name, location, province, status")
-        .order("counterparty_type", { ascending: true });
+      const parcelId = (gateData as Gate).parcel_id;
 
-      const { data: documentData } = await supabase
-        .from("documents")
-        .select("document_code, document_type, title, status, notes")
-        .eq("parcel_id", parcelData.id)
-        .order("document_code", { ascending: true });
+      let routeQuery = supabase.from("route_chains").select("*").limit(1);
 
-      const { data: approvalData } = await supabase
-        .from("approvals")
-        .select("approval_code, approval_type, status, decision_note")
-        .eq("parcel_id", parcelData.id)
-        .order("approval_code", { ascending: true });
+      if (parcelId) {
+        routeQuery = routeQuery.eq("parcel_id", parcelId);
+      }
 
-      setProfile(profileData);
-      setParcel(parcelData);
-      setRoute(routeData ?? null);
-      setCounterparties(counterpartyData ?? []);
-      setDocuments(documentData ?? []);
-      setApprovals(approvalData ?? []);
+      const { data: routeData } = await routeQuery;
+
+      setRoute(routeData && routeData.length > 0 ? (routeData[0] as RouteRow) : null);
       setLoading(false);
     }
 
@@ -202,299 +276,235 @@ export default function OperationsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <Card label="SAR ResourceOS" title="Loading operations control..." />
-      </main>
+      <ResourceShell
+        title="Operations Control"
+        subtitle="Loading central operations release summary..."
+      >
+        <Card label="Loading" title="Reading release_gate_summary..." />
+      </ResourceShell>
     );
   }
 
-  if (error) {
+  if (error || !gate) {
     return (
-      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <section className="rounded-3xl border border-red-400/30 bg-[#080d18] p-6 text-white">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-red-200">
-            SAR ResourceOS
+      <ResourceShell title="Operations Control" subtitle="Operations module error">
+        <Card label="Error" title="Could not load operations">
+          <p className="mt-3 text-red-200">
+            {error || "Could not load operations."}
           </p>
-          <h1 className="mt-3 text-2xl font-black">Operations module error</h1>
-          <p className="mt-3 text-slate-300">{error}</p>
-        </section>
-      </main>
+        </Card>
+      </ResourceShell>
     );
   }
 
-  const supplier = counterparties.find(
-    (item) => item.counterparty_type === "Supplier"
-  );
+  const operationsBlocked = n(gate.total_open_blockers) > 0;
+  const operationsState = operationsBlocked ? "Blocked" : "Ready";
 
-  const washPlant = counterparties.find(
-    (item) => item.counterparty_type === "Wash Plant"
-  );
+  const origin = route
+    ? routeValue(route.origin, route.source_location, route.loading_point)
+    : "Not captured";
 
-  const buyer = counterparties.find((item) => item.counterparty_type === "Buyer");
+  const plant = route
+    ? routeValue(route.plant, route.plant_location, route.wash_plant)
+    : "Not captured";
 
-  const transporter = counterparties.find(
-    (item) => item.counterparty_type === "Transporter"
-  );
+  const delivery = route
+    ? routeValue(route.destination, route.delivery_location, route.buyer_location)
+    : "Not captured";
 
-  const blockedDocuments = documents.filter(
-    (item) => item.status === "Blocked" || item.status === "Pending"
-  );
-
-  const blockedApprovals = approvals.filter(
-    (item) => item.status === "Blocked" || item.status === "Pending"
-  );
-
-  const dispatchBlocked =
-    parcel?.control_state === "Blocked" ||
-    route?.status === "Blocked" ||
-    blockedDocuments.length > 0 ||
-    blockedApprovals.length > 0;
-
-  const revenue =
-    parcel?.indicative_revenue ??
-    Number(parcel?.accepted_tons ?? 0) *
-      Number(parcel?.expected_price_per_ton ?? 0);
-
-  const operationsSteps = [
-    {
-      label: "Source Confirmation",
-      title: supplier?.company_name ?? "Supplier pending",
-      note: "Supplier source, material availability and commercial terms must be verified.",
-      state: supplier?.status ?? "Pending",
-    },
-    {
-      label: "Plant Readiness",
-      title: washPlant?.company_name ?? "Wash plant pending",
-      note: "Tolling quote, throughput, recovery basis and assay timing must be confirmed.",
-      state: washPlant?.status ?? "Pending",
-    },
-    {
-      label: "Truck Allocation",
-      title: transporter?.company_name ?? "Transporter pending",
-      note: "Truck availability, rate, loading plan and route timing must be confirmed.",
-      state: transporter?.status ?? "Pending",
-    },
-    {
-      label: "Buyer Delivery",
-      title: buyer?.company_name ?? "Buyer pending",
-      note: "Buyer delivery and offtake support must be ready before dispatch release.",
-      state: buyer?.status ?? "Pending",
-    },
-    {
-      label: "Finance Handoff",
-      title: "Settlement readiness",
-      note: "Finance handoff remains blocked until document and approval gates are cleared.",
-      state: dispatchBlocked ? "Blocked" : "Approved",
-    },
-  ];
+  const transporter = route ? routeValue(route.transporter) : "Not captured";
 
   return (
-    <main className="min-h-screen bg-[#050914] pt-28 text-white">
-      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-        <Card label="SAR ResourceOS" title="Operations / Dispatch Control">
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            Live dispatch readiness page for parcel movement, loading control,
-            weighbridge readiness, delivery tracking, evidence control and finance
-            handoff.
+    <ResourceShell
+      title="Operations Control"
+      subtitle="Read-only dispatch, loading, plant handoff, movement and delivery control powered by release_gate_summary."
+    >
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Parcel" value={gate.parcel_code || PARCEL_CODE} />
+        <Stat label="Resource" value={gate.resource_type || "Not Set"} gold />
+        <Stat label="Category" value={gate.resource_category || "Not Set"} />
+        <Stat label="Material" value={gate.material_type || "Not Set"} />
+      </section>
+
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          label="Operations State"
+          value={operationsState}
+          state={operationsState}
+        />
+        <Stat
+          label="Release Decision"
+          value={gate.release_decision || "Hold / Review"}
+        />
+        <Stat label="Open Blockers" value={String(n(gate.total_open_blockers))} />
+        <Stat label="Route Margin" value={pct(gate.estimated_route_margin_percent)} gold />
+      </section>
+
+      <Card label="Operations Basis" title="Parcel movement control">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Product Tons" value={tons(gate.product_tons)} />
+          <Stat
+            label="Feedstock Tons"
+            value={tons(gate.feedstock_tons)}
+            note={`${pct(gate.expected_yield_percent)} expected yield`}
+            gold
+          />
+          <Stat label="Revenue" value={money(gate.indicative_revenue)} gold />
+          <Stat label="Route Cost" value={money(gate.estimated_route_cost)} />
+          <Stat label="Surplus" value={money(gate.estimated_route_surplus)} gold />
+          <Stat label="Assay Cost" value={money(gate.estimated_total_assay_cost)} />
+          <Stat label="Margin State" value={gate.margin_state || "Not Set"} state={gate.margin_state || "Blocked"} />
+          <Stat label="Finance Signal" value={operationsBlocked ? "Do Not Release" : "Review"} state={operationsBlocked ? "Blocked" : "Ready"} />
+        </div>
+      </Card>
+
+      <Card label="Route Movement Chain" title="Origin, plant, delivery and transporter">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Origin / Loading" value={origin} />
+          <Stat label="Plant / Tolling" value={plant} />
+          <Stat label="Delivery / Offtake" value={delivery} />
+          <Stat label="Transporter" value={transporter} />
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            Route Note
           </p>
+          <p className="mt-2 text-sm leading-7 text-slate-400">
+            {route?.notes ||
+              "No operational route note captured yet. Loading point, truck control, seal control, weighbridge evidence and delivery handoff must be controlled before dispatch."}
+          </p>
+        </div>
+      </Card>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link
-              href="/dashboard"
-              className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
-            >
-              Back to Dashboard
-            </Link>
+      <Card label="Operations Release Control" title={operationsBlocked ? "Do not dispatch yet" : "Dispatch can move to controlled review"}>
+        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(operationsState)}`}>
+          <p className="text-xl font-black">
+            {operationsBlocked
+              ? "Operations release remains blocked."
+              : "Operations can proceed to controlled dispatch review."}
+          </p>
+          <p className="mt-3 text-sm leading-7">
+            {operationsBlocked
+              ? "Do not authorize loading, truck dispatch, plant handoff, weighbridge movement, delivery, settlement or finance handoff until all central release gates are clear."
+              : "All central blockers are clear. Dispatch still requires controlled approval, authority and evidence capture."}
+          </p>
+        </div>
 
-            <Link
-              href="/route-builder"
-              className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300"
-            >
-              Route Builder
-            </Link>
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <GateLine
+            label="Documents"
+            blocked={n(gate.blocked_documents)}
+            pending={n(gate.pending_documents)}
+          />
+          <GateLine
+            label="Approvals"
+            blocked={n(gate.blocked_approvals)}
+            pending={n(gate.pending_approvals)}
+          />
+          <GateLine
+            label="Counterparties"
+            blocked={n(gate.blocked_counterparties)}
+            pending={n(gate.pending_counterparties)}
+          />
+          <GateLine
+            label="Routes"
+            blocked={n(gate.blocked_routes)}
+            pending={n(gate.pending_routes)}
+          />
+        </div>
+      </Card>
 
-            <Link
-              href="/counterparties"
-              className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300"
-            >
-              Counterparties
-            </Link>
-          </div>
-        </Card>
+      <Card label="Operational Step Flow" title="Gate to delivery sequence">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <OperationStep
+            step="1. Source / Supplier"
+            title="Verify source authority"
+            status={n(gate.blocked_counterparties) > 0 ? "Blocked" : "Review"}
+            note="Confirm supplier authority, material control, location, KYC/FICA and source evidence before loading."
+          />
+          <OperationStep
+            step="2. Plant / Tolling"
+            title="Confirm processing route"
+            status={n(gate.blocked_routes) > 0 ? "Blocked" : "Review"}
+            note="Confirm plant availability, tolling quote, recovery basis, assay timing and operational handoff."
+          />
+          <OperationStep
+            step="3. Documents"
+            title="Complete evidence pack"
+            status={n(gate.blocked_documents) > 0 ? "Blocked" : "Review"}
+            note="Supplier, plant, transport, buyer, assay and movement evidence must be complete before release."
+          />
+          <OperationStep
+            step="4. Approvals"
+            title="Clear release authority"
+            status={n(gate.blocked_approvals) > 0 ? "Blocked" : "Review"}
+            note="Plant, counterparty, route and finance approvals must be cleared before operational dispatch."
+          />
+          <OperationStep
+            step="5. Loading / Dispatch"
+            title="No uncontrolled movement"
+            status={operationsBlocked ? "Blocked" : "Ready"}
+            note="Loading, dispatch and weighbridge movement must follow the central release decision."
+          />
+          <OperationStep
+            step="6. Finance Handoff"
+            title="Controlled handoff only"
+            status={operationsBlocked ? "Blocked" : "Ready"}
+            note="Settlement and route payments remain blocked until all gates clear and finance review approves release."
+          />
+        </div>
+      </Card>
 
-        <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Parcel
-            </p>
-            <p className="mt-3 text-2xl font-black">{parcel?.parcel_code}</p>
-            <p className="mt-2 text-sm font-semibold text-[#d7ad32]">
-              {parcel?.commodity}
-            </p>
-          </div>
+      <Card label="Central Operations Result" title="Operations follows the release gate engine">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Hard Blockers" value={String(n(gate.hard_blockers))} />
+          <Stat label="Pending Blockers" value={String(n(gate.pending_blockers))} />
+          <Stat label="Total Open" value={String(n(gate.total_open_blockers))} />
+          <Stat label="Margin Blocker" value={n(gate.margin_blocker) > 0 ? "Yes" : "No"} />
+        </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Accepted Tons
-            </p>
-            <p className="mt-3 text-4xl font-black">
-              {tons(parcel?.accepted_tons)}
-            </p>
-          </div>
+        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(gate.release_state)}`}>
+          <p className="text-xs font-black uppercase tracking-[0.25em]">
+            Release decision
+          </p>
+          <p className="mt-2 text-2xl font-black">
+            {gate.release_decision || "Hold / Review"}
+          </p>
+          <p className="mt-2 text-sm leading-6">
+            Operations now reads the same central release decision as Dashboard,
+            Analytics, Finance and Route Builder. No separate page-level dispatch
+            logic is being used.
+          </p>
+        </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Indicative Revenue
-            </p>
-            <p className="mt-3 text-3xl font-black">{money(revenue)}</p>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Dispatch State
-            </p>
-            <div className="mt-3">
-              <Badge state={dispatchBlocked ? "Blocked" : "Approved"} />
-            </div>
-            <p className="mt-2 text-sm text-slate-400">
-              {dispatchBlocked ? "Release gates still open." : "Ready for release."}
-            </p>
-          </div>
-        </section>
-
-        <Card
-          label="Dispatch Release Gate"
-          title={dispatchBlocked ? "Dispatch blocked" : "Dispatch ready"}
-        >
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Control Rule
-                </p>
-                <h3 className="mt-2 text-xl font-black">
-                  {dispatchBlocked
-                    ? "Do not release trucks yet."
-                    : "Truck release may proceed."}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-slate-400">
-                  Dispatch can only proceed when supplier, plant, buyer,
-                  transporter, documents and approvals are no longer Pending or
-                  Blocked.
-                </p>
-              </div>
-
-              <Badge state={dispatchBlocked ? "Blocked" : "Approved"} />
-            </div>
-          </div>
-        </Card>
-
-        <Card label="Operations Flow" title="Gate → Loading → Weighbridge → Delivery">
-          <div className="mt-5 space-y-4">
-            {operationsSteps.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-              >
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                      {item.label}
-                    </p>
-                    <h3 className="mt-2 text-xl font-black">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">
-                      {item.note}
-                    </p>
-                  </div>
-
-                  <Badge state={item.state} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <section className="grid gap-6 xl:grid-cols-2">
-          <Card label="Open Release Blockers" title="Documents and approvals">
-            <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Document blockers
-                </p>
-                <p className="mt-2 text-3xl font-black text-[#f5d778]">
-                  {blockedDocuments.length}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Approval blockers
-                </p>
-                <p className="mt-2 text-3xl font-black text-red-200">
-                  {blockedApprovals.length}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Next Action
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Clear plant tolling, supplier verification, transport support
-                  and finance approval before dispatch release.
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card label="Route Movement" title={route?.route_name ?? "Route pending"}>
-            <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Origin
-                </p>
-                <p className="mt-2 text-xl font-black">
-                  {route?.origin_location ?? "Pending"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Wash Plant
-                </p>
-                <p className="mt-2 text-xl font-black">
-                  {route?.plant_location ?? "Pending"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Delivery
-                </p>
-                <p className="mt-2 text-xl font-black">
-                  {route?.delivery_location ?? "Pending"}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </section>
-
-        <Card label="Operator" title={profile?.full_name ?? "Operator"}>
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Company
-            </p>
-            <p className="mt-2 text-xl font-black">
-              {profile?.company_name ?? "Shobane African Resources"}
-            </p>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              The operations page is currently a live read-only dispatch control
-              view. The next phase can add actual dispatch records, truck release
-              forms, weighbridge entries and evidence uploads.
-            </p>
-          </div>
-        </Card>
-      </div>
-    </main>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/dashboard"
+            className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
+          >
+            Back to Dashboard
+          </Link>
+          <Link
+            href="/route-builder"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Route Builder
+          </Link>
+          <Link
+            href="/documents"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Documents
+          </Link>
+          <Link
+            href="/finance"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Finance
+          </Link>
+        </div>
+      </Card>
+    </ResourceShell>
   );
   }

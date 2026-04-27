@@ -23,7 +23,17 @@ const mobileNav = [
   { label: "Leads", href: "/economics" },
   { label: "Route", href: "/route-builder" },
   { label: "Ops", href: "/operations" },
-  { label: "More", href: "/dashboard#more" },
+  { label: "More", href: "/more" },
+];
+
+const morePages = [
+  "/more",
+  "/finance",
+  "/analytics",
+  "/documents",
+  "/approvals",
+  "/counterparties",
+  "/admin",
 ];
 
 function cleanPath(pathname: string) {
@@ -42,8 +52,8 @@ function isMobileActive(pathname: string, href: string) {
   const path = cleanPath(pathname);
   const base = href.split("#")[0];
 
-  if (href.includes("#more")) {
-    return !["/dashboard", "/economics", "/route-builder", "/operations"].includes(path);
+  if (base === "/more") {
+    return morePages.some((p) => path === p || path.startsWith(`${p}/`));
   }
 
   return path === base || path.startsWith(`${base}/`);
@@ -118,7 +128,7 @@ export default function ResourceShell({
       </aside>
 
       <div className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#050914]/95 px-3 py-3 shadow-2xl backdrop-blur-xl md:hidden">
-        <div className="flex items-center gap-2 overflow-x-auto rounded-full border border-white/10 bg-[#080d18] p-2">
+        <div className="flex items-center gap-2 overflow-x-auto rounded-full border border-white/10 bg-[#080d18] p-2 scrollbar-hide">
           {mobileNav.map((item) => {
             const active = isMobileActive(pathname, item.href);
 
@@ -166,4 +176,4 @@ export default function ResourceShell({
       </main>
     </div>
   );
-   }
+  }

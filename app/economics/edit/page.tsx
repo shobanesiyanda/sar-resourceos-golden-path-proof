@@ -4,8 +4,12 @@ import { useEffect, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import ResourceShell from "../../../components/ResourceShell";
 import {
+  CommodityClass,
   RESOURCE_MAP,
+  commodityClassForGroup,
   defaultsFor,
+  firstGroupForClass,
+  firstResourceForGroup,
   materialDefaultFor,
   materialOptionsFor,
 } from "../../../lib/resourceDefaults";
@@ -32,6 +36,7 @@ export default function EditEconomicsPage() {
   const [error, setError] = useState("");
 
   const [form, setForm] = useState<EditForm>({
+    commodityClass: "Hard Commodities",
     category: "Ferrous Metals",
     resource: "Chrome",
     material: "ROM",
@@ -85,7 +90,9 @@ export default function EditEconomicsPage() {
       }
 
       const category = parcel.resource_category || "Ferrous Metals";
+      const commodityClass = commodityClassForGroup(category);
       const resources = RESOURCE_MAP[category] || RESOURCE_MAP["Ferrous Metals"];
+
       const resource =
         parcel.resource_type && resources.includes(parcel.resource_type)
           ? parcel.resource_type
@@ -93,13 +100,15 @@ export default function EditEconomicsPage() {
 
       const materials = materialOptionsFor(resource);
       const base = defaultsFor(resource);
+
       const material =
         parcel.material_type && materials.includes(parcel.material_type)
           ? parcel.material_type
           : base.material;
 
       const md = materialDefaultFor(resource, material);
-      const productTons = parcel.expected_concentrate_tons ?? parcel.accepted_tons ?? 0;
+      const productTons =
+        parcel.expected_concentrate_tons ?? parcel.accepted_tons ?? 0;
 
       const savedYield =
         md.stage === "raw_feedstock"
@@ -111,6 +120,7 @@ export default function EditEconomicsPage() {
       setParcelCode(parcel.parcel_code || PARCEL_CODE);
 
       setForm({
+        commodityClass,
         category,
         resource,
         material,
@@ -124,12 +134,24 @@ export default function EditEconomicsPage() {
           parcel.economics_basis ||
           "Effective selling price uses negotiated price if entered, otherwise market/reference price.",
         feedstock: String(parcel.feedstock_cost_per_ton ?? md.feedstock),
-        transport: String(parcel.transport_to_plant_cost_per_ton ?? md.transport),
+        transport: String(
+          parcel.transport_to_plant_cost_per_ton ?? md.transport
+        ),
         tolling: String(parcel.tolling_cost_per_ton ?? md.tolling),
-        feedstockAssayRate: String(parcel.feedstock_assay_cost_per_batch ?? md.feedstockAssayRate),
-        feedstockAssayBatches: String(parcel.feedstock_assay_batches ?? md.feedstockAssayBatches),
-        concentrateAssayRate: String(parcel.concentrate_assay_cost_per_batch ?? md.concentrateAssayRate),
-        concentrateAssayBatches: String(parcel.concentrate_assay_batches ?? md.concentrateAssayBatches),
+        feedstockAssayRate: String(
+          parcel.feedstock_assay_cost_per_batch ?? md.feedstockAssayRate
+        ),
+        feedstockAssayBatches: String(
+          parcel.feedstock_assay_batches ?? md.feedstockAssayBatches
+        ),
+        concentrateAssayRate: String(
+          parcel.concentrate_assay_cost_per_batch ??
+            md.concentrateAssayRate
+        ),
+        concentrateAssayBatches: String(
+          parcel.concentrate_assay_batches ??
+            md.concentrateAssayBatches
+        ),
       });
 
       setLoading(false);
@@ -138,14 +160,22 @@ export default function EditEconomicsPage() {
     load();
   }, [supabase]);
 
-  function applyResourceDefaults(resource: string, category?: string) {
+  function applyResourceDefaults(
+    resource: string,
+    category?: string,
+    commodityClass?: CommodityClass
+  ) {
     const base = defaultsFor(resource);
     const materials = materialOptionsFor(resource);
-    const material = materials.includes(base.material) ? base.material : materials[0];
+    const material = materials.includes(base.material)
+      ? base.material
+      : materials[0];
+
     const md = materialDefaultFor(resource, material);
 
     setForm((old) => ({
       ...old,
+      commodityClass: commodityClass || old.commodityClass,
       category: category || old.category,
       resource,
       material,
@@ -188,8 +218,22 @@ export default function EditEconomicsPage() {
   }
 
   function setField(key: keyof EditForm, value: string) {
+    if (key === "commodityClass") {
+      const nextClass =
+        value === "Soft Commodities"
+          ? "Soft Commodities"
+          : "Hard Commodities";
+
+      const nextGroup = firstGroupForClass(nextClass);
+      const nextResource = firstResourceForGroup(nextGroup);
+
+      applyResourceDefaults(nextResource, nextGroup, nextClass);
+      return;
+    }
+
     if (key === "category") {
-      applyResourceDefaults(RESOURCE_MAP[value]?.[0] || "Other", value);
+      const nextResource = firstResourceForGroup(value);
+      applyResourceDefaults(nextResource, value);
       return;
     }
 
@@ -243,13 +287,15 @@ export default function EditEconomicsPage() {
       estimated_route_surplus: c.surplus,
       estimated_route_margin_percent: c.margin,
       economics_basis: [
+        `Commodity class: ${form.commodityClass}.`,
+        `Commodity group: ${form.category}.`,
         `Material stage: ${form.stage}.`,
         `Price basis: ${form.priceBasis}.`,
         `Market/reference price: ${form.marketPrice}.`,
         `Negotiated price: ${form.negotiatedPrice}.`,
         `Effective selling price: ${c.effectivePrice}.`,
         form.overrideNote ? `Note: ${form.overrideNote}` : "",
-        "Market/reference prices are indicative until verified against buyer PO, contract, grade, delivery basis, assay terms and payment terms.",
+        "Market/reference prices are indicative until verified against buyer PO, contract, grade, quality, delivery basis and payment terms.",
       ]
         .filter(Boolean)
         .join(" "),
@@ -272,7 +318,10 @@ export default function EditEconomicsPage() {
 
   if (loading) {
     return (
-      <ResourceShell title="Edit Lead Economics" subtitle="Loading editable economics...">
+      <ResourceShell
+        title="Edit Lead Economics"
+        subtitle="Loading editable economics..."
+      >
         <Card label="Loading" title="Reading parcel economics..." />
       </ResourceShell>
     );
@@ -280,7 +329,10 @@ export default function EditEconomicsPage() {
 
   if (error && !parcelId) {
     return (
-      <ResourceShell title="Edit Lead Economics" subtitle="Economics module error">
+      <ResourceShell
+        title="Edit Lead Economics"
+        subtitle="Economics module error"
+      >
         <Card label="Error" title="Could not load editable economics">
           <p className="mt-3 text-red-200">{error}</p>
         </Card>
@@ -294,7 +346,7 @@ export default function EditEconomicsPage() {
   return (
     <ResourceShell
       title="Edit Lead Economics"
-      subtitle="Editable economics with exact material-stage logic, market/reference price basis and negotiated price override."
+      subtitle="Editable economics with hard/soft commodity taxonomy, material-stage logic and negotiated price override."
     >
       <HeaderStats parcelCode={parcelCode} form={form} />
 
@@ -314,15 +366,19 @@ export default function EditEconomicsPage() {
         <LivePreview form={form} />
       </section>
 
-      <Card label="Control Note" title="Exact material and price basis locked">
+      <Card
+        label="Control Note"
+        title="Commodity taxonomy and product wording locked"
+      >
         <p className="mt-3 text-sm leading-7 text-slate-300">
-          Raw feedstock uses yield recovery. Intermediate concentrates and finished
-          products use 100% material-stage basis. Effective selling price uses the
-          negotiated/contract price when entered, otherwise the market/reference price.
-          Future live-feed pricing can plug into the market/reference field without
-          changing the release-gate spine.
+          The economics engine now starts with Hard Commodities and Soft
+          Commodities, then narrows into commodity group, commodity/resource,
+          material/product type and material stage. Raw materials use yield
+          recovery. Saleable and finished products use 100% route basis.
+          Effective selling price uses negotiated price when entered, otherwise
+          market/reference price.
         </p>
       </Card>
     </ResourceShell>
   );
-      }
+        }

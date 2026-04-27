@@ -421,12 +421,12 @@ export function LivePreview({ form }: { form: EditForm }) {
 
         <Stat
           label="Market / Reference Price"
-          value={`${money(form.marketPrice)}/t`}
+          value={`${money(n(form.marketPrice))}/t`}
         />
 
         <Stat
           label="Negotiated Price"
-          value={`${money(form.negotiatedPrice)}/t`}
+          value={`${money(n(form.negotiatedPrice))}/t`}
         />
 
         <Stat
@@ -453,4 +453,4 @@ export function LivePreview({ form }: { form: EditForm }) {
       </div>
     </Card>
   );
-  }
+    }

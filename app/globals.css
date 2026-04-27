@@ -117,4 +117,91 @@ textarea {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
   }
+
+@media (max-width: 640px) {
+  main {
+    font-size: 13px;
   }
+
+  .text-3xl {
+    font-size: 1.45rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.15rem !important;
+    line-height: 1.45rem !important;
+  }
+
+  .text-xl {
+    font-size: 1rem !important;
+    line-height: 1.35rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.78rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .text-xs {
+    font-size: 0.66rem !important;
+    line-height: 1rem !important;
+  }
+
+  .p-5 {
+    padding: 0.85rem !important;
+  }
+
+  .p-4 {
+    padding: 0.7rem !important;
+  }
+
+  .py-3 {
+    padding-top: 0.55rem !important;
+    padding-bottom: 0.55rem !important;
+  }
+
+  .px-5 {
+    padding-left: 0.8rem !important;
+    padding-right: 0.8rem !important;
+  }
+
+  .px-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .rounded-3xl {
+    border-radius: 1rem !important;
+  }
+
+  .rounded-2xl {
+    border-radius: 0.85rem !important;
+  }
+
+  .mb-6 {
+    margin-bottom: 0.8rem !important;
+  }
+
+  .mt-5 {
+    margin-top: 0.8rem !important;
+  }
+
+  .mt-4 {
+    margin-top: 0.7rem !important;
+  }
+
+  .mt-3 {
+    margin-top: 0.55rem !important;
+  }
+
+  .gap-4 {
+    gap: 0.65rem !important;
+  }
+
+  .tracking-\[0\.35em\],
+  .tracking-\[0\.3em\],
+  .tracking-\[0\.25em\] {
+    letter-spacing: 0.14em !important;
+  }
+    }

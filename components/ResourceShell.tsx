@@ -5,17 +5,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 
 const nav = [
-  { label: "Dashboard", short: "Dash", href: "/dashboard", live: true },
-  { label: "Opportunities", short: "Leads", href: "/economics", live: true },
-  { label: "Counterparties", short: "Parties", href: "/counterparties", live: true },
-  { label: "Route Builder", short: "Route", href: "/route-builder", live: true },
-  { label: "Operations", short: "Ops", href: "/operations", live: true },
-  { label: "Tolling & Plants", short: "Plants", href: "/dashboard#plants", live: false },
-  { label: "Documents", short: "Docs", href: "/documents", live: true },
-  { label: "Approvals", short: "Approvals", href: "/approvals", live: true },
-  { label: "Finance", short: "Finance", href: "/finance", live: true },
-  { label: "Analytics", short: "Analytics", href: "/analytics", live: true },
-  { label: "Admin", short: "Admin", href: "/dashboard#admin", live: false },
+  { label: "Dashboard", href: "/dashboard", live: true },
+  { label: "Opportunities", href: "/economics", live: true },
+  { label: "Counterparties", href: "/counterparties", live: true },
+  { label: "Route Builder", href: "/route-builder", live: true },
+  { label: "Operations", href: "/operations", live: true },
+  { label: "Tolling & Plants", href: "/dashboard#plants", live: false },
+  { label: "Documents", href: "/documents", live: true },
+  { label: "Approvals", href: "/approvals", live: true },
+  { label: "Finance", href: "/finance", live: true },
+  { label: "Analytics", href: "/analytics", live: true },
+  { label: "Admin", href: "/admin", live: true },
 ];
 
 const mobileNav = [

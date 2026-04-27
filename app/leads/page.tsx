@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
+import { stageLabel, stateLabel } from "../../lib/displayLabels";
 
 const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
 
@@ -60,22 +61,6 @@ function pct(value: number | null | undefined) {
 function tons(value: number | null | undefined) {
   const n = Number(value || 0);
   return n.toFixed(3);
-}
-
-function stateText(value: string | null | undefined) {
-  if (!value) return "Blocked";
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function stageText(value: string | null | undefined) {
-  if (value === "raw_feedstock") return "Raw Feedstock";
-  if (value === "intermediate_concentrate") {
-    return "Intermediate / Saleable Product";
-  }
-  if (value === "finished_product") return "Finished Product";
-  return stateText(value);
 }
 
 function marginState(value: number | null | undefined) {
@@ -196,44 +181,21 @@ export default function LeadsPage() {
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Stat label="Parcel" value={code} />
-        <Stat
-          label="Resource"
-          value={parcel?.resource_type || "Chrome"}
-          gold
-        />
-        <Stat
-          label="Category"
-          value={parcel?.resource_category || "Ferrous Metals"}
-        />
+        <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
+        <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
         <Stat label="Material" value={parcel?.material_type || "ROM"} />
       </section>
 
       <Card label="Lead / Opportunity" title="Current lead summary">
         <div className="space-y-4">
           <Stat label="Parcel" value={code} />
-          <Stat
-            label="Commodity Class"
-            value={parcel?.commodity_class || "Hard Commodities"}
-          />
-          <Stat
-            label="Category"
-            value={parcel?.resource_category || "Ferrous Metals"}
-          />
-          <Stat
-            label="Resource"
-            value={parcel?.resource_type || "Chrome"}
-            gold
-          />
+          <Stat label="Commodity Class" value={parcel?.commodity_class || "Hard Commodities"} />
+          <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
+          <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
           <Stat label="Material" value={parcel?.material_type || "ROM"} />
-          <Stat
-            label="Material Stage"
-            value={stageText(parcel?.material_stage)}
-          />
-          <Stat label="Lead State" value={stateText(gate?.release_state)} />
-          <Stat
-            label="Release Decision"
-            value={gate?.release_decision || "Hold / Gates Blocked"}
-          />
+          <Stat label="Material Stage" value={stageLabel(parcel?.material_stage)} />
+          <Stat label="Lead State" value={stateLabel(gate?.release_state)} />
+          <Stat label="Release Decision" value={gate?.release_decision || "Hold / Gates Blocked"} />
           <Stat label="Open Blockers" value={gate?.open_blockers ?? 0} />
         </div>
       </Card>
@@ -251,37 +213,18 @@ export default function LeadsPage() {
             value={tons(parcel?.feedstock_tons)}
             note={
               parcel?.material_stage === "raw_feedstock"
-                ? `${tons(productTons)} ÷ ${pct(
-                    parcel?.expected_yield_percent
-                  )} yield`
+                ? `${tons(productTons)} ÷ ${pct(parcel?.expected_yield_percent)} yield`
                 : "Saleable / finished product basis = product quantity"
             }
             gold
           />
 
-          <Stat
-            label="Market / Reference Price"
-            value={`${money(parcel?.market_reference_price_per_ton)}/t`}
-          />
-          <Stat
-            label="Negotiated Price"
-            value={`${money(parcel?.negotiated_price_per_ton)}/t`}
-          />
-          <Stat
-            label="Effective Price"
-            value={`${money(effectivePrice)}/t`}
-            gold
-          />
+          <Stat label="Market / Reference Price" value={`${money(parcel?.market_reference_price_per_ton)}/t`} />
+          <Stat label="Negotiated Price" value={`${money(parcel?.negotiated_price_per_ton)}/t`} />
+          <Stat label="Effective Price" value={`${money(effectivePrice)}/t`} gold />
           <Stat label="Route Cost" value={money(parcel?.estimated_route_cost)} />
-          <Stat
-            label="Verification / Quality Cost"
-            value={money(parcel?.estimated_total_assay_cost)}
-          />
-          <Stat
-            label="Surplus"
-            value={money(parcel?.estimated_route_surplus)}
-            gold
-          />
+          <Stat label="Verification / Quality Cost" value={money(parcel?.estimated_total_assay_cost)} />
+          <Stat label="Surplus" value={money(parcel?.estimated_route_surplus)} gold />
           <Stat label="Route Margin" value={pct(margin)} gold />
           <Stat label="Margin State" value={marginState(margin)} />
         </div>
@@ -289,10 +232,7 @@ export default function LeadsPage() {
 
       <Card label="Price Control" title="Price basis and override note">
         <div className="space-y-4">
-          <Stat
-            label="Price Basis"
-            value={parcel?.price_basis || "Not captured"}
-          />
+          <Stat label="Price Basis" value={parcel?.price_basis || "Not captured"} />
 
           <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">

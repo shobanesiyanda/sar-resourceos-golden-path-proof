@@ -35,28 +35,6 @@ function NavPill({
   );
 }
 
-function InfoCard({
-  label,
-  title,
-  text,
-}: {
-  label: string;
-  title: string;
-  text: string;
-}) {
-  return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
-      <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
-        {label}
-      </p>
-      <h2 className="mt-3 text-2xl font-black leading-tight text-white">
-        {title}
-      </h2>
-      <p className="mt-3 text-base leading-7 text-slate-400">{text}</p>
-    </section>
-  );
-}
-
 export default function HomePage() {
   const supabase = createClient();
 
@@ -103,21 +81,18 @@ export default function HomePage() {
         </nav>
       </div>
 
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-8">
-        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
+      <div className="mx-auto flex min-h-[calc(100vh-96px)] max-w-3xl items-center px-4 py-8">
+        <section className="w-full rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
           <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
             SAR ResourceOS
           </p>
 
           <h1 className="mt-5 text-5xl font-black leading-tight text-white">
-            Secure resource transaction control system.
+            Secure internal access.
           </h1>
 
-          <p className="mt-6 text-lg leading-8 text-slate-300">
-            SAR ResourceOS is the internal operating environment for controlled
-            resource opportunity intake, counterparty verification, route
-            economics, execution readiness, parcel movement, reconciliation,
-            approvals and finance handoff.
+          <p className="mt-6 text-2xl font-black leading-tight text-white">
+            Authorised users only.
           </p>
 
           <div className="mt-10 space-y-4">
@@ -133,42 +108,22 @@ export default function HomePage() {
                 href="/login"
                 className="inline-flex w-full justify-center rounded-full border border-slate-700 bg-slate-900/40 px-6 py-5 text-lg font-black text-slate-200"
               >
-                Request / Create Access
+                Request Access
               </Link>
             ) : null}
           </div>
-        </section>
 
-        <section className="grid gap-4 md:grid-cols-3">
-          <InfoCard
-            label="Controlled Access"
-            title="Authorised users only"
-            text="Access is restricted to approved operators and internal users. Live operational controls are not exposed publicly."
-          />
-
-          <InfoCard
-            label="Transaction Control"
-            title="Route to finance handoff"
-            text="The live dashboard is available only after secure login and Supabase session verification."
-          />
-
-          <InfoCard
-            label="Shobane African Resources"
-            title="Internal operating system"
-            text="Built for controlled resource opportunity execution, route discipline, evidence tracking, approvals and finance readiness."
-          />
-        </section>
-
-        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
-            Access Notice
-          </p>
-          <p className="mt-3 text-base leading-7 text-slate-400">
-            Internal module navigation is hidden until a Supabase user session
-            is active.
-          </p>
+          <div className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+              Access Notice
+            </p>
+            <p className="mt-3 text-base leading-7 text-slate-400">
+              Access is restricted to authorised Shobane African Resources
+              users.
+            </p>
+          </div>
         </section>
       </div>
     </main>
   );
-}
+      }

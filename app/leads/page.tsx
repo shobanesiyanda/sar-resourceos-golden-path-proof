@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
 
@@ -31,6 +32,15 @@ type ParcelRow = {
   price_override_note: string | null;
 };
 
+type GateRow = {
+  parcel_id: string | null;
+  release_state: string | null;
+  release_decision: string | null;
+  open_blockers: number | null;
+  hard_blockers: number | null;
+  pending_blockers: number | null;
+};
+
 function displayParcelCode(parcel: ParcelRow | null) {
   return parcel?.working_parcel_code || parcel?.parcel_code || SEED_PARCEL_CODE;
 }
@@ -50,6 +60,22 @@ function pct(value: number | null | undefined) {
 function tons(value: number | null | undefined) {
   const n = Number(value || 0);
   return n.toFixed(3);
+}
+
+function stateText(value: string | null | undefined) {
+  if (!value) return "Blocked";
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function stageText(value: string | null | undefined) {
+  if (value === "raw_feedstock") return "Raw Feedstock";
+  if (value === "intermediate_concentrate") {
+    return "Intermediate / Saleable Product";
+  }
+  if (value === "finished_product") return "Finished Product";
+  return stateText(value);
 }
 
 function marginState(value: number | null | undefined) {
@@ -120,16 +146,28 @@ export default function LeadsPage() {
 
   const [loading, setLoading] = useState(true);
   const [parcel, setParcel] = useState<ParcelRow | null>(null);
+  const [gate, setGate] = useState<GateRow | null>(null);
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
+      const { data: parcelData } = await supabase
         .from("parcels")
         .select("*")
         .eq("parcel_code", SEED_PARCEL_CODE)
         .single();
 
-      if (data) setParcel(data as ParcelRow);
+      if (parcelData) {
+        setParcel(parcelData as ParcelRow);
+
+        const { data: gateData } = await supabase
+          .from("release_gate_summary")
+          .select("*")
+          .eq("parcel_id", parcelData.id)
+          .single();
+
+        if (gateData) setGate(gateData as GateRow);
+      }
+
       setLoading(false);
     }
 
@@ -148,9 +186,7 @@ export default function LeadsPage() {
   const productTons =
     parcel?.expected_concentrate_tons || parcel?.accepted_tons || 0;
   const effectivePrice =
-    parcel?.effective_price_per_ton ||
-    parcel?.expected_price_per_ton ||
-    0;
+    parcel?.effective_price_per_ton || parcel?.expected_price_per_ton || 0;
   const margin = parcel?.estimated_route_margin_percent || 0;
 
   return (
@@ -160,25 +196,52 @@ export default function LeadsPage() {
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Stat label="Parcel" value={code} />
-        <Stat label="Class" value={parcel?.commodity_class || "Hard Commodities"} />
-        <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
+        <Stat
+          label="Resource"
+          value={parcel?.resource_type || "Chrome"}
+          gold
+        />
+        <Stat
+          label="Category"
+          value={parcel?.resource_category || "Ferrous Metals"}
+        />
         <Stat label="Material" value={parcel?.material_type || "ROM"} />
       </section>
 
       <Card label="Lead / Opportunity" title="Current lead summary">
         <div className="space-y-4">
           <Stat label="Parcel" value={code} />
-          <Stat label="Commodity Class" value={parcel?.commodity_class || "Hard Commodities"} />
-          <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
-          <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
+          <Stat
+            label="Commodity Class"
+            value={parcel?.commodity_class || "Hard Commodities"}
+          />
+          <Stat
+            label="Category"
+            value={parcel?.resource_category || "Ferrous Metals"}
+          />
+          <Stat
+            label="Resource"
+            value={parcel?.resource_type || "Chrome"}
+            gold
+          />
           <Stat label="Material" value={parcel?.material_type || "ROM"} />
-          <Stat label="Material Stage" value={parcel?.material_stage || "raw_feedstock"} />
+          <Stat
+            label="Material Stage"
+            value={stageText(parcel?.material_stage)}
+          />
+          <Stat label="Lead State" value={stateText(gate?.release_state)} />
+          <Stat
+            label="Release Decision"
+            value={gate?.release_decision || "Hold / Gates Blocked"}
+          />
+          <Stat label="Open Blockers" value={gate?.open_blockers ?? 0} />
         </div>
       </Card>
 
       <Card label="Lead Economics Screening" title="Commercial starting point">
         <div className="space-y-4">
           <Stat label="Product Quantity" value={tons(productTons)} />
+
           <Stat
             label={
               parcel?.material_stage === "raw_feedstock"
@@ -195,12 +258,30 @@ export default function LeadsPage() {
             }
             gold
           />
-          <Stat label="Market / Reference Price" value={`${money(parcel?.market_reference_price_per_ton)}/t`} />
-          <Stat label="Negotiated Price" value={`${money(parcel?.negotiated_price_per_ton)}/t`} />
-          <Stat label="Effective Price" value={`${money(effectivePrice)}/t`} gold />
+
+          <Stat
+            label="Market / Reference Price"
+            value={`${money(parcel?.market_reference_price_per_ton)}/t`}
+          />
+          <Stat
+            label="Negotiated Price"
+            value={`${money(parcel?.negotiated_price_per_ton)}/t`}
+          />
+          <Stat
+            label="Effective Price"
+            value={`${money(effectivePrice)}/t`}
+            gold
+          />
           <Stat label="Route Cost" value={money(parcel?.estimated_route_cost)} />
-          <Stat label="Verification / Quality Cost" value={money(parcel?.estimated_total_assay_cost)} />
-          <Stat label="Surplus" value={money(parcel?.estimated_route_surplus)} gold />
+          <Stat
+            label="Verification / Quality Cost"
+            value={money(parcel?.estimated_total_assay_cost)}
+          />
+          <Stat
+            label="Surplus"
+            value={money(parcel?.estimated_route_surplus)}
+            gold
+          />
           <Stat label="Route Margin" value={pct(margin)} gold />
           <Stat label="Margin State" value={marginState(margin)} />
         </div>
@@ -208,7 +289,11 @@ export default function LeadsPage() {
 
       <Card label="Price Control" title="Price basis and override note">
         <div className="space-y-4">
-          <Stat label="Price Basis" value={parcel?.price_basis || "Not captured"} />
+          <Stat
+            label="Price Basis"
+            value={parcel?.price_basis || "Not captured"}
+          />
+
           <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
               Override / Price Note
@@ -217,8 +302,15 @@ export default function LeadsPage() {
               {parcel?.price_override_note || "No price note captured."}
             </p>
           </div>
+
+          <Link
+            href="/economics/edit"
+            className="inline-flex w-full justify-center rounded-full bg-[#d7ad32] px-5 py-4 text-base font-black text-[#07101c]"
+          >
+            Edit Lead Economics
+          </Link>
         </div>
       </Card>
     </ResourceShell>
   );
-}
+  }

@@ -28,6 +28,22 @@ import {
 
 const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
 
+function asString(value: unknown, fallback = "") {
+  if (value === null || value === undefined) return fallback;
+  return String(value);
+}
+
+function asNumberString(value: unknown, fallback = "0") {
+  if (value === null || value === undefined || value === "") return fallback;
+  return String(value);
+}
+
+function safeCommodityClass(value: unknown, category: string): CommodityClass {
+  if (value === "Soft Commodities") return "Soft Commodities";
+  if (value === "Hard Commodities") return "Hard Commodities";
+  return commodityClassForGroup(category);
+}
+
 export default function EditEconomicsPage() {
   const supabase = createClient();
 
@@ -36,6 +52,7 @@ export default function EditEconomicsPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [parcelId, setParcelId] = useState("");
   const [savedParcelCode, setSavedParcelCode] = useState(SEED_PARCEL_CODE);
+  const [storedWorkingParcelCode, setStoredWorkingParcelCode] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
@@ -93,8 +110,16 @@ export default function EditEconomicsPage() {
         return;
       }
 
-      const category = parcel.resource_category || "Ferrous Metals";
-      const commodityClass = commodityClassForGroup(category);
+      const category = asString(
+        parcel.resource_category,
+        "Ferrous Metals"
+      );
+
+      const commodityClass = safeCommodityClass(
+        parcel.commodity_class,
+        category
+      );
+
       const resources =
         RESOURCE_MAP[category] || RESOURCE_MAP["Ferrous Metals"];
 
@@ -112,50 +137,85 @@ export default function EditEconomicsPage() {
           : base.material;
 
       const md = materialDefaultFor(resource, material);
+
       const productTons =
         parcel.expected_concentrate_tons ?? parcel.accepted_tons ?? 0;
 
+      const savedStage =
+        parcel.material_stage === "finished_product" ||
+        parcel.material_stage === "intermediate_concentrate" ||
+        parcel.material_stage === "raw_feedstock"
+          ? parcel.material_stage
+          : md.stage;
+
       const savedYield =
-        md.stage === "raw_feedstock"
-          ? String(parcel.expected_yield_percent ?? md.yield)
+        savedStage === "raw_feedstock"
+          ? asNumberString(parcel.expected_yield_percent, md.yield)
           : "100";
+
+      const marketPrice = asNumberString(
+        parcel.market_reference_price_per_ton,
+        asNumberString(parcel.expected_price_per_ton, md.price)
+      );
+
+      const negotiatedPrice = asNumberString(
+        parcel.negotiated_price_per_ton,
+        asNumberString(parcel.expected_price_per_ton, "")
+      );
 
       setIsAdmin(profile.role === "admin");
       setParcelId(parcel.id);
       setSavedParcelCode(parcel.parcel_code || SEED_PARCEL_CODE);
+      setStoredWorkingParcelCode(
+        asString(parcel.working_parcel_code, "")
+      );
 
       setForm({
         commodityClass,
         category,
         resource,
         material,
-        stage: md.stage,
+        stage: savedStage,
         target: String(productTons),
         yield: savedYield,
-        marketPrice: "0",
-        negotiatedPrice: String(parcel.expected_price_per_ton ?? ""),
-        priceBasis: "Buyer PO / Contract / Manual Negotiation",
-        overrideNote:
+        marketPrice,
+        negotiatedPrice,
+        priceBasis: asString(
+          parcel.price_basis,
+          "Buyer PO / Contract / Manual Negotiation"
+        ),
+        overrideNote: asString(
+          parcel.price_override_note,
           parcel.economics_basis ||
-          "Effective selling price uses negotiated price if entered, otherwise market/reference price.",
-        feedstock: String(parcel.feedstock_cost_per_ton ?? md.feedstock),
-        transport: String(
-          parcel.transport_to_plant_cost_per_ton ?? md.transport
+            "Effective selling price uses negotiated price if entered, otherwise market/reference price."
         ),
-        tolling: String(parcel.tolling_cost_per_ton ?? md.tolling),
-        feedstockAssayRate: String(
-          parcel.feedstock_assay_cost_per_batch ?? md.feedstockAssayRate
+        feedstock: asNumberString(
+          parcel.feedstock_cost_per_ton,
+          md.feedstock
         ),
-        feedstockAssayBatches: String(
-          parcel.feedstock_assay_batches ?? md.feedstockAssayBatches
+        transport: asNumberString(
+          parcel.transport_to_plant_cost_per_ton,
+          md.transport
         ),
-        concentrateAssayRate: String(
-          parcel.concentrate_assay_cost_per_batch ??
-            md.concentrateAssayRate
+        tolling: asNumberString(
+          parcel.tolling_cost_per_ton,
+          md.tolling
         ),
-        concentrateAssayBatches: String(
-          parcel.concentrate_assay_batches ??
-            md.concentrateAssayBatches
+        feedstockAssayRate: asNumberString(
+          parcel.feedstock_assay_cost_per_batch,
+          md.feedstockAssayRate
+        ),
+        feedstockAssayBatches: asNumberString(
+          parcel.feedstock_assay_batches,
+          md.feedstockAssayBatches
+        ),
+        concentrateAssayRate: asNumberString(
+          parcel.concentrate_assay_cost_per_batch,
+          md.concentrateAssayRate
+        ),
+        concentrateAssayBatches: asNumberString(
+          parcel.concentrate_assay_batches,
+          md.concentrateAssayBatches
         ),
       });
 
@@ -266,6 +326,15 @@ export default function EditEconomicsPage() {
     const workingCode = workingParcelCode(form.resource);
 
     const payload = {
+      commodity_class: form.commodityClass,
+      material_stage: form.stage,
+      working_parcel_code: workingCode,
+      market_reference_price_per_ton: Number(form.marketPrice || 0),
+      negotiated_price_per_ton: Number(form.negotiatedPrice || 0),
+      effective_price_per_ton: c.effectivePrice,
+      price_basis: form.priceBasis,
+      price_override_note: form.overrideNote,
+
       resource_category: form.category,
       resource_type: form.resource,
       material_type: form.material,
@@ -320,7 +389,8 @@ export default function EditEconomicsPage() {
       return;
     }
 
-    setNotice("Lead economics saved to Supabase.");
+    setStoredWorkingParcelCode(workingCode);
+    setNotice("Lead economics and structured price-basis fields saved.");
     setSaving(false);
   }
 
@@ -359,7 +429,7 @@ export default function EditEconomicsPage() {
   return (
     <ResourceShell
       title="Edit Lead Economics"
-      subtitle="Editable economics with hard/soft commodity taxonomy, material-stage logic, negotiated price override and commodity-specific working parcel code."
+      subtitle="Editable economics with structured price-basis persistence, material-stage logic and commodity-specific working parcel code."
     >
       <HeaderStats parcelCode={displayedParcelCode} form={form} />
 
@@ -380,27 +450,39 @@ export default function EditEconomicsPage() {
       </section>
 
       <Card
-        label="Parcel Code Control"
-        title="Commodity-specific working parcel code"
+        label="Structured Persistence"
+        title="Price basis and parcel code now save as real fields"
       >
-        <div className="mt-4 rounded-2xl border border-[#d7ad32]/30 bg-[#d7ad32]/10 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#f5d778]">
-            Displayed Working Code
-          </p>
-          <p className="mt-2 text-3xl font-black">
-            {displayedParcelCode}
-          </p>
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            {displayedParcelNote}
+        <div className="mt-4 space-y-4">
+          <div className="rounded-2xl border border-[#d7ad32]/30 bg-[#d7ad32]/10 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#f5d778]">
+              Displayed Working Code
+            </p>
+            <p className="mt-2 text-3xl font-black">
+              {displayedParcelCode}
+            </p>
+            <p className="mt-3 text-sm leading-7 text-slate-300">
+              {displayedParcelNote}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-700 bg-slate-950/30 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
+              Last Stored Working Code
+            </p>
+            <p className="mt-2 text-2xl font-black">
+              {storedWorkingParcelCode || "Not saved yet"}
+            </p>
+          </div>
+
+          <p className="text-sm leading-7 text-slate-300">
+            This build stores commodity class, material stage, working parcel
+            code, market/reference price, negotiated price, effective price,
+            price basis and override note as structured Supabase fields. The
+            original seed parcel code remains unchanged until the full parcel
+            code engine is added across all modules.
           </p>
         </div>
-
-        <p className="mt-4 text-sm leading-7 text-slate-300">
-          This page now displays a commodity-specific working parcel code based
-          on the selected resource. The database record is not renamed yet, so
-          the live seed parcel remains safe until the Supabase parcel-code
-          engine is added.
-        </p>
       </Card>
 
       <Card
@@ -418,4 +500,4 @@ export default function EditEconomicsPage() {
       </Card>
     </ResourceShell>
   );
-    }
+                 }

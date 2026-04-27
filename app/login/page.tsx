@@ -1,54 +1,36 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 
-type AuthMode = "password" | "magic";
-type AuthState = "checking" | "signed_in" | "signed_out";
+type Mode = "password" | "magic";
 
-function NavPill({
-  href,
+function Pill({
   label,
   active,
-  danger,
 }: {
-  href: string;
   label: string;
   active?: boolean;
-  danger?: boolean;
 }) {
   return (
-    <Link
-      href={href}
+    <div
       className={
         active
-          ? "shrink-0 rounded-full bg-[#d7ad32] px-6 py-4 text-base font-black text-[#07101c]"
-          : danger
-          ? "shrink-0 rounded-full border border-red-400/30 bg-red-500/10 px-6 py-4 text-base font-black text-red-100"
-          : "shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-6 py-4 text-base font-black text-slate-200"
+          ? "shrink-0 rounded-full bg-[#d7ad32] px-8 py-4 text-lg font-black text-[#07101c]"
+          : "shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-8 py-4 text-lg font-black text-slate-200"
       }
     >
       {label}
-    </Link>
+    </div>
   );
 }
 
-function statusLabel(state: AuthState) {
-  if (state === "checking") return "Checking";
-  if (state === "signed_in") return "Signed In";
-  return "Access";
-}
-
-function LoginPageContent() {
+export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClient();
 
-  const [mode, setMode] = useState<AuthMode>("password");
-  const [authState, setAuthState] = useState<AuthState>("checking");
-
+  const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -56,32 +38,17 @@ function LoginPageContent() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
-  const returnTo = useMemo(() => {
-    const fromQuery = searchParams.get("returnTo");
-    if (fromQuery && fromQuery.startsWith("/")) return fromQuery;
+  function getReturnTo() {
+    if (typeof window === "undefined") return "/dashboard";
+
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get("returnTo");
+
+    if (value && value.startsWith("/")) return value;
     return "/dashboard";
-  }, [searchParams]);
+  }
 
-  useEffect(() => {
-    async function checkSession() {
-      const { data } = await supabase.auth.getSession();
-      setAuthState(data.session ? "signed_in" : "signed_out");
-    }
-
-    checkSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthState(session ? "signed_in" : "signed_out");
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  async function signInWithPassword() {
+  async function signInPassword() {
     setWorking(true);
     setNotice("");
     setError("");
@@ -94,10 +61,11 @@ function LoginPageContent() {
       return;
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: cleanEmail,
-      password,
-    });
+    const { error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
 
     if (signInError) {
       setError(signInError.message);
@@ -105,9 +73,7 @@ function LoginPageContent() {
       return;
     }
 
-    setNotice("Signed in successfully.");
-    setAuthState("signed_in");
-    router.push(returnTo);
+    router.replace(getReturnTo());
   }
 
   async function sendMagicLink() {
@@ -118,22 +84,25 @@ function LoginPageContent() {
     const cleanEmail = email.trim();
 
     if (!cleanEmail) {
-      setError("Enter your email address first.");
+      setError("Enter your email address.");
       setWorking(false);
       return;
     }
+
+    const returnTo = getReturnTo();
 
     const redirectTo =
       typeof window !== "undefined"
         ? `${window.location.origin}${returnTo}`
         : undefined;
 
-    const { error: magicError } = await supabase.auth.signInWithOtp({
-      email: cleanEmail,
-      options: {
-        emailRedirectTo: redirectTo,
-      },
-    });
+    const { error: magicError } =
+      await supabase.auth.signInWithOtp({
+        email: cleanEmail,
+        options: {
+          emailRedirectTo: redirectTo,
+        },
+      });
 
     if (magicError) {
       setError(magicError.message);
@@ -145,71 +114,43 @@ function LoginPageContent() {
     setWorking(false);
   }
 
-  const signedIn = authState === "signed_in";
-
   return (
     <main className="min-h-screen bg-[#050914] text-white">
-      <div className="sticky top-0 z-50 border-b border-slate-800 bg-[#050914]/95 px-4 py-4 backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto rounded-full border border-slate-800 bg-slate-950/60 p-2">
-          <div className="shrink-0 px-4 py-3">
+      <div className="sticky top-0 z-50 border-b border-slate-800 bg-[#050914]/95 px-4 py-4">
+        <nav className="mx-auto flex max-w-3xl items-center gap-3 overflow-x-auto rounded-full border border-slate-800 bg-slate-950/60 p-2">
+          <div className="shrink-0 px-5 py-4">
             <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
-              {statusLabel(authState)}
+              Access
             </p>
           </div>
 
-          {signedIn ? (
-            <>
-              <NavPill href="/dashboard" label="Dash" />
-              <NavPill href="/leads" label="Leads" />
-              <NavPill href="/route-builder" label="Route" />
-              <NavPill href="/operations" label="Ops" />
-              <NavPill href="/finance" label="Finance" />
-              <NavPill href="/analytics" label="Analytics" />
-              <NavPill href="/documents" label="Docs" />
-              <NavPill href="/logout" label="Out" danger />
-            </>
-          ) : (
-            <>
-              <NavPill href="/login" label="Login" active />
-              <NavPill href="/login" label="Request Access" />
-            </>
-          )}
+          <Pill label="Login" active />
+          <Pill label="Request Access" />
         </nav>
       </div>
 
-      <div className="mx-auto flex min-h-[calc(100vh-96px)] max-w-3xl items-center px-4 py-8">
-        <section className="w-full rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
           <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
             SAR ResourceOS
           </p>
 
-          <h1 className="mt-5 text-4xl font-black leading-tight text-white">
+          <h1 className="mt-6 text-5xl font-black leading-tight">
             Secure internal access.
           </h1>
 
-          <p className="mt-5 text-lg font-black leading-7 text-white">
+          <p className="mt-6 text-2xl font-black">
             Authorised users only.
           </p>
 
-          {returnTo !== "/dashboard" ? (
-            <div className="mt-6 rounded-3xl border border-[#d7ad32]/30 bg-[#d7ad32]/10 p-4">
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
-                Return Path
-              </p>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                After sign-in, you will return to: {returnTo}
-              </p>
-            </div>
-          ) : null}
-
-          <div className="mt-8 flex gap-3">
+          <div className="mt-8 flex gap-4">
             <button
               type="button"
               onClick={() => setMode("password")}
               className={
                 mode === "password"
-                  ? "rounded-full bg-[#d7ad32] px-6 py-4 text-base font-black text-[#07101c]"
-                  : "rounded-full border border-slate-700 bg-slate-900/40 px-6 py-4 text-base font-black text-slate-300"
+                  ? "rounded-full bg-[#d7ad32] px-7 py-4 text-lg font-black text-[#07101c]"
+                  : "rounded-full border border-slate-700 px-7 py-4 text-lg font-black text-slate-300"
               }
             >
               Password
@@ -220,8 +161,8 @@ function LoginPageContent() {
               onClick={() => setMode("magic")}
               className={
                 mode === "magic"
-                  ? "rounded-full bg-[#d7ad32] px-6 py-4 text-base font-black text-[#07101c]"
-                  : "rounded-full border border-slate-700 bg-slate-900/40 px-6 py-4 text-base font-black text-slate-300"
+                  ? "rounded-full bg-[#d7ad32] px-7 py-4 text-lg font-black text-[#07101c]"
+                  : "rounded-full border border-slate-700 px-7 py-4 text-lg font-black text-slate-300"
               }
             >
               Magic link
@@ -234,10 +175,10 @@ function LoginPageContent() {
                 Email
               </label>
               <input
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
                 className="mt-3 w-full rounded-3xl border border-slate-700 bg-slate-900/70 px-5 py-5 text-2xl font-black text-white outline-none focus:border-[#d7ad32]"
               />
             </div>
@@ -248,10 +189,10 @@ function LoginPageContent() {
                   Password
                 </label>
                 <input
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Password"
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
                   className="mt-3 w-full rounded-3xl border border-slate-700 bg-slate-900/70 px-5 py-5 text-2xl font-black text-white outline-none focus:border-[#d7ad32]"
                 />
               </div>
@@ -260,7 +201,9 @@ function LoginPageContent() {
             <button
               type="button"
               disabled={working}
-              onClick={mode === "password" ? signInWithPassword : sendMagicLink}
+              onClick={
+                mode === "password" ? signInPassword : sendMagicLink
+              }
               className="w-full rounded-full bg-[#d7ad32] px-6 py-5 text-lg font-black text-[#07101c] disabled:opacity-50"
             >
               {working
@@ -271,16 +214,16 @@ function LoginPageContent() {
             </button>
 
             {notice ? (
-              <div className="rounded-3xl border border-emerald-400/30 bg-emerald-500/10 p-4">
-                <p className="text-sm font-bold leading-6 text-emerald-200">
+              <div className="rounded-3xl border border-emerald-400/30 bg-emerald-500/10 p-5">
+                <p className="text-sm font-black text-emerald-200">
                   {notice}
                 </p>
               </div>
             ) : null}
 
             {error ? (
-              <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-4">
-                <p className="text-sm font-bold leading-6 text-red-200">
+              <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
+                <p className="text-sm font-black text-red-200">
                   {error}
                 </p>
               </div>
@@ -292,37 +235,12 @@ function LoginPageContent() {
               Access Notice
             </p>
             <p className="mt-3 text-base leading-7 text-slate-400">
-              Internal module navigation is hidden until Supabase confirms an
-              active user session.
+              Login page never shows internal module navigation. Internal
+              controls only appear inside protected system pages.
             </p>
           </div>
         </section>
       </div>
     </main>
   );
-}
-
-function LoginFallback() {
-  return (
-    <main className="min-h-screen bg-[#050914] text-white">
-      <div className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-8">
-        <section className="w-full rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
-            SAR ResourceOS
-          </p>
-          <h1 className="mt-5 text-4xl font-black leading-tight text-white">
-            Loading secure access...
-          </h1>
-        </section>
-      </div>
-    </main>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<LoginFallback />}>
-      <LoginPageContent />
-    </Suspense>
-  );
-      }
+    }

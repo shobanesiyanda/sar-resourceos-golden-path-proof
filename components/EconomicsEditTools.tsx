@@ -1,20 +1,19 @@
-export type { EditForm } from "./EconomicsEditTypes";
+"use client";
 
-export {
-  economicsCalc,
-  priceEffective,
-} from "./EconomicsEditTypes";
+import { EconomicsEditHeader } from "./EconomicsEditHeader";
+import { InputControls } from "./EconomicsEditInputs";
+import { LivePreview } from "./EconomicsEditPreview";
 
-export {
-  HeaderStats,
-  PricingWarning,
-  StageNotice,
-} from "./EconomicsEditHeader";
+export { EconomicsEditHeader } from "./EconomicsEditHeader";
+export { InputControls } from "./EconomicsEditInputs";
+export { LivePreview } from "./EconomicsEditPreview";
 
-export {
-  InputControls,
-} from "./EconomicsEditInputs";
-
-export {
-  LivePreview,
-} from "./EconomicsEditPreview";
+export default function EconomicsEditTools() {
+  return (
+    <div className="space-y-6">
+      <EconomicsEditHeader />
+      <InputControls />
+      <LivePreview />
+    </div>
+  );
+}

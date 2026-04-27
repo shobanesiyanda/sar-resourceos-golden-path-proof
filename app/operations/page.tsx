@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
+import { stageLabel, stateLabel } from "../../lib/displayLabels";
 
 const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
 
@@ -61,13 +62,6 @@ function pct(value: number | null | undefined) {
 function tons(value: number | null | undefined) {
   const n = Number(value || 0);
   return n.toFixed(3);
-}
-
-function stateText(value: string | null | undefined) {
-  if (!value) return "Blocked";
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function Card({
@@ -147,7 +141,7 @@ function Step({
           <p className="mt-3 text-2xl font-black text-white">{title}</p>
         </div>
         <span className="rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200">
-          {stateText(state)}
+          {stateLabel(state)}
         </span>
       </div>
       <p className="mt-3 text-sm leading-7 text-slate-400">{text}</p>
@@ -209,14 +203,23 @@ export default function OperationsPage() {
         <Stat label="Parcel" value={code} />
         <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
         <Stat label="Material" value={parcel?.material_type || "ROM"} />
-        <Stat label="Operations State" value={stateText(gate?.release_state)} />
+        <Stat label="Operations State" value={stateLabel(gate?.release_state)} />
       </section>
 
       <Card label="Operations Basis" title="Parcel movement control">
         <div className="space-y-4">
-          <Stat label="Commodity Class" value={parcel?.commodity_class || "Hard Commodities"} />
-          <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
-          <Stat label="Material Stage" value={parcel?.material_stage || "raw_feedstock"} />
+          <Stat
+            label="Commodity Class"
+            value={parcel?.commodity_class || "Hard Commodities"}
+          />
+          <Stat
+            label="Category"
+            value={parcel?.resource_category || "Ferrous Metals"}
+          />
+          <Stat
+            label="Material Stage"
+            value={stageLabel(parcel?.material_stage)}
+          />
           <Stat label="Product Quantity" value={tons(productTons)} />
           <Stat
             label={
@@ -233,8 +236,15 @@ export default function OperationsPage() {
             gold
           />
           <Stat label="Route Cost" value={money(parcel?.estimated_route_cost)} />
-          <Stat label="Verification / Quality Cost" value={money(parcel?.estimated_total_assay_cost)} />
-          <Stat label="Surplus" value={money(parcel?.estimated_route_surplus)} gold />
+          <Stat
+            label="Verification / Quality Cost"
+            value={money(parcel?.estimated_total_assay_cost)}
+          />
+          <Stat
+            label="Surplus"
+            value={money(parcel?.estimated_route_surplus)}
+            gold
+          />
         </div>
       </Card>
 
@@ -246,7 +256,10 @@ export default function OperationsPage() {
           <Stat label="Transporter" value={parcel?.transporter_name || "Not captured"} />
           <Stat
             label="Route Note"
-            value={parcel?.route_note || "Seed route chain for first live parcel. Plant and document gates still blocked."}
+            value={
+              parcel?.route_note ||
+              "Seed route chain for first live parcel. Plant and document gates still blocked."
+            }
           />
         </div>
       </Card>

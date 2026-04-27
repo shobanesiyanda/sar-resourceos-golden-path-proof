@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ResourceShell from "../../../components/ResourceShell";
-import { EconomicsEditTools } from "../../../components/EconomicsEditTools";
+import EconomicsEditTools from "../../../components/EconomicsEditTools";
 import { createClient } from "../../../lib/supabase/client";
 
 type SessionState = "checking" | "signed_in" | "signed_out";

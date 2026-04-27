@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
+import { stageLabel, stateLabel } from "../../lib/displayLabels";
 
 const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
 
@@ -67,13 +68,6 @@ function pct(value: number | null | undefined) {
 function tons(value: number | null | undefined) {
   const n = Number(value || 0);
   return n.toFixed(3);
-}
-
-function titleCaseState(value: string | null | undefined) {
-  if (!value) return "Blocked";
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function Card({
@@ -197,11 +191,9 @@ export default function FinancePage() {
   const productTons =
     parcel?.expected_concentrate_tons || parcel?.accepted_tons || 0;
   const effectivePrice =
-    parcel?.effective_price_per_ton ||
-    parcel?.expected_price_per_ton ||
-    0;
+    parcel?.effective_price_per_ton || parcel?.expected_price_per_ton || 0;
   const margin = parcel?.estimated_route_margin_percent || 0;
-  const financeState = titleCaseState(gate?.release_state);
+  const financeState = stateLabel(gate?.release_state);
   const decision = gate?.release_decision || "Hold / Gates Blocked";
 
   return (
@@ -218,6 +210,9 @@ export default function FinancePage() {
 
       <Card label="Finance Exposure" title="Cost and margin breakdown">
         <div className="space-y-4">
+          <Stat label="Commodity Class" value={parcel?.commodity_class || "Hard Commodities"} />
+          <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
+          <Stat label="Material Stage" value={stageLabel(parcel?.material_stage)} />
           <Stat label="Revenue" value={money(productTons * effectivePrice)} gold />
           <Stat label="Product Quantity" value={tons(productTons)} />
           <Stat label="Effective Price" value={`${money(effectivePrice)}/t`} />
@@ -258,26 +253,26 @@ export default function FinancePage() {
         <div className="space-y-4">
           <GateStat
             label="Documents"
-            state={titleCaseState(gate?.documents_state)}
+            state={stateLabel(gate?.documents_state)}
             note="Document evidence must be complete before finance release."
           />
           <GateStat
             label="Approvals"
-            state={titleCaseState(gate?.approvals_state)}
+            state={stateLabel(gate?.approvals_state)}
             note="Approval authority must be cleared before payment action."
           />
           <GateStat
             label="Counterparties"
-            state={titleCaseState(gate?.counterparties_state)}
+            state={stateLabel(gate?.counterparties_state)}
             note="Supplier, buyer, plant and transporter controls must be verified."
           />
           <GateStat
             label="Routes"
-            state={titleCaseState(gate?.routes_state)}
+            state={stateLabel(gate?.routes_state)}
             note="Route chain and movement basis must be confirmed before dispatch."
           />
         </div>
       </Card>
     </ResourceShell>
   );
-      }
+  }

@@ -5,56 +5,11 @@ import Link from "next/link";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
 import { stageLabel, stateLabel } from "../../lib/displayLabels";
-
-const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
-
-type ParcelRow = {
-  id: string;
-  parcel_code: string | null;
-  working_parcel_code: string | null;
-  commodity_class: string | null;
-  resource_category: string | null;
-  resource_type: string | null;
-  material_type: string | null;
-  material_stage: string | null;
-  origin_location: string | null;
-  plant_location: string | null;
-  delivery_location: string | null;
-  transporter_name: string | null;
-  route_note: string | null;
-  expected_concentrate_tons: number | null;
-  accepted_tons: number | null;
-  feedstock_tons: number | null;
-  expected_yield_percent: number | null;
-  estimated_route_cost: number | null;
-  estimated_route_surplus: number | null;
-  estimated_route_margin_percent: number | null;
-};
-
-type GateRow = {
-  parcel_id: string | null;
-  release_state: string | null;
-  release_decision: string | null;
-  open_blockers: number | null;
-  hard_blockers: number | null;
-  pending_blockers: number | null;
-  margin_blocker: boolean | null;
-  route_margin_percent: number | null;
-  documents_state: string | null;
-  approvals_state: string | null;
-  counterparties_state: string | null;
-  routes_state: string | null;
-};
-
-function displayParcelCode(parcel: ParcelRow | null) {
-  return parcel?.working_parcel_code || parcel?.parcel_code || SEED_PARCEL_CODE;
-}
+import { ActiveGate, ActiveParcel, loadActiveParcel } from "../../lib/activeParcel";
 
 function money(value: number | null | undefined) {
   const n = Number(value || 0);
-  return `R ${n.toLocaleString("en-ZA", {
-    maximumFractionDigits: 0,
-  })}`;
+  return `R ${n.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`;
 }
 
 function pct(value: number | null | undefined) {
@@ -144,29 +99,14 @@ export default function RouteBuilderPage() {
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
-  const [parcel, setParcel] = useState<ParcelRow | null>(null);
-  const [gate, setGate] = useState<GateRow | null>(null);
+  const [parcel, setParcel] = useState<ActiveParcel | null>(null);
+  const [gate, setGate] = useState<ActiveGate | null>(null);
 
   useEffect(() => {
     async function load() {
-      const { data: parcelData } = await supabase
-        .from("parcels")
-        .select("*")
-        .eq("parcel_code", SEED_PARCEL_CODE)
-        .single();
-
-      if (parcelData) {
-        setParcel(parcelData as ParcelRow);
-
-        const { data: gateData } = await supabase
-          .from("release_gate_summary")
-          .select("*")
-          .eq("parcel_id", parcelData.id)
-          .single();
-
-        if (gateData) setGate(gateData as GateRow);
-      }
-
+      const result = await loadActiveParcel(supabase);
+      setParcel(result.parcel);
+      setGate(result.gate);
       setLoading(false);
     }
 
@@ -184,28 +124,37 @@ export default function RouteBuilderPage() {
     );
   }
 
-  const code = displayParcelCode(parcel);
+  if (!parcel || !gate) {
+    return (
+      <ResourceShell
+        title="Route Builder Control Module"
+        subtitle="No active parcel found."
+      >
+        <Card label="No Data" title="Active parcel could not be loaded." />
+      </ResourceShell>
+    );
+  }
+
   const margin =
-    gate?.route_margin_percent ?? parcel?.estimated_route_margin_percent ?? 0;
-  const releaseDecision = gate?.release_decision || "Hold / Gates Blocked";
+    gate.routeMarginPercent || parcel.estimatedMarginPercent || 0;
 
   return (
     <ResourceShell
       title="Route Builder Control Module"
-      subtitle="Route-chain view powered by central release result and working parcel code."
+      subtitle="Route-chain view powered by central release result and active working parcel."
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Parcel" value={code} />
-        <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
-        <Stat label="Material" value={parcel?.material_type || "ROM"} />
-        <Stat label="Route State" value={stateLabel(gate?.release_state)} />
+        <Stat label="Parcel" value={parcel.parcelCode} />
+        <Stat label="Resource" value={parcel.resource} gold />
+        <Stat label="Material" value={parcel.material} />
+        <Stat label="Route State" value={stateLabel(gate.releaseState)} />
       </section>
 
       <Card label="Route Identity" title="Commodity and material basis">
         <div className="space-y-4">
-          <Stat label="Commodity Class" value={parcel?.commodity_class || "Hard Commodities"} />
-          <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
-          <Stat label="Material Stage" value={stageLabel(parcel?.material_stage)} />
+          <Stat label="Commodity Class" value={parcel.commodityClass} />
+          <Stat label="Category" value={parcel.category} />
+          <Stat label="Material Stage" value={stageLabel(parcel.materialStage)} />
         </div>
       </Card>
 
@@ -217,46 +166,39 @@ export default function RouteBuilderPage() {
                 Route Chain
               </p>
               <p className="mt-3 text-2xl font-black text-white">
-                {parcel?.origin_location || "Not captured"} to{" "}
-                {parcel?.plant_location || "plant"} to{" "}
-                {parcel?.delivery_location || "buyer"}
+                {parcel.originLocation} to {parcel.plantLocation} to{" "}
+                {parcel.deliveryLocation}
               </p>
             </div>
             <span className="rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200">
-              {stateLabel(gate?.routes_state)}
+              {stateLabel(gate.routesState)}
             </span>
           </div>
 
           <div className="mt-5 space-y-4">
-            <Stat label="Origin / Loading" value={parcel?.origin_location || "Not captured"} />
-            <Stat label="Plant / Processing" value={parcel?.plant_location || "Not captured"} />
-            <Stat label="Delivery / Offtake" value={parcel?.delivery_location || "Not captured"} />
-            <Stat label="Transporter" value={parcel?.transporter_name || "Not captured"} />
-            <Stat
-              label="Route Note"
-              value={
-                parcel?.route_note ||
-                "Seed route chain for first live parcel. Plant and document gates still blocked."
-              }
-            />
+            <Stat label="Origin / Loading" value={parcel.originLocation} />
+            <Stat label="Plant / Processing" value={parcel.plantLocation} />
+            <Stat label="Delivery / Offtake" value={parcel.deliveryLocation} />
+            <Stat label="Transporter" value={parcel.transporterName} />
+            <Stat label="Route Note" value={parcel.routeNote} />
           </div>
         </div>
       </Card>
 
       <Card label="Release Gate Result" title="Route Builder follows the central decision">
         <div className="space-y-4">
-          <Stat label="Release Decision" value={releaseDecision} />
-          <Stat label="Open Blockers" value={gate?.open_blockers ?? 0} />
-          <Stat label="Hard Blockers" value={gate?.hard_blockers ?? 0} />
-          <Stat label="Pending Blockers" value={gate?.pending_blockers ?? 0} />
-          <Stat label="Margin Blocker" value={gate?.margin_blocker ? "Yes" : "No"} />
+          <Stat label="Release Decision" value={gate.releaseDecision} />
+          <Stat label="Open Blockers" value={gate.openBlockers} />
+          <Stat label="Hard Blockers" value={gate.hardBlockers} />
+          <Stat label="Pending Blockers" value={gate.pendingBlockers} />
+          <Stat label="Margin Blocker" value={gate.marginBlocker ? "Yes" : "No"} />
 
           <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
             <p className="text-xs font-black uppercase tracking-[0.25em] text-red-200">
               Release Decision
             </p>
             <p className="mt-3 text-2xl font-black text-red-100">
-              {releaseDecision}
+              {gate.releaseDecision}
             </p>
             <p className="mt-3 text-sm leading-7 text-red-100/80">
               Route Builder reads the same central release decision as Dashboard,
@@ -268,23 +210,23 @@ export default function RouteBuilderPage() {
 
       <Card label="Route Economics Basis" title="Tonnage and margin signal">
         <div className="space-y-4">
-          <Stat label="Product Quantity" value={tons(parcel?.expected_concentrate_tons || parcel?.accepted_tons)} />
+          <Stat label="Product Quantity" value={tons(parcel.productQuantity)} />
           <Stat
             label={
-              parcel?.material_stage === "raw_feedstock"
+              parcel.materialStage === "raw_feedstock"
                 ? "Feedstock Required"
                 : "Route Product Quantity"
             }
-            value={tons(parcel?.feedstock_tons)}
+            value={tons(parcel.routeQuantity)}
             note={
-              parcel?.material_stage === "raw_feedstock"
-                ? `${pct(parcel?.expected_yield_percent)} expected yield`
+              parcel.materialStage === "raw_feedstock"
+                ? `${pct(parcel.expectedYieldPercent)} expected yield`
                 : "Saleable / finished product basis = product quantity"
             }
             gold
           />
-          <Stat label="Route Cost" value={money(parcel?.estimated_route_cost)} />
-          <Stat label="Surplus" value={money(parcel?.estimated_route_surplus)} gold />
+          <Stat label="Route Cost" value={money(parcel.estimatedRouteCost)} />
+          <Stat label="Surplus" value={money(parcel.estimatedSurplus)} gold />
           <Stat label="Route Margin" value={pct(margin)} gold />
         </div>
       </Card>
@@ -302,10 +244,10 @@ export default function RouteBuilderPage() {
             </p>
           </div>
 
-          <GateItem label="Documents" value={gate?.documents_state} />
-          <GateItem label="Approvals" value={gate?.approvals_state} />
-          <GateItem label="Counterparties" value={gate?.counterparties_state} />
-          <GateItem label="Routes" value={gate?.routes_state} />
+          <GateItem label="Documents" value={gate.documentsState} />
+          <GateItem label="Approvals" value={gate.approvalsState} />
+          <GateItem label="Counterparties" value={gate.counterpartiesState} />
+          <GateItem label="Routes" value={gate.routesState} />
 
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
@@ -325,4 +267,4 @@ export default function RouteBuilderPage() {
       </Card>
     </ResourceShell>
   );
-  }
+}

@@ -1,4 +1,53 @@
-/* SAR ResourceOS — Mobile typography compression */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sar-bg: #050914;
+  --sar-card: #080d18;
+  --sar-line: rgba(255, 255, 255, 0.1);
+  --sar-gold: #d7ad32;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--sar-bg);
+  color: white;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--sar-bg);
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* SAR ResourceOS — safe mobile compression */
 @media (max-width: 640px) {
   main {
     font-size: 14px;
@@ -35,12 +84,6 @@
     line-height: 1.35rem !important;
   }
 
-  .tracking-\[0\.35em\],
-  .tracking-\[0\.3em\],
-  .tracking-\[0\.25em\] {
-    letter-spacing: 0.18em !important;
-  }
-
   .rounded-3xl {
     border-radius: 1.25rem !important;
   }
@@ -74,4 +117,4 @@
     padding-left: 1rem !important;
     padding-right: 1rem !important;
   }
-    }
+  }

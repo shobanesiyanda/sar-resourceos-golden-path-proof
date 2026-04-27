@@ -3,105 +3,247 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "../../lib/supabase/client";
+import ResourceShell from "../../components/ResourceShell";
 
-type Profile = {
-  full_name: string;
-  company_name: string | null;
-  role: string;
-  is_active: boolean;
-};
+const PARCEL_CODE = "PAR-CHR-2026-0001";
 
-type Parcel = {
-  id: string;
-  parcel_code: string;
-  commodity: string;
-  accepted_tons: number;
+type Gate = {
+  parcel_id: string | null;
+  parcel_code: string | null;
+  resource_category: string | null;
+  resource_type: string | null;
+  material_type: string | null;
+  product_tons: number | null;
+  feedstock_tons: number | null;
+  expected_yield_percent: number | null;
   expected_price_per_ton: number | null;
   indicative_revenue: number | null;
-  control_state: string;
-  feedstock_tons: number | null;
-  feedstock_cost_per_ton: number | null;
-  transport_to_plant_cost_per_ton: number | null;
-  tolling_cost_per_ton: number | null;
-  estimated_feedstock_cost: number | null;
-  estimated_transport_cost: number | null;
-  estimated_tolling_cost: number | null;
   estimated_route_cost: number | null;
   estimated_route_surplus: number | null;
   estimated_route_margin_percent: number | null;
-  economics_basis: string | null;
+  estimated_total_assay_cost: number | null;
+  total_documents: number | null;
+  cleared_documents: number | null;
+  pending_documents: number | null;
+  blocked_documents: number | null;
+  total_approvals: number | null;
+  cleared_approvals: number | null;
+  pending_approvals: number | null;
+  blocked_approvals: number | null;
+  total_counterparties: number | null;
+  cleared_counterparties: number | null;
+  pending_counterparties: number | null;
+  blocked_counterparties: number | null;
+  total_routes: number | null;
+  cleared_routes: number | null;
+  pending_routes: number | null;
+  blocked_routes: number | null;
+  margin_blocker: number | null;
+  margin_state: string | null;
+  hard_blockers: number | null;
+  pending_blockers: number | null;
+  total_open_blockers: number | null;
+  release_state: string | null;
+  release_decision: string | null;
 };
 
-type RouteChain = {
-  route_code: string;
-  route_name: string | null;
-  origin_location: string | null;
-  plant_location: string | null;
-  delivery_location: string | null;
-  status: string;
-  notes: string | null;
+type RouteRow = {
+  id?: string;
+  parcel_id?: string | null;
+  status?: string | null;
+  origin?: string | null;
+  source_location?: string | null;
+  loading_point?: string | null;
+  plant?: string | null;
+  plant_location?: string | null;
+  wash_plant?: string | null;
+  destination?: string | null;
+  delivery_location?: string | null;
+  buyer_location?: string | null;
+  buyer?: string | null;
+  transporter?: string | null;
+  route_name?: string | null;
+  notes?: string | null;
 };
 
-type Counterparty = {
-  counterparty_type: string;
-  company_name: string;
-  location: string | null;
-  province: string | null;
-  status: string;
-};
+function n(v: number | null | undefined) {
+  return Number(v || 0);
+}
 
-function money(value: number | null | undefined) {
+function money(v: number | null | undefined) {
   return new Intl.NumberFormat("en-ZA", {
     style: "currency",
     currency: "ZAR",
     maximumFractionDigits: 0,
-  }).format(value ?? 0);
+  }).format(n(v));
 }
 
-function tons(value: number | null | undefined) {
-  return Number(value ?? 0).toFixed(3);
+function tons(v: number | null | undefined) {
+  return n(v).toFixed(3);
 }
 
-function percent(value: number | null | undefined) {
-  return `${Number(value ?? 0).toFixed(1)}%`;
+function pct(v: number | null | undefined) {
+  return `${n(v).toFixed(1)}%`;
 }
 
-function Badge({ state }: { state: string }) {
-  const style =
-    state === "Blocked"
-      ? "border-red-400/40 bg-red-500/15 text-red-200"
-      : state === "Held"
-      ? "border-orange-400/40 bg-orange-500/15 text-orange-200"
-      : state === "Approved" || state === "Complete" || state === "Active"
-      ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200"
-      : "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+function stateClass(state: string | null | undefined) {
+  const s = String(state || "").toLowerCase();
 
+  if (s.includes("ready") || s.includes("clear") || s.includes("strong")) {
+    return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
+  }
+
+  if (s.includes("pending") || s.includes("target")) {
+    return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+  }
+
+  return "border-red-400/40 bg-red-500/15 text-red-200";
+}
+
+function routeState(status: string | null | undefined) {
+  const s = String(status || "").toLowerCase();
+
+  if (s.includes("ready") || s.includes("approved") || s.includes("complete")) {
+    return "Ready";
+  }
+
+  if (s.includes("pending") || s.includes("review")) {
+    return "Pending";
+  }
+
+  return "Blocked";
+}
+
+function routeValue(...items: Array<string | null | undefined>) {
+  return items.find((x) => x && String(x).trim().length > 0) || "Not captured";
+}
+
+function Card(p: { label: string; title: string; children?: React.ReactNode }) {
   return (
-    <span
-      className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${style}`}
-    >
-      {state}
-    </span>
+    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
+      <p className="text-xs font-black uppercase tracking-[0.3em] text-[#d7ad32]">
+        {p.label}
+      </p>
+      <h3 className="mt-2 text-2xl font-black">{p.title}</h3>
+      {p.children}
+    </section>
   );
 }
 
-function Card({
-  label,
-  title,
-  children,
-}: {
+function Stat(p: {
   label: string;
-  title: string;
-  children?: React.ReactNode;
+  value: string;
+  note?: string;
+  gold?: boolean;
+  state?: string;
 }) {
   return (
-    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-      <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-        {label}
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {p.label}
       </p>
-      <h2 className="mt-2 text-2xl font-black">{title}</h2>
-      {children}
-    </section>
+
+      {p.state ? (
+        <div className="mt-3">
+          <span
+            className={`inline-flex rounded-full border px-3 py-1 text-sm font-black ${stateClass(
+              p.state
+            )}`}
+          >
+            {p.value}
+          </span>
+        </div>
+      ) : (
+        <p
+          className={`mt-2 text-3xl font-black ${
+            p.gold ? "text-[#f5d778]" : "text-white"
+          }`}
+        >
+          {p.value}
+        </p>
+      )}
+
+      {p.note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function GateLine(p: { label: string; blocked: number; pending: number }) {
+  const blocked = n(p.blocked);
+  const pending = n(p.pending);
+  const state = blocked > 0 ? "Blocked" : pending > 0 ? "Pending" : "Clear";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {p.label}
+      </p>
+      <div className="mt-3">
+        <span
+          className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${stateClass(
+            state
+          )}`}
+        >
+          {state}
+        </span>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-slate-400">
+        {blocked > 0
+          ? `${blocked} hard blocker(s).`
+          : pending > 0
+          ? `${pending} pending blocker(s).`
+          : "No open blocker."}
+      </p>
+    </div>
+  );
+}
+
+function RouteRecord({ route }: { route: RouteRow }) {
+  const state = routeState(route.status);
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            Route Chain
+          </p>
+          <h4 className="mt-2 text-xl font-black">
+            {routeValue(route.route_name, "Supplier → Plant → Buyer")}
+          </h4>
+        </div>
+
+        <span
+          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${stateClass(
+            state
+          )}`}
+        >
+          {state}
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          label="Origin"
+          value={routeValue(route.origin, route.source_location, route.loading_point)}
+        />
+        <Stat
+          label="Plant / Tolling"
+          value={routeValue(route.plant, route.plant_location, route.wash_plant)}
+        />
+        <Stat
+          label="Delivery / Offtake"
+          value={routeValue(route.destination, route.delivery_location, route.buyer_location)}
+        />
+        <Stat label="Transporter" value={routeValue(route.transporter)} />
+      </div>
+
+      <p className="mt-4 text-sm leading-7 text-slate-400">
+        {route.notes || "No route note captured yet."}
+      </p>
+    </div>
   );
 }
 
@@ -109,76 +251,56 @@ export default function RouteBuilderPage() {
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [parcel, setParcel] = useState<Parcel | null>(null);
-  const [route, setRoute] = useState<RouteChain | null>(null);
-  const [counterparties, setCounterparties] = useState<Counterparty[]>([]);
+  const [error, setError] = useState("");
+  const [gate, setGate] = useState<Gate | null>(null);
+  const [routes, setRoutes] = useState<RouteRow[]>([]);
 
   useEffect(() => {
     async function load() {
-      setLoading(true);
-      setError(null);
+      const { data: auth } = await supabase.auth.getUser();
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (!auth.user) {
         window.location.href = "/login";
         return;
       }
 
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, company_name, role, is_active")
-        .eq("id", user.id)
+        .select("role, is_active")
+        .eq("id", auth.user.id)
         .single();
 
-      if (profileError || !profileData || profileData.is_active !== true) {
+      if (!profile || profile.is_active !== true) {
         setError("Profile not found or inactive.");
         setLoading(false);
         return;
       }
 
-      const { data: parcelData, error: parcelError } = await supabase
-        .from("parcels")
-        .select(
-          "id, parcel_code, commodity, accepted_tons, expected_price_per_ton, indicative_revenue, control_state, feedstock_tons, feedstock_cost_per_ton, transport_to_plant_cost_per_ton, tolling_cost_per_ton, estimated_feedstock_cost, estimated_transport_cost, estimated_tolling_cost, estimated_route_cost, estimated_route_surplus, estimated_route_margin_percent, economics_basis"
-        )
-        .eq("parcel_code", "PAR-CHR-2026-0001")
+      const { data: gateData, error: gateError } = await supabase
+        .from("release_gate_summary")
+        .select("*")
+        .eq("parcel_code", PARCEL_CODE)
         .single();
 
-      if (parcelError || !parcelData) {
-        setError("Parcel not found.");
+      if (gateError || !gateData) {
+        setError(gateError?.message || "Release gate summary not found.");
         setLoading(false);
         return;
       }
 
-      const { data: routeData, error: routeError } = await supabase
-        .from("route_chains")
-        .select(
-          "route_code, route_name, origin_location, plant_location, delivery_location, status, notes"
-        )
-        .eq("route_code", "ROUTE-CHR-2026-0001")
-        .maybeSingle();
+      setGate(gateData as Gate);
 
-      if (routeError) {
-        setError("Route chain could not be loaded.");
-        setLoading(false);
-        return;
+      const parcelId = (gateData as Gate).parcel_id;
+
+      let routeQuery = supabase.from("route_chains").select("*");
+
+      if (parcelId) {
+        routeQuery = routeQuery.eq("parcel_id", parcelId);
       }
 
-      const { data: counterpartyData } = await supabase
-        .from("counterparties")
-        .select("counterparty_type, company_name, location, province, status")
-        .order("counterparty_type", { ascending: true });
+      const { data: routeData } = await routeQuery;
 
-      setProfile(profileData);
-      setParcel(parcelData);
-      setRoute(routeData ?? null);
-      setCounterparties(counterpartyData ?? []);
+      setRoutes((routeData as RouteRow[]) || []);
       setLoading(false);
     }
 
@@ -187,324 +309,186 @@ export default function RouteBuilderPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <Card label="SAR ResourceOS" title="Loading route builder..." />
-      </main>
+      <ResourceShell
+        title="Route Builder Control Module"
+        subtitle="Loading central route release summary..."
+      >
+        <Card label="Loading" title="Reading release_gate_summary..." />
+      </ResourceShell>
     );
   }
 
-  if (error) {
+  if (error || !gate) {
     return (
-      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <section className="rounded-3xl border border-red-400/30 bg-[#080d18] p-6 text-white">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-red-200">
-            SAR ResourceOS
+      <ResourceShell
+        title="Route Builder Control Module"
+        subtitle="Route Builder module error"
+      >
+        <Card label="Error" title="Could not load route builder">
+          <p className="mt-3 text-red-200">
+            {error || "Could not load route builder."}
           </p>
-          <h1 className="mt-3 text-2xl font-black">Route Builder module error</h1>
-          <p className="mt-3 text-slate-300">{error}</p>
-        </section>
-      </main>
+        </Card>
+      </ResourceShell>
     );
   }
 
-  const supplier = counterparties.find(
-    (item) => item.counterparty_type === "Supplier"
-  );
-  const washPlant = counterparties.find(
-    (item) => item.counterparty_type === "Wash Plant"
-  );
-  const buyer = counterparties.find((item) => item.counterparty_type === "Buyer");
-  const transporter = counterparties.find(
-    (item) => item.counterparty_type === "Transporter"
-  );
-
-  const concentrateTons = Number(parcel?.accepted_tons ?? 0);
-  const pricePerTon = Number(parcel?.expected_price_per_ton ?? 0);
-  const revenue = Number(parcel?.indicative_revenue ?? concentrateTons * pricePerTon);
-
-  const feedstockTons = Number(parcel?.feedstock_tons ?? 0);
-  const feedstockCostPerTon = Number(parcel?.feedstock_cost_per_ton ?? 0);
-  const transportToPlantCostPerTon = Number(
-    parcel?.transport_to_plant_cost_per_ton ?? 0
-  );
-  const tollingCostPerTon = Number(parcel?.tolling_cost_per_ton ?? 0);
-
-  const feedstockCost = Number(
-    parcel?.estimated_feedstock_cost ?? feedstockTons * feedstockCostPerTon
-  );
-  const transportCost = Number(
-    parcel?.estimated_transport_cost ?? feedstockTons * transportToPlantCostPerTon
-  );
-  const tollingCost = Number(
-    parcel?.estimated_tolling_cost ?? feedstockTons * tollingCostPerTon
-  );
-
-  const routeCost = Number(
-    parcel?.estimated_route_cost ?? feedstockCost + transportCost + tollingCost
-  );
-  const routeSurplus = Number(parcel?.estimated_route_surplus ?? revenue - routeCost);
-  const routeMargin = Number(
-    parcel?.estimated_route_margin_percent ??
-      (revenue > 0 ? (routeSurplus / revenue) * 100 : 0)
-  );
-
-  const chainItems = [
-    {
-      label: "Supplier",
-      title: supplier?.company_name ?? "Supplier pending",
-      location: supplier?.location ?? route?.origin_location ?? "Origin pending",
-      status: supplier?.status ?? "Pending",
-    },
-    {
-      label: "Wash Plant",
-      title: washPlant?.company_name ?? "Wash plant pending",
-      location: washPlant?.location ?? route?.plant_location ?? "Plant pending",
-      status: washPlant?.status ?? "Pending",
-    },
-    {
-      label: "Buyer",
-      title: buyer?.company_name ?? "Buyer pending",
-      location: buyer?.location ?? route?.delivery_location ?? "Delivery pending",
-      status: buyer?.status ?? "Pending",
-    },
-    {
-      label: "Transporter",
-      title: transporter?.company_name ?? "Transporter pending",
-      location: transporter?.location ?? "Route transport pending",
-      status: transporter?.status ?? "Pending",
-    },
-    {
-      label: "Finance",
-      title: "Finance handoff",
-      location: "Blocked until route and documents clear",
-      status: parcel?.control_state ?? "Pending",
-    },
-  ];
+  const routeBlocked = n(gate.total_open_blockers) > 0;
+  const routeControlState = routeBlocked ? "Blocked" : "Ready";
 
   return (
-    <main className="min-h-screen bg-[#050914] pt-28 text-white">
-      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-        <Card label="SAR ResourceOS" title="Route Builder Control Module">
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            Live route-chain view linking supplier, wash plant, buyer,
-            transporter and finance handoff for the first chrome parcel.
+    <ResourceShell
+      title="Route Builder Control Module"
+      subtitle="Route-chain view now powered by the central release_gate_summary control result."
+    >
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Parcel" value={gate.parcel_code || PARCEL_CODE} />
+        <Stat label="Resource" value={gate.resource_type || "Not Set"} gold />
+        <Stat label="Category" value={gate.resource_category || "Not Set"} />
+        <Stat label="Material" value={gate.material_type || "Not Set"} />
+      </section>
+
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          label="Route State"
+          value={routeControlState}
+          state={routeControlState}
+        />
+        <Stat
+          label="Release Decision"
+          value={gate.release_decision || "Hold / Review"}
+        />
+        <Stat label="Open Blockers" value={String(n(gate.total_open_blockers))} />
+        <Stat label="Route Margin" value={pct(gate.estimated_route_margin_percent)} gold />
+      </section>
+
+      <Card label="Route Economics Basis" title="Tonnage and margin signal">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Product Tons" value={tons(gate.product_tons)} />
+          <Stat
+            label="Feedstock Tons"
+            value={tons(gate.feedstock_tons)}
+            note={`${pct(gate.expected_yield_percent)} expected yield`}
+            gold
+          />
+          <Stat label="Revenue" value={money(gate.indicative_revenue)} gold />
+          <Stat label="Route Cost" value={money(gate.estimated_route_cost)} />
+          <Stat label="Surplus" value={money(gate.estimated_route_surplus)} gold />
+          <Stat label="Price / Ton" value={`${money(gate.expected_price_per_ton)}/t`} />
+          <Stat label="Assay Cost" value={money(gate.estimated_total_assay_cost)} />
+          <Stat label="Margin State" value={gate.margin_state || "Not Set"} state={gate.margin_state || "Blocked"} />
+        </div>
+      </Card>
+
+      <Card label="Route Chain" title="Supplier to plant to buyer">
+        <div className="mt-5 space-y-4">
+          {routes.length > 0 ? (
+            routes.map((route, index) => (
+              <RouteRecord key={route.id || `route-${index}`} route={route} />
+            ))
+          ) : (
+            <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4">
+              <p className="text-xl font-black text-red-200">
+                No route chain record found.
+              </p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">
+                Route Builder requires a route_chains record before movement,
+                plant handoff, dispatch or finance release can proceed.
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card
+        label="Central Route Control"
+        title={routeBlocked ? "Route cannot proceed yet" : "Route ready for controlled review"}
+      >
+        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(routeControlState)}`}>
+          <p className="text-xl font-black">
+            {routeBlocked
+              ? "Route release remains blocked."
+              : "Route can move to controlled release review."}
           </p>
-
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link
-              href="/dashboard"
-              className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
-            >
-              Back to Dashboard
-            </Link>
-
-            <Link
-              href="/counterparties"
-              className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300"
-            >
-              Counterparties
-            </Link>
-
-            <Link
-              href="/finance"
-              className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300"
-            >
-              Finance
-            </Link>
-          </div>
-        </Card>
-
-        <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Parcel
-            </p>
-            <p className="mt-3 text-2xl font-black">{parcel?.parcel_code}</p>
-            <p className="mt-2 text-sm font-semibold text-[#d7ad32]">
-              {parcel?.commodity}
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Concentrate Tons
-            </p>
-            <p className="mt-3 text-4xl font-black">{tons(concentrateTons)}</p>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Feedstock Tons
-            </p>
-            <p className="mt-3 text-4xl font-black">{tons(feedstockTons)}</p>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Route Status
-            </p>
-            <div className="mt-3">
-              <Badge state={route?.status ?? "Pending"} />
-            </div>
-          </div>
-        </section>
-
-        <Card label="Route Chain" title={route?.route_name ?? "Route chain pending"}>
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Origin
-              </p>
-              <p className="mt-2 text-xl font-black">
-                {route?.origin_location ?? "Pending"}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Plant
-              </p>
-              <p className="mt-2 text-xl font-black">
-                {route?.plant_location ?? "Pending"}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Delivery
-              </p>
-              <p className="mt-2 text-xl font-black">
-                {route?.delivery_location ?? "Pending"}
-              </p>
-            </div>
-          </div>
-
-          <p className="mt-5 text-sm leading-7 text-slate-400">
-            {route?.notes ?? "No route note captured."}
+          <p className="mt-3 text-sm leading-7">
+            {routeBlocked
+              ? "Do not authorize loading, plant dispatch, buyer movement, transport release or finance handoff until the central release gate result is clear."
+              : "All central blockers are clear. Route release still requires controlled approval and authority."}
           </p>
-        </Card>
+        </div>
 
-        <Card label="Route Flow" title="Supplier → Plant → Buyer → Transporter → Finance">
-          <div className="mt-5 space-y-4">
-            {chainItems.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-              >
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                      {item.label}
-                    </p>
-                    <h3 className="mt-2 text-xl font-black">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">
-                      {item.location}
-                    </p>
-                  </div>
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <GateLine
+            label="Documents"
+            blocked={n(gate.blocked_documents)}
+            pending={n(gate.pending_documents)}
+          />
+          <GateLine
+            label="Approvals"
+            blocked={n(gate.blocked_approvals)}
+            pending={n(gate.pending_approvals)}
+          />
+          <GateLine
+            label="Counterparties"
+            blocked={n(gate.blocked_counterparties)}
+            pending={n(gate.pending_counterparties)}
+          />
+          <GateLine
+            label="Routes"
+            blocked={n(gate.blocked_routes)}
+            pending={n(gate.pending_routes)}
+          />
+        </div>
+      </Card>
 
-                  <Badge state={item.status} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+      <Card label="Release Gate Result" title="Route Builder follows the central decision">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Hard Blockers" value={String(n(gate.hard_blockers))} />
+          <Stat label="Pending Blockers" value={String(n(gate.pending_blockers))} />
+          <Stat label="Total Open" value={String(n(gate.total_open_blockers))} />
+          <Stat label="Margin Blocker" value={n(gate.margin_blocker) > 0 ? "Yes" : "No"} />
+        </div>
 
-        <section className="grid gap-6 xl:grid-cols-2">
-          <Card label="Route Economics" title="Supabase parcel economics">
-            <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Indicative Revenue
-                </p>
-                <p className="mt-2 text-3xl font-black">{money(revenue)}</p>
-                <p className="mt-2 text-sm text-slate-400">
-                  {tons(concentrateTons)}t concentrate × {money(pricePerTon)}/t
-                </p>
-              </div>
+        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(gate.release_state)}`}>
+          <p className="text-xs font-black uppercase tracking-[0.25em]">
+            Release decision
+          </p>
+          <p className="mt-2 text-2xl font-black">
+            {gate.release_decision || "Hold / Review"}
+          </p>
+          <p className="mt-2 text-sm leading-6">
+            Route Builder now reads the same central release decision as Dashboard,
+            Analytics and Finance. No separate page-level route release logic is being used.
+          </p>
+        </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Feedstock Cost
-                </p>
-                <p className="mt-2 text-3xl font-black">{money(feedstockCost)}</p>
-                <p className="mt-2 text-sm text-slate-400">
-                  {money(feedstockCostPerTon)}/t × {tons(feedstockTons)}t feedstock
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Transport Cost
-                </p>
-                <p className="mt-2 text-3xl font-black">{money(transportCost)}</p>
-                <p className="mt-2 text-sm text-slate-400">
-                  {money(transportToPlantCostPerTon)}/t × {tons(feedstockTons)}t feedstock
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Tolling Cost
-                </p>
-                <p className="mt-2 text-3xl font-black">{money(tollingCost)}</p>
-                <p className="mt-2 text-sm text-slate-400">
-                  {money(tollingCostPerTon)}/t × {tons(feedstockTons)}t feedstock
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card label="Margin Control" title="Corrected route surplus">
-            <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Route Cost
-                </p>
-                <p className="mt-2 text-3xl font-black">{money(routeCost)}</p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Indicative Surplus
-                </p>
-                <p className="mt-2 text-3xl font-black text-[#f5d778]">
-                  {money(routeSurplus)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Route Margin
-                </p>
-                <p className="mt-2 text-3xl font-black text-[#f5d778]">
-                  {percent(routeMargin)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                  Economics Basis
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  {parcel?.economics_basis ??
-                    "Revenue is calculated on concentrate tons. Feedstock, transport and tolling are calculated on feedstock tons."}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </section>
-
-        <Card label="Operator" title={profile?.full_name ?? "Operator"}>
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Company
-            </p>
-            <p className="mt-2 text-xl font-black">
-              {profile?.company_name ?? "Shobane African Resources"}
-            </p>
-          </div>
-        </Card>
-      </div>
-    </main>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/dashboard"
+            className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
+          >
+            Back to Dashboard
+          </Link>
+          <Link
+            href="/documents"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Documents
+          </Link>
+          <Link
+            href="/approvals"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Approvals
+          </Link>
+          <Link
+            href="/finance"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
+          >
+            Finance
+          </Link>
+        </div>
+      </Card>
+    </ResourceShell>
   );
-    }
+}

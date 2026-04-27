@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
@@ -41,7 +41,7 @@ function statusLabel(state: AuthState) {
   return "Access";
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -300,4 +300,29 @@ export default function LoginPage() {
       </div>
     </main>
   );
-                   }
+}
+
+function LoginFallback() {
+  return (
+    <main className="min-h-screen bg-[#050914] text-white">
+      <div className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-8">
+        <section className="w-full rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+            SAR ResourceOS
+          </p>
+          <h1 className="mt-5 text-4xl font-black leading-tight text-white">
+            Loading secure access...
+          </h1>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginPageContent />
+    </Suspense>
+  );
+      }

@@ -1,169 +1,143 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { createClient } from "../../lib/supabase/client";
+import ResourceShell from "../../components/ResourceShell";
 
-type Profile = {
-  full_name: string;
-  company_name: string | null;
-  role: string;
-  is_active: boolean;
-};
+const PARCEL_CODE = "PAR-CHR-2026-0001";
 
 type Parcel = {
   id: string;
   parcel_code: string;
-  commodity: string;
-  product_description: string | null;
-  accepted_tons: number;
+  commodity: string | null;
+  resource_category: string | null;
+  resource_type: string | null;
+  material_type: string | null;
+  accepted_tons: number | null;
+  expected_concentrate_tons: number | null;
+  feedstock_tons: number | null;
+  expected_yield_percent: number | null;
   expected_price_per_ton: number | null;
   indicative_revenue: number | null;
-  control_state: string;
-  feedstock_tons: number | null;
-  feedstock_cost_per_ton: number | null;
-  transport_to_plant_cost_per_ton: number | null;
-  tolling_cost_per_ton: number | null;
-  estimated_feedstock_cost: number | null;
-  estimated_transport_cost: number | null;
-  estimated_tolling_cost: number | null;
   estimated_route_cost: number | null;
   estimated_route_surplus: number | null;
   estimated_route_margin_percent: number | null;
-  economics_basis: string | null;
 };
 
-type RouteChain = {
-  route_code: string;
-  route_name: string | null;
-  origin_location: string | null;
-  plant_location: string | null;
-  delivery_location: string | null;
-  status: string;
-  notes: string | null;
-};
+type StatusRow = { status: string | null };
 
-type Counterparty = {
-  counterparty_type: string;
-  company_name: string;
-  location: string | null;
-  province: string | null;
-  status: string;
-};
-
-type DocumentRecord = {
-  document_code: string;
-  document_type: string;
-  title: string;
-  status: string;
-};
-
-type ApprovalRecord = {
-  approval_code: string;
-  approval_type: string;
-  status: string;
-};
-
-function money(value: number | null | undefined) {
+function money(v: number | null | undefined) {
   return new Intl.NumberFormat("en-ZA", {
     style: "currency",
     currency: "ZAR",
     maximumFractionDigits: 0,
-  }).format(value ?? 0);
+  }).format(Number(v || 0));
 }
 
-function tons(value: number | null | undefined) {
-  return Number(value ?? 0).toFixed(3);
+function tons(v: number | null | undefined) {
+  return Number(v || 0).toFixed(3);
 }
 
-function percent(value: number | null | undefined) {
-  return `${Number(value ?? 0).toFixed(1)}%`;
+function pct(v: number | null | undefined) {
+  return `${Number(v || 0).toFixed(1)}%`;
 }
 
-function Badge({ state }: { state: string }) {
-  const style =
-    state === "Blocked"
-      ? "border-red-400/40 bg-red-500/15 text-red-200"
-      : state === "Held"
-      ? "border-orange-400/40 bg-orange-500/15 text-orange-200"
-      : state === "Approved" || state === "Complete" || state === "Active"
-      ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200"
-      : "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
-
-  return (
-    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${style}`}>
-      {state}
-    </span>
-  );
+function openCount(rows: StatusRow[]) {
+  return rows.filter((r) => r.status === "Pending" || r.status === "Blocked")
+    .length;
 }
 
-function Card({
-  label,
-  title,
-  children,
-}: {
-  label: string;
-  title: string;
-  children?: React.ReactNode;
-}) {
+function readyCount(rows: StatusRow[]) {
+  return rows.filter((r) => r.status === "Approved" || r.status === "Complete")
+    .length;
+}
+
+function score(done: number, total: number) {
+  if (total <= 0) return 0;
+  return Math.round((done / total) * 100);
+}
+
+function marginState(m: number) {
+  if (m < 18) return "Below Target";
+  if (m <= 25) return "Target Band";
+  return "Strong Route";
+}
+
+function controlState(open: number, margin: number) {
+  if (open > 0 || margin < 18) return "Blocked";
+  return "Ready";
+}
+
+function decisionText(open: number, margin: number) {
+  if (margin < 18) return "Commercially visible, not release ready";
+  if (open > 0) return "Economics acceptable, gates still open";
+  return "Ready for controlled release review";
+}
+
+function stateClass(state: string) {
+  if (state === "Ready") return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
+  if (state === "Target Band") return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
+  return "border-red-400/40 bg-red-500/15 text-red-200";
+}
+
+function Card(p: { label: string; title: string; children?: React.ReactNode }) {
   return (
     <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-      <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#d7ad32]">
-        {label}
+      <p className="text-xs font-black uppercase tracking-[0.3em] text-[#d7ad32]">
+        {p.label}
       </p>
-      <h2 className="mt-2 text-2xl font-black">{title}</h2>
-      {children}
+      <h3 className="mt-2 text-2xl font-black">{p.title}</h3>
+      {p.children}
     </section>
   );
 }
 
-function MetricCard({
-  label,
-  value,
-  note,
-  tone = "default",
-}: {
-  label: string;
-  value: string | number;
-  note: string;
-  tone?: "default" | "gold" | "red" | "green";
-}) {
-  const toneClass =
-    tone === "red"
-      ? "text-red-200"
-      : tone === "green"
-      ? "text-emerald-200"
-      : tone === "gold"
-      ? "text-[#f5d778]"
-      : "text-white";
-
+function Stat(p: { label: string; value: string; note?: string; gold?: boolean }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">{label}</p>
-      <p className={`mt-3 text-4xl font-black ${toneClass}`}>{value}</p>
-      <p className="mt-2 text-sm leading-6 text-slate-400">{note}</p>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {p.label}
+      </p>
+      <p className={`mt-2 text-3xl font-black ${p.gold ? "text-[#f5d778]" : "text-white"}`}>
+        {p.value}
+      </p>
+      {p.note ? <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p> : null}
     </div>
   );
 }
 
-function InfoBox({
-  label,
-  value,
-  note,
-  gold = false,
-}: {
+function Gate(p: {
   label: string;
-  value: string;
-  note?: string;
-  gold?: boolean;
+  ready: number;
+  total: number;
+  open: number;
 }) {
+  const s = score(p.ready, p.total);
+  const blocked = p.open > 0;
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">{label}</p>
-      <p className={`mt-2 text-3xl font-black ${gold ? "text-[#f5d778]" : "text-white"}`}>
-        {value}
+    <div
+      className={[
+        "rounded-2xl border p-4",
+        blocked
+          ? "border-red-400/30 bg-red-500/10"
+          : "border-emerald-400/30 bg-emerald-500/10",
+      ].join(" ")}
+    >
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {p.label}
       </p>
-      {note ? <p className="mt-2 text-sm leading-6 text-slate-400">{note}</p> : null}
+      <p className="mt-2 text-3xl font-black text-white">
+        {p.ready}/{p.total}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-slate-400">
+        {blocked ? `${p.open} item(s) still Pending or Blocked.` : "Gate cleared."}
+      </p>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+        <div
+          className={blocked ? "h-full bg-red-300" : "h-full bg-emerald-300"}
+          style={{ width: `${s}%` }}
+        />
+      </div>
     </div>
   );
 }
@@ -172,36 +146,29 @@ export default function AnalyticsPage() {
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [error, setError] = useState("");
   const [parcel, setParcel] = useState<Parcel | null>(null);
-  const [route, setRoute] = useState<RouteChain | null>(null);
-  const [counterparties, setCounterparties] = useState<Counterparty[]>([]);
-  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
-  const [approvals, setApprovals] = useState<ApprovalRecord[]>([]);
+  const [documents, setDocuments] = useState<StatusRow[]>([]);
+  const [approvals, setApprovals] = useState<StatusRow[]>([]);
+  const [counterparties, setCounterparties] = useState<StatusRow[]>([]);
+  const [routes, setRoutes] = useState<StatusRow[]>([]);
 
   useEffect(() => {
     async function load() {
-      setLoading(true);
-      setError(null);
+      const { data: auth } = await supabase.auth.getUser();
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (!auth.user) {
         window.location.href = "/login";
         return;
       }
 
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, company_name, role, is_active")
-        .eq("id", user.id)
+        .select("role, is_active")
+        .eq("id", auth.user.id)
         .single();
 
-      if (profileError || !profileData || profileData.is_active !== true) {
+      if (!profile || profile.is_active !== true) {
         setError("Profile not found or inactive.");
         setLoading(false);
         return;
@@ -209,10 +176,8 @@ export default function AnalyticsPage() {
 
       const { data: parcelData, error: parcelError } = await supabase
         .from("parcels")
-        .select(
-          "id, parcel_code, commodity, product_description, accepted_tons, expected_price_per_ton, indicative_revenue, control_state, feedstock_tons, feedstock_cost_per_ton, transport_to_plant_cost_per_ton, tolling_cost_per_ton, estimated_feedstock_cost, estimated_transport_cost, estimated_tolling_cost, estimated_route_cost, estimated_route_surplus, estimated_route_margin_percent, economics_basis"
-        )
-        .eq("parcel_code", "PAR-CHR-2026-0001")
+        .select("*")
+        .eq("parcel_code", PARCEL_CODE)
         .single();
 
       if (parcelError || !parcelData) {
@@ -221,35 +186,30 @@ export default function AnalyticsPage() {
         return;
       }
 
+      const { data: docs } = await supabase
+        .from("documents")
+        .select("status")
+        .eq("parcel_id", parcelData.id);
+
+      const { data: apps } = await supabase
+        .from("approvals")
+        .select("status")
+        .eq("parcel_id", parcelData.id);
+
+      const { data: parties } = await supabase
+        .from("counterparties")
+        .select("status");
+
       const { data: routeData } = await supabase
         .from("route_chains")
-        .select("route_code, route_name, origin_location, plant_location, delivery_location, status, notes")
-        .eq("route_code", "ROUTE-CHR-2026-0001")
-        .maybeSingle();
+        .select("status")
+        .eq("route_code", "ROUTE-CHR-2026-0001");
 
-      const { data: counterpartyData } = await supabase
-        .from("counterparties")
-        .select("counterparty_type, company_name, location, province, status")
-        .order("counterparty_type", { ascending: true });
-
-      const { data: documentData } = await supabase
-        .from("documents")
-        .select("document_code, document_type, title, status")
-        .eq("parcel_id", parcelData.id)
-        .order("document_code", { ascending: true });
-
-      const { data: approvalData } = await supabase
-        .from("approvals")
-        .select("approval_code, approval_type, status")
-        .eq("parcel_id", parcelData.id)
-        .order("approval_code", { ascending: true });
-
-      setProfile(profileData);
-      setParcel(parcelData);
-      setRoute(routeData ?? null);
-      setCounterparties(counterpartyData ?? []);
-      setDocuments(documentData ?? []);
-      setApprovals(approvalData ?? []);
+      setParcel(parcelData as Parcel);
+      setDocuments((docs as StatusRow[]) || []);
+      setApprovals((apps as StatusRow[]) || []);
+      setCounterparties((parties as StatusRow[]) || []);
+      setRoutes((routeData as StatusRow[]) || []);
       setLoading(false);
     }
 
@@ -258,243 +218,153 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <Card label="SAR ResourceOS" title="Loading analytics..." />
-      </main>
+      <ResourceShell title="Analytics Control" subtitle="Loading analytics...">
+        <Card label="Loading" title="Reading Supabase analytics data..." />
+      </ResourceShell>
     );
   }
 
-  if (error) {
+  if (error || !parcel) {
     return (
-      <main className="min-h-screen bg-[#050914] px-5 py-28 text-white">
-        <section className="rounded-3xl border border-red-400/30 bg-[#080d18] p-6 text-white">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-red-200">
-            SAR ResourceOS
-          </p>
-          <h1 className="mt-3 text-2xl font-black">Analytics module error</h1>
-          <p className="mt-3 text-slate-300">{error}</p>
-        </section>
-      </main>
+      <ResourceShell title="Analytics Control" subtitle="Analytics module error">
+        <Card label="Error" title="Could not load analytics">
+          <p className="mt-3 text-red-200">{error || "Could not load analytics page."}</p>
+        </Card>
+      </ResourceShell>
     );
   }
 
-  const concentrateTons = Number(parcel?.accepted_tons ?? 0);
-  const pricePerTon = Number(parcel?.expected_price_per_ton ?? 0);
-  const revenue = Number(parcel?.indicative_revenue ?? concentrateTons * pricePerTon);
+  const productTons = parcel.expected_concentrate_tons ?? parcel.accepted_tons ?? 0;
+  const revenue =
+    parcel.indicative_revenue ||
+    productTons * Number(parcel.expected_price_per_ton || 0);
 
-  const feedstockTons = Number(parcel?.feedstock_tons ?? 0);
-  const feedstockCost = Number(parcel?.estimated_feedstock_cost ?? 0);
-  const transportCost = Number(parcel?.estimated_transport_cost ?? 0);
-  const tollingCost = Number(parcel?.estimated_tolling_cost ?? 0);
-  const routeCost = Number(parcel?.estimated_route_cost ?? 0);
-  const routeSurplus = Number(parcel?.estimated_route_surplus ?? revenue - routeCost);
-  const routeMargin = Number(
-    parcel?.estimated_route_margin_percent ??
-      (revenue > 0 ? (routeSurplus / revenue) * 100 : 0)
+  const routeCost = Number(parcel.estimated_route_cost || 0);
+  const surplus = Number(parcel.estimated_route_surplus || revenue - routeCost);
+  const margin = Number(
+    parcel.estimated_route_margin_percent ||
+      (revenue > 0 ? (surplus / revenue) * 100 : 0)
   );
 
-  const openDocuments = documents.filter(
-    (item) => item.status === "Blocked" || item.status === "Pending"
-  );
+  const docReady = readyCount(documents);
+  const appReady = readyCount(approvals);
+  const partyReady = readyCount(counterparties);
+  const routeReady = readyCount(routes);
 
-  const openApprovals = approvals.filter(
-    (item) => item.status === "Blocked" || item.status === "Pending"
-  );
+  const docOpen = openCount(documents);
+  const appOpen = openCount(approvals);
+  const partyOpen = openCount(counterparties);
+  const routeOpen = openCount(routes);
 
-  const openCounterparties = counterparties.filter(
-    (item) => item.status === "Blocked" || item.status === "Pending"
-  );
+  const totalItems =
+    documents.length + approvals.length + counterparties.length + routes.length + 1;
 
-  const readyDocuments = documents.length - openDocuments.length;
-  const readyApprovals = approvals.length - openApprovals.length;
-  const readyCounterparties = counterparties.length - openCounterparties.length;
+  const readyItems =
+    docReady +
+    appReady +
+    partyReady +
+    routeReady +
+    (margin >= 18 ? 1 : 0);
 
-  const totalGateItems =
-    documents.length + approvals.length + counterparties.length + 1;
-
-  const openGateItems =
-    openDocuments.length +
-    openApprovals.length +
-    openCounterparties.length +
-    (route?.status === "Blocked" || route?.status === "Pending" ? 1 : 0);
-
-  const readinessScore =
-    totalGateItems > 0
-      ? Math.max(0, ((totalGateItems - openGateItems) / totalGateItems) * 100)
-      : 0;
-
-  const controlState =
-    parcel?.control_state === "Blocked" || openGateItems > 0 ? "Blocked" : "Approved";
-
-  const readinessRows = [
-    {
-      label: "Document readiness",
-      value: `${readyDocuments}/${documents.length}`,
-      note: `${openDocuments.length} document items are still Pending or Blocked.`,
-      state: openDocuments.length > 0 ? "Blocked" : "Approved",
-    },
-    {
-      label: "Approval readiness",
-      value: `${readyApprovals}/${approvals.length}`,
-      note: `${openApprovals.length} approval items are still Pending or Blocked.`,
-      state: openApprovals.length > 0 ? "Blocked" : "Approved",
-    },
-    {
-      label: "Counterparty readiness",
-      value: `${readyCounterparties}/${counterparties.length}`,
-      note: `${openCounterparties.length} counterparty records are still Pending or Blocked.`,
-      state: openCounterparties.length > 0 ? "Blocked" : "Approved",
-    },
-    {
-      label: "Route readiness",
-      value: route?.status ?? "Pending",
-      note: route?.notes ?? "Route chain note pending.",
-      state: route?.status ?? "Pending",
-    },
-  ];
+  const openTotal = docOpen + appOpen + partyOpen + routeOpen + (margin < 18 ? 1 : 0);
+  const readiness = score(readyItems, totalItems);
+  const state = controlState(openTotal, margin);
+  const mState = marginState(margin);
 
   return (
-    <main className="min-h-screen bg-[#050914] pt-28 text-white">
-      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-        <Card label="SAR ResourceOS" title="Analytics Control Module">
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            Live analytics view for parcel readiness, release blockers,
-            Supabase-based route exposure, margin control, counterparty readiness
-            and finance handoff risk.
+    <ResourceShell
+      title="Analytics Control"
+      subtitle="Read-only cockpit for readiness, margin signal, blocker count, route economics and release-control interpretation."
+    >
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Readiness Score" value={`${readiness}%`} gold={readiness >= 80} />
+        <Stat label="Open Blockers" value={String(openTotal)} />
+        <Stat label="Route Margin" value={pct(margin)} gold />
+        <Stat label="Control State" value={state} />
+      </section>
+
+      <Card label="Current Position" title={decisionText(openTotal, margin)}>
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Parcel" value={parcel.parcel_code} />
+          <Stat label="Resource" value={parcel.resource_type || parcel.commodity || "Not Set"} gold />
+          <Stat label="Material" value={parcel.material_type || "Not Set"} />
+          <Stat label="Feedstock Required" value={tons(parcel.feedstock_tons)} />
+        </div>
+      </Card>
+
+      <Card label="Readiness Analytics" title="Release-gate breakdown">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Gate label="Document Readiness" ready={docReady} total={documents.length} open={docOpen} />
+          <Gate label="Approval Readiness" ready={appReady} total={approvals.length} open={appOpen} />
+          <Gate label="Counterparty Readiness" ready={partyReady} total={counterparties.length} open={partyOpen} />
+          <Gate label="Route Readiness" ready={routeReady} total={routes.length} open={routeOpen} />
+        </div>
+      </Card>
+
+      <Card label="Commercial Analytics" title="Revenue, cost and margin signal">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Product Tons" value={tons(productTons)} />
+          <Stat label="Revenue" value={money(revenue)} gold />
+          <Stat label="Route Cost" value={money(routeCost)} />
+          <Stat label="Surplus" value={money(surplus)} gold />
+        </div>
+
+        <div className={`mt-5 rounded-3xl border p-5 ${stateClass(mState)}`}>
+          <p className="text-xs font-bold uppercase tracking-[0.25em]">
+            Margin Signal
           </p>
+          <p className="mt-3 text-3xl font-black">{mState}</p>
+          <p className="mt-2 text-sm leading-6">
+            Target margin control band is 18%–25%. Below target should remain under review or require exception approval.
+          </p>
+        </div>
+      </Card>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/dashboard" className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]">
-              Back to Dashboard
-            </Link>
-
-            <Link href="/operations" className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300">
-              Operations
-            </Link>
-
-            <Link href="/finance" className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-slate-300">
-              Finance
-            </Link>
-          </div>
-        </Card>
-
-        <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label="Readiness Score"
-            value={percent(readinessScore)}
-            note="Calculated from route, counterparty, document and approval gates."
-            tone={readinessScore >= 80 ? "green" : readinessScore >= 50 ? "gold" : "red"}
-          />
-
-          <MetricCard
-            label="Open Blockers"
-            value={openGateItems}
-            note="Total Pending or Blocked items across live control gates."
-            tone={openGateItems > 0 ? "red" : "green"}
-          />
-
-          <MetricCard
-            label="Route Margin"
-            value={percent(routeMargin)}
-            note="Revenue less Supabase parcel economics costs."
-            tone={routeMargin >= 18 ? "green" : routeMargin >= 10 ? "gold" : "red"}
-          />
-
-          <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
+      <Card label="Risk Interpretation" title="What the analytics mean">
+        <div className="mt-5 grid gap-4 xl:grid-cols-3">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Control State
+              Current Position
             </p>
-            <div className="mt-3">
-              <Badge state={controlState} />
-            </div>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
-              {controlState === "Blocked"
-                ? "Route cannot proceed until open gates are cleared."
-                : "Route gates are clear."}
+            <p className="mt-2 text-2xl font-black text-white">
+              {decisionText(openTotal, margin)}
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              The parcel is commercially visible but cannot release while required gates remain open.
             </p>
           </div>
-        </section>
 
-        <section className="grid gap-6 xl:grid-cols-2">
-          <Card label="Commercial Analytics" title="Revenue and tonnage signal">
-            <div className="mt-5 space-y-4">
-              <InfoBox label="Parcel" value={parcel?.parcel_code ?? "Pending"} note={parcel?.commodity ?? "Commodity pending"} />
-              <InfoBox label="Concentrate Tons" value={tons(concentrateTons)} />
-              <InfoBox label="Feedstock Tons" value={tons(feedstockTons)} />
-              <InfoBox
-                label="Revenue"
-                value={money(revenue)}
-                note={`${tons(concentrateTons)}t concentrate × ${money(pricePerTon)}/t`}
-              />
-            </div>
-          </Card>
-
-          <Card label="Exposure Analytics" title="Supabase parcel economics">
-            <div className="mt-5 space-y-4">
-              <InfoBox label="Feedstock Cost" value={money(feedstockCost)} />
-              <InfoBox label="Transport Cost" value={money(transportCost)} />
-              <InfoBox label="Tolling Cost" value={money(tollingCost)} />
-              <InfoBox label="Route Cost" value={money(routeCost)} />
-              <InfoBox label="Indicative Surplus" value={money(routeSurplus)} gold />
-            </div>
-          </Card>
-        </section>
-
-        <Card label="Readiness Analytics" title="Gate readiness breakdown">
-          <div className="mt-5 space-y-4">
-            {readinessRows.map((item) => (
-              <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                      {item.label}
-                    </p>
-                    <h3 className="mt-2 text-xl font-black">{item.value}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">{item.note}</p>
-                  </div>
-                  <Badge state={item.state} />
-                </div>
-              </div>
-            ))}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+              Main Blockers
+            </p>
+            <p className="mt-2 text-2xl font-black text-white">
+              {openTotal} open item(s)
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Documents, approvals, counterparty verification, route readiness and margin control are read together.
+            </p>
           </div>
-        </Card>
 
-        <section className="grid gap-6 xl:grid-cols-2">
-          <Card label="Control Interpretation" title="What the analytics mean">
-            <div className="mt-5 space-y-4">
-              <InfoBox
-                label="Current Position"
-                value="Commercially visible, not release ready"
-                note="The main blockers remain document completion, approval clearance and plant readiness."
-              />
-              <InfoBox
-                label="Finance Signal"
-                value="Supabase-based economics"
-                note="Current Live v1 margin is read from Supabase parcel economics fields."
-              />
-              <InfoBox
-                label="Next Practical Action"
-                value="Clear release blockers"
-                note="Prioritise supplier source evidence, wash plant tolling quote, buyer offtake pack, transport confirmation and finance handoff approval."
-              />
-            </div>
-          </Card>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+              Next Practical Action
+            </p>
+            <p className="mt-2 text-2xl font-black text-white">
+              Clear release blockers
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Prioritise supplier evidence, plant tolling support, transport confirmation, buyer support and finance approval.
+            </p>
+          </div>
+        </div>
+      </Card>
 
-          <Card label="Operator" title={profile?.full_name ?? "Operator"}>
-            <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Company
-              </p>
-              <p className="mt-2 text-xl font-black">
-                {profile?.company_name ?? "Shobane African Resources"}
-              </p>
-              <p className="mt-3 text-sm leading-6 text-slate-400">
-                The analytics page now reads parcel economics from Supabase.
-              </p>
-            </div>
-          </Card>
-        </section>
-      </div>
-    </main>
+      <Card label="Control Note" title="Analytics is advisory until release rules are enforced">
+        <p className="mt-3 text-sm leading-7 text-slate-300">
+          This page currently reads live Supabase records and interprets readiness. The next production phase will enforce release-gate rules, approval authority, audit events and exception controls.
+        </p>
+      </Card>
+    </ResourceShell>
   );
-  }
+                     }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
+import { stageLabel, stateLabel } from "../../lib/displayLabels";
 
 const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
 
@@ -64,13 +65,6 @@ function pct(value: number | null | undefined) {
 function tons(value: number | null | undefined) {
   const n = Number(value || 0);
   return n.toFixed(3);
-}
-
-function stateText(value: string | null | undefined) {
-  if (!value) return "Blocked";
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function Card({
@@ -140,7 +134,7 @@ function GateItem({
         {label}
       </p>
       <span className="mt-3 inline-flex rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200">
-        {stateText(value)}
+        {stateLabel(value)}
       </span>
     </div>
   );
@@ -204,8 +198,16 @@ export default function RouteBuilderPage() {
         <Stat label="Parcel" value={code} />
         <Stat label="Resource" value={parcel?.resource_type || "Chrome"} gold />
         <Stat label="Material" value={parcel?.material_type || "ROM"} />
-        <Stat label="Route State" value={stateText(gate?.release_state)} />
+        <Stat label="Route State" value={stateLabel(gate?.release_state)} />
       </section>
+
+      <Card label="Route Identity" title="Commodity and material basis">
+        <div className="space-y-4">
+          <Stat label="Commodity Class" value={parcel?.commodity_class || "Hard Commodities"} />
+          <Stat label="Category" value={parcel?.resource_category || "Ferrous Metals"} />
+          <Stat label="Material Stage" value={stageLabel(parcel?.material_stage)} />
+        </div>
+      </Card>
 
       <Card label="Route Chain" title="Supplier to plant to buyer">
         <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
@@ -221,7 +223,7 @@ export default function RouteBuilderPage() {
               </p>
             </div>
             <span className="rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200">
-              {stateText(gate?.routes_state)}
+              {stateLabel(gate?.routes_state)}
             </span>
           </div>
 
@@ -232,7 +234,10 @@ export default function RouteBuilderPage() {
             <Stat label="Transporter" value={parcel?.transporter_name || "Not captured"} />
             <Stat
               label="Route Note"
-              value={parcel?.route_note || "Seed route chain for first live parcel. Plant and document gates still blocked."}
+              value={
+                parcel?.route_note ||
+                "Seed route chain for first live parcel. Plant and document gates still blocked."
+              }
             />
           </div>
         </div>
@@ -244,10 +249,7 @@ export default function RouteBuilderPage() {
           <Stat label="Open Blockers" value={gate?.open_blockers ?? 0} />
           <Stat label="Hard Blockers" value={gate?.hard_blockers ?? 0} />
           <Stat label="Pending Blockers" value={gate?.pending_blockers ?? 0} />
-          <Stat
-            label="Margin Blocker"
-            value={gate?.margin_blocker ? "Yes" : "No"}
-          />
+          <Stat label="Margin Blocker" value={gate?.margin_blocker ? "Yes" : "No"} />
 
           <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
             <p className="text-xs font-black uppercase tracking-[0.25em] text-red-200">
@@ -257,9 +259,8 @@ export default function RouteBuilderPage() {
               {releaseDecision}
             </p>
             <p className="mt-3 text-sm leading-7 text-red-100/80">
-              Route Builder reads the same central release decision as
-              Dashboard, Analytics, Finance and Operations. No separate
-              page-level route release logic is used.
+              Route Builder reads the same central release decision as Dashboard,
+              Analytics, Finance and Operations.
             </p>
           </div>
         </div>

@@ -21,8 +21,12 @@ import {
   LivePreview,
   economicsCalc,
 } from "../../../components/EconomicsEditTools";
+import {
+  parcelCodeNote,
+  workingParcelCode,
+} from "../../../lib/parcelCode";
 
-const PARCEL_CODE = "PAR-CHR-2026-0001";
+const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
 
 export default function EditEconomicsPage() {
   const supabase = createClient();
@@ -31,7 +35,7 @@ export default function EditEconomicsPage() {
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [parcelId, setParcelId] = useState("");
-  const [parcelCode, setParcelCode] = useState(PARCEL_CODE);
+  const [savedParcelCode, setSavedParcelCode] = useState(SEED_PARCEL_CODE);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
@@ -80,7 +84,7 @@ export default function EditEconomicsPage() {
       const { data: parcel, error: parcelError } = await supabase
         .from("parcels")
         .select("*")
-        .eq("parcel_code", PARCEL_CODE)
+        .eq("parcel_code", SEED_PARCEL_CODE)
         .single();
 
       if (parcelError || !parcel) {
@@ -91,7 +95,8 @@ export default function EditEconomicsPage() {
 
       const category = parcel.resource_category || "Ferrous Metals";
       const commodityClass = commodityClassForGroup(category);
-      const resources = RESOURCE_MAP[category] || RESOURCE_MAP["Ferrous Metals"];
+      const resources =
+        RESOURCE_MAP[category] || RESOURCE_MAP["Ferrous Metals"];
 
       const resource =
         parcel.resource_type && resources.includes(parcel.resource_type)
@@ -117,7 +122,7 @@ export default function EditEconomicsPage() {
 
       setIsAdmin(profile.role === "admin");
       setParcelId(parcel.id);
-      setParcelCode(parcel.parcel_code || PARCEL_CODE);
+      setSavedParcelCode(parcel.parcel_code || SEED_PARCEL_CODE);
 
       setForm({
         commodityClass,
@@ -258,6 +263,7 @@ export default function EditEconomicsPage() {
     setError("");
 
     const c = economicsCalc(form);
+    const workingCode = workingParcelCode(form.resource);
 
     const payload = {
       resource_category: form.category,
@@ -287,6 +293,8 @@ export default function EditEconomicsPage() {
       estimated_route_surplus: c.surplus,
       estimated_route_margin_percent: c.margin,
       economics_basis: [
+        `Working parcel code: ${workingCode}.`,
+        `Saved seed parcel code: ${savedParcelCode}.`,
         `Commodity class: ${form.commodityClass}.`,
         `Commodity group: ${form.category}.`,
         `Material stage: ${form.stage}.`,
@@ -342,13 +350,18 @@ export default function EditEconomicsPage() {
 
   const resourceOptions = RESOURCE_MAP[form.category] || ["Other"];
   const materialOptions = materialOptionsFor(form.resource);
+  const displayedParcelCode = workingParcelCode(form.resource);
+  const displayedParcelNote = parcelCodeNote(
+    savedParcelCode,
+    displayedParcelCode
+  );
 
   return (
     <ResourceShell
       title="Edit Lead Economics"
-      subtitle="Editable economics with hard/soft commodity taxonomy, material-stage logic and negotiated price override."
+      subtitle="Editable economics with hard/soft commodity taxonomy, material-stage logic, negotiated price override and commodity-specific working parcel code."
     >
-      <HeaderStats parcelCode={parcelCode} form={form} />
+      <HeaderStats parcelCode={displayedParcelCode} form={form} />
 
       <section className="grid gap-6 xl:grid-cols-2">
         <InputControls
@@ -367,11 +380,35 @@ export default function EditEconomicsPage() {
       </section>
 
       <Card
+        label="Parcel Code Control"
+        title="Commodity-specific working parcel code"
+      >
+        <div className="mt-4 rounded-2xl border border-[#d7ad32]/30 bg-[#d7ad32]/10 p-4">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#f5d778]">
+            Displayed Working Code
+          </p>
+          <p className="mt-2 text-3xl font-black">
+            {displayedParcelCode}
+          </p>
+          <p className="mt-3 text-sm leading-7 text-slate-300">
+            {displayedParcelNote}
+          </p>
+        </div>
+
+        <p className="mt-4 text-sm leading-7 text-slate-300">
+          This page now displays a commodity-specific working parcel code based
+          on the selected resource. The database record is not renamed yet, so
+          the live seed parcel remains safe until the Supabase parcel-code
+          engine is added.
+        </p>
+      </Card>
+
+      <Card
         label="Control Note"
         title="Commodity taxonomy and product wording locked"
       >
         <p className="mt-3 text-sm leading-7 text-slate-300">
-          The economics engine now starts with Hard Commodities and Soft
+          The economics engine starts with Hard Commodities and Soft
           Commodities, then narrows into commodity group, commodity/resource,
           material/product type and material stage. Raw materials use yield
           recovery. Saleable and finished products use 100% route basis.
@@ -381,4 +418,4 @@ export default function EditEconomicsPage() {
       </Card>
     </ResourceShell>
   );
-        }
+    }

@@ -1,181 +1,86 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "../lib/supabase/client";
+import { usePathname } from "next/navigation";
 
-const nav = [
-  { label: "Dashboard", href: "/dashboard", live: true },
-  { label: "Opportunities", href: "/economics", live: true },
-  { label: "Counterparties", href: "/counterparties", live: true },
-  { label: "Route Builder", href: "/route-builder", live: true },
-  { label: "Operations", href: "/operations", live: true },
-  { label: "Tolling & Plants", href: "/dashboard#plants", live: false },
-  { label: "Documents", href: "/documents", live: true },
-  { label: "Approvals", href: "/approvals", live: true },
-  { label: "Finance", href: "/finance", live: true },
-  { label: "Analytics", href: "/analytics", live: true },
-  { label: "Admin", href: "/admin", live: true },
-];
+type ResourceShellProps = {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+};
 
-const mobileNav = [
+const navItems = [
   { label: "Dash", href: "/dashboard" },
-  { label: "Leads", href: "/economics" },
+  { label: "Leads", href: "/leads" },
   { label: "Route", href: "/route-builder" },
   { label: "Ops", href: "/operations" },
   { label: "More", href: "/more" },
+  { label: "Out", href: "/logout" },
 ];
 
-const morePages = [
-  "/more",
-  "/finance",
-  "/analytics",
-  "/documents",
-  "/approvals",
-  "/counterparties",
-  "/admin",
-];
-
-function cleanPath(pathname: string) {
-  if (pathname === "/") return "/dashboard";
-  return pathname;
-}
-
-function isActive(pathname: string, href: string, live: boolean) {
-  if (!live) return false;
-
-  const path = cleanPath(pathname);
-  const base = href.split("#")[0];
-
-  return path === base || path.startsWith(`${base}/`);
-}
-
-function isMobileActive(pathname: string, href: string) {
-  const path = cleanPath(pathname);
-  const base = href.split("#")[0];
-
-  if (base === "/more") {
-    return morePages.some((p) => path === p || path.startsWith(`${p}/`));
+function isActive(pathname: string, href: string) {
+  if (href === "/dashboard") {
+    return pathname === "/" || pathname === "/dashboard";
   }
 
-  return path === base || path.startsWith(`${base}/`);
+  if (href === "/leads") {
+    return pathname === "/leads";
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export default function ResourceShell({
   title,
   subtitle,
   children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) {
+}: ResourceShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const supabase = createClient();
-
-  async function signOut() {
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
-  }
 
   return (
-    <div className="min-h-screen bg-[#050914] text-white">
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 overflow-y-auto border-r border-white/10 bg-[#050914] p-5 md:block">
-        <div className="rounded-3xl border border-white/10 bg-[#080d18] p-5">
-          <p className="text-xs font-black uppercase tracking-[0.35em] text-[#d7ad32]">
-            SAR ResourceOS
-          </p>
-          <h1 className="mt-3 text-xl font-black">Control Room</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-            Sourcing, economics, route control and release readiness.
-          </p>
-        </div>
-
-        <nav className="mt-5 space-y-2">
-          {nav.map((item) => {
-            const active = isActive(pathname, item.href, item.live);
+    <main className="min-h-screen bg-[#050914] text-white">
+      <div className="sticky top-0 z-50 border-b border-slate-800 bg-[#050914]/95 px-4 py-4 backdrop-blur">
+        <nav className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto rounded-full border border-slate-800 bg-slate-950/60 p-2">
+          {navItems.map((item) => {
+            const active = isActive(pathname, item.href);
+            const isOut = item.label === "Out";
 
             return (
               <Link
-                key={item.label}
+                key={item.href}
                 href={item.href}
-                className={[
-                  "block rounded-2xl border px-4 py-3 text-sm font-black transition",
+                className={
                   active
-                    ? "border-[#d7ad32] bg-[#d7ad32] text-[#07101c]"
-                    : item.live
-                    ? "border-white/10 bg-white/[0.03] text-slate-300 hover:border-[#d7ad32]/50 hover:text-white"
-                    : "border-white/5 bg-white/[0.02] text-slate-600",
-                ].join(" ")}
-              >
-                <span>{item.label}</span>
-                {!item.live ? (
-                  <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-slate-600">
-                    later
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <button
-          onClick={signOut}
-          className="mt-5 w-full rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-black text-red-100"
-        >
-          Sign out
-        </button>
-      </aside>
-
-      <div className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#050914]/95 px-3 py-3 shadow-2xl backdrop-blur-xl md:hidden">
-        <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto rounded-full border border-white/10 bg-[#080d18] p-2">
-          {mobileNav.map((item) => {
-            const active = isMobileActive(pathname, item.href);
-
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={[
-                  "shrink-0 rounded-full border px-5 py-3 text-sm font-black",
-                  active
-                    ? "border-[#d7ad32] bg-[#d7ad32] text-[#07101c]"
-                    : "border-white/10 bg-white/[0.03] text-slate-200",
-                ].join(" ")}
+                    ? "shrink-0 rounded-full bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
+                    : isOut
+                    ? "shrink-0 rounded-full border border-red-400/30 bg-red-500/10 px-5 py-3 text-sm font-black text-red-100"
+                    : "shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-5 py-3 text-sm font-black text-slate-200"
+                }
               >
                 {item.label}
               </Link>
             );
           })}
-
-          <button
-            onClick={signOut}
-            className="shrink-0 rounded-full border border-red-400/30 bg-red-500/10 px-5 py-3 text-sm font-black text-red-100"
-          >
-            Out
-          </button>
-        </div>
+        </nav>
       </div>
 
-      <main className="px-4 pb-28 pt-28 md:pl-80 md:pr-6 md:pt-6">
-        <div className="mx-auto max-w-7xl">
-          <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-            <p className="text-xs font-black uppercase tracking-[0.35em] text-[#d7ad32]">
-              SAR ResourceOS
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5 shadow-2xl">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+            SAR ResourceOS
+          </p>
+          <h1 className="mt-3 text-3xl font-black leading-tight text-white">
+            {title}
+          </h1>
+          {subtitle ? (
+            <p className="mt-4 text-base leading-7 text-slate-400">
+              {subtitle}
             </p>
-            <h2 className="mt-2 text-3xl font-black">{title}</h2>
-            {subtitle ? (
-              <p className="mt-3 text-sm leading-7 text-slate-400">
-                {subtitle}
-              </p>
-            ) : null}
-          </section>
+          ) : null}
+        </section>
 
-          {children}
-        </div>
-      </main>
-    </div>
+        {children}
+      </div>
+    </main>
   );
-  }
+    }

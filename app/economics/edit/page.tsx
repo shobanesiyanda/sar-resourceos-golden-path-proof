@@ -110,15 +110,8 @@ export default function EditEconomicsPage() {
         return;
       }
 
-      const category = asString(
-        parcel.resource_category,
-        "Ferrous Metals"
-      );
-
-      const commodityClass = safeCommodityClass(
-        parcel.commodity_class,
-        category
-      );
+      const category = asString(parcel.resource_category, "Ferrous Metals");
+      const commodityClass = safeCommodityClass(parcel.commodity_class, category);
 
       const resources =
         RESOURCE_MAP[category] || RESOURCE_MAP["Ferrous Metals"];
@@ -166,9 +159,7 @@ export default function EditEconomicsPage() {
       setIsAdmin(profile.role === "admin");
       setParcelId(parcel.id);
       setSavedParcelCode(parcel.parcel_code || SEED_PARCEL_CODE);
-      setStoredWorkingParcelCode(
-        asString(parcel.working_parcel_code, "")
-      );
+      setStoredWorkingParcelCode(asString(parcel.working_parcel_code, ""));
 
       setForm({
         commodityClass,
@@ -329,6 +320,7 @@ export default function EditEconomicsPage() {
       commodity_class: form.commodityClass,
       material_stage: form.stage,
       working_parcel_code: workingCode,
+
       market_reference_price_per_ton: Number(form.marketPrice || 0),
       negotiated_price_per_ton: Number(form.negotiatedPrice || 0),
       effective_price_per_ton: c.effectivePrice,
@@ -339,28 +331,34 @@ export default function EditEconomicsPage() {
       resource_type: form.resource,
       material_type: form.material,
       commodity: form.resource,
+
       feedstock_tons: c.feedTons,
       expected_yield_percent: c.y,
       expected_concentrate_tons: c.target,
       accepted_tons: c.target,
       expected_price_per_ton: c.effectivePrice,
-      indicative_revenue: c.revenue,
+
       feedstock_cost_per_ton: c.feedRate,
       transport_to_plant_cost_per_ton: c.transRate,
       tolling_cost_per_ton: c.tollRate,
+
       estimated_feedstock_cost: c.feedCost,
       estimated_transport_cost: c.transCost,
       estimated_tolling_cost: c.tollCost,
+
       feedstock_assay_cost_per_batch: c.feedAssayRate,
       feedstock_assay_batches: c.feedAssayBatches,
       estimated_feedstock_assay_cost: c.feedAssayCost,
+
       concentrate_assay_cost_per_batch: c.prodAssayRate,
       concentrate_assay_batches: c.prodAssayBatches,
       estimated_concentrate_assay_cost: c.prodAssayCost,
+
       estimated_total_assay_cost: c.assayCost,
       estimated_route_cost: c.routeCost,
       estimated_route_surplus: c.surplus,
       estimated_route_margin_percent: c.margin,
+
       economics_basis: [
         `Working parcel code: ${workingCode}.`,
         `Saved seed parcel code: ${savedParcelCode}.`,
@@ -500,4 +498,4 @@ export default function EditEconomicsPage() {
       </Card>
     </ResourceShell>
   );
-                 }
+  }

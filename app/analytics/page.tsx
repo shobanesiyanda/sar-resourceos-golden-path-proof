@@ -3,82 +3,58 @@
 import { useEffect, useState } from "react";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
-import { stageLabel, stateLabel } from "../../lib/displayLabels";
 
-const SEED_PARCEL_CODE = "PAR-CHR-2026-0001";
+const SEED_CODE = "PAR-CHR-2026-0001";
 
-type ParcelRow = {
-  id: string;
-  parcel_code: string | null;
-  working_parcel_code: string | null;
-  commodity_class: string | null;
-  resource_category: string | null;
-  resource_type: string | null;
-  material_type: string | null;
-  material_stage: string | null;
-  expected_concentrate_tons: number | null;
-  accepted_tons: number | null;
-  feedstock_tons: number | null;
-  expected_yield_percent: number | null;
-  market_reference_price_per_ton: number | null;
-  negotiated_price_per_ton: number | null;
-  effective_price_per_ton: number | null;
-  expected_price_per_ton: number | null;
-  estimated_route_cost: number | null;
-  estimated_total_assay_cost: number | null;
-  estimated_route_surplus: number | null;
-  estimated_route_margin_percent: number | null;
-  price_basis: string | null;
+type Row = Record<string, unknown>;
+
+type LoadState = {
+  loading: boolean;
+  error: string;
+  row: Row | null;
 };
 
-type GateRow = {
-  parcel_id: string | null;
-  release_state: string | null;
-  release_decision: string | null;
-  readiness_score: number | null;
-  open_blockers: number | null;
-  hard_blockers: number | null;
-  pending_blockers: number | null;
-  documents_required: number | null;
-  documents_complete: number | null;
-  documents_blockers: number | null;
-  documents_state: string | null;
-  approvals_required: number | null;
-  approvals_complete: number | null;
-  approvals_blockers: number | null;
-  approvals_state: string | null;
-  counterparties_required: number | null;
-  counterparties_complete: number | null;
-  counterparties_blockers: number | null;
-  counterparties_state: string | null;
-  routes_required: number | null;
-  routes_complete: number | null;
-  routes_blockers: number | null;
-  routes_state: string | null;
-  margin_state: string | null;
-  margin_blocker: boolean | null;
-  route_margin_percent: number | null;
-};
+function num(value: unknown, fallback = 0) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
 
-function displayParcelCode(parcel: ParcelRow | null) {
-  return parcel?.working_parcel_code || parcel?.parcel_code || SEED_PARCEL_CODE;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
 }
 
-function money(value: number | null | undefined) {
-  const n = Number(value || 0);
-  return `R ${n.toLocaleString("en-ZA", {
+function txt(value: unknown, fallback = "Not captured") {
+  if (typeof value === "string" && value.trim()) return value;
+  return fallback;
+}
+
+function money(value: number) {
+  return `R ${Number(value || 0).toLocaleString("en-ZA", {
     maximumFractionDigits: 0,
   })}`;
 }
 
-function pct(value: number | null | undefined) {
-  const n = Number(value || 0);
-  return `${n.toFixed(1)}%`;
+function moneyTon(value: number) {
+  return `${money(value)}/t`;
 }
 
-function tons(value: number | null | undefined) {
-  const n = Number(value || 0);
-  return n.toFixed(3);
+function marginBand(margin: number) {
+  if (margin >= 25) return "Strong Margin";
+  if (margin >= 18) return "Target Margin";
+  if (margin >= 15) return "Watch / Improve";
+  if (margin > 0) return "Weak Margin";
+  return "Negative Margin";
+}
+
+function materialStageLabel(stage: string) {
+  if (stage === "raw_feedstock") return "Raw Feedstock";
+  if (stage === "intermediate_concentrate") {
+    return "Intermediate / Saleable Product";
+  }
+  if (stage === "finished_product") return "Finished Product";
+  return stage || "Not captured";
 }
 
 function Card({
@@ -88,17 +64,19 @@ function Card({
 }: {
   label: string;
   title: string;
-  children?: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5 shadow-2xl">
-      <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+    <section className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
+      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
         {label}
       </p>
-      <h2 className="mt-3 text-2xl font-black leading-tight text-white">
+
+      <h2 className="mt-2 text-xl font-black leading-tight text-white">
         {title}
       </h2>
-      {children ? <div className="mt-4">{children}</div> : null}
+
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
@@ -108,75 +86,37 @@ function Stat({
   value,
   note,
   gold,
+  danger,
 }: {
   label: string;
-  value: string | number;
+  value: string;
   note?: string;
   gold?: boolean;
+  danger?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
         {label}
       </p>
+
       <p
         className={
-          gold
-            ? "mt-3 text-3xl font-black text-[#f5d778]"
-            : "mt-3 text-3xl font-black text-white"
+          danger
+            ? "mt-2 text-xl font-black text-red-200"
+            : gold
+            ? "mt-2 text-xl font-black text-[#f5d778]"
+            : "mt-2 text-xl font-black text-white"
         }
       >
         {value}
       </p>
+
       {note ? (
-        <p className="mt-2 text-sm leading-6 text-slate-400">{note}</p>
+        <p className="mt-2 text-sm leading-6 text-slate-400">
+          {note}
+        </p>
       ) : null}
-    </div>
-  );
-}
-
-function GateFamily({
-  label,
-  complete,
-  required,
-  blockers,
-  state,
-}: {
-  label: string;
-  complete: number | null | undefined;
-  required: number | null | undefined;
-  blockers: number | null | undefined;
-  state: string | null | undefined;
-}) {
-  const done = Number(complete || 0);
-  const total = Number(required || 0);
-  const pctDone = total > 0 ? Math.min(100, (done / total) * 100) : 0;
-
-  return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
-            {label}
-          </p>
-          <p className="mt-3 text-3xl font-black text-white">
-            {done}/{total}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-            {Number(blockers || 0)} blocker(s).
-          </p>
-        </div>
-        <span className="rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200">
-          {stateLabel(state)}
-        </span>
-      </div>
-
-      <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-800">
-        <div
-          className="h-full rounded-full bg-[#d7ad32]"
-          style={{ width: `${pctDone}%` }}
-        />
-      </div>
     </div>
   );
 }
@@ -184,161 +124,381 @@ function GateFamily({
 export default function AnalyticsPage() {
   const supabase = createClient();
 
-  const [loading, setLoading] = useState(true);
-  const [parcel, setParcel] = useState<ParcelRow | null>(null);
-  const [gate, setGate] = useState<GateRow | null>(null);
+  const [state, setState] = useState<LoadState>({
+    loading: true,
+    error: "",
+    row: null,
+  });
 
   useEffect(() => {
-    async function load() {
-      const { data: parcelData } = await supabase
+    async function loadAnalytics() {
+      setState({
+        loading: true,
+        error: "",
+        row: null,
+      });
+
+      const { data, error } = await supabase
         .from("parcels")
         .select("*")
-        .eq("parcel_code", SEED_PARCEL_CODE)
+        .eq("parcel_code", SEED_CODE)
         .single();
 
-      if (parcelData) {
-        setParcel(parcelData as ParcelRow);
-
-        const { data: gateData } = await supabase
-          .from("release_gate_summary")
-          .select("*")
-          .eq("parcel_id", parcelData.id)
-          .single();
-
-        if (gateData) setGate(gateData as GateRow);
+      if (error) {
+        setState({
+          loading: false,
+          error: error.message,
+          row: null,
+        });
+        return;
       }
 
-      setLoading(false);
+      setState({
+        loading: false,
+        error: "",
+        row: (data || null) as Row | null,
+      });
     }
 
-    load();
+    loadAnalytics();
   }, [supabase]);
 
-  if (loading) {
+  if (state.loading) {
     return (
-      <ResourceShell title="Analytics Control" subtitle="Loading analytics...">
-        <Card label="Loading" title="Reading analytics data..." />
+      <ResourceShell
+        title="Analytics"
+        subtitle="Reading saved parcel analytics."
+      >
+        <Card label="Loading" title="Reading analytics data...">
+          <p className="text-sm leading-6 text-slate-400">
+            Loading margin, price, cost and route decision signals.
+          </p>
+        </Card>
       </ResourceShell>
     );
   }
 
-  const code = displayParcelCode(parcel);
-  const productTons =
-    parcel?.expected_concentrate_tons || parcel?.accepted_tons || 0;
-  const effectivePrice =
-    parcel?.effective_price_per_ton || parcel?.expected_price_per_ton || 0;
-  const revenue = productTons * effectivePrice;
+  if (state.error || !state.row) {
+    return (
+      <ResourceShell
+        title="Analytics"
+        subtitle="Analytics data could not load."
+      >
+        <Card label="Exception" title="Analytics unavailable">
+          <p className="text-sm leading-6 text-red-200">
+            {state.error || "No active parcel record found."}
+          </p>
+        </Card>
+      </ResourceShell>
+    );
+  }
 
-  const margin =
-    gate?.route_margin_percent ?? parcel?.estimated_route_margin_percent ?? 0;
+  const row = state.row;
 
-  const releaseDecision = gate?.release_decision || "Hold / Gates Blocked";
+  const parcelCode = txt(
+    row.working_parcel_code,
+    txt(row.parcel_code, SEED_CODE)
+  );
+
+  const commodityClass = txt(row.commodity_class);
+  const category = txt(row.resource_category);
+  const resource = txt(row.resource_type);
+  const material = txt(row.material_type);
+  const stage = txt(row.material_stage);
+
+  const productQty = num(
+    row.expected_concentrate_tons,
+    num(row.accepted_tons, 0)
+  );
+
+  const routeQty = num(row.feedstock_tons, productQty);
+
+  const marketPrice = num(row.market_reference_price_per_ton, 0);
+  const negotiatedPrice = num(row.negotiated_price_per_ton, 0);
+
+  const effectivePrice = num(
+    row.effective_price_per_ton,
+    negotiatedPrice > 0 ? negotiatedPrice : marketPrice
+  );
+
+  const acquisitionCostPerUnit = num(row.feedstock_cost_per_ton, 0);
+  const logisticsCostPerUnit = num(
+    row.transport_to_plant_cost_per_ton,
+    0
+  );
+  const processingCostPerUnit = num(row.tolling_cost_per_ton, 0);
+  const verificationCost = num(row.estimated_total_assay_cost, 0);
+
+  const revenue = productQty * effectivePrice;
+  const acquisitionTotal = routeQty * acquisitionCostPerUnit;
+  const logisticsTotal = routeQty * logisticsCostPerUnit;
+  const processingTotal = routeQty * processingCostPerUnit;
+
+  const routeCost =
+    acquisitionTotal +
+    logisticsTotal +
+    processingTotal +
+    verificationCost;
+
+  const surplus = revenue - routeCost;
+  const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
+
+  const acquisitionShare =
+    routeCost > 0 ? (acquisitionTotal / routeCost) * 100 : 0;
+  const logisticsShare =
+    routeCost > 0 ? (logisticsTotal / routeCost) * 100 : 0;
+  const processingShare =
+    routeCost > 0 ? (processingTotal / routeCost) * 100 : 0;
+  const verificationShare =
+    routeCost > 0 ? (verificationCost / routeCost) * 100 : 0;
+
+  const costGapTo18 = Math.max(routeCost - revenue * 0.82, 0);
+
+  const targetBuyerPrice =
+    margin >= 18 || productQty <= 0
+      ? effectivePrice
+      : Math.ceil(routeCost / (productQty * 0.82));
+
+  const costReductionUnit =
+    routeQty > 0 ? Math.ceil(costGapTo18 / routeQty) : 0;
+
+  const buyerPriceGap =
+    targetBuyerPrice > effectivePrice
+      ? targetBuyerPrice - effectivePrice
+      : 0;
+
+  const largestCostDriver = [
+    {
+      name: "Acquisition",
+      value: acquisitionTotal,
+      share: acquisitionShare,
+    },
+    {
+      name: "Logistics",
+      value: logisticsTotal,
+      share: logisticsShare,
+    },
+    {
+      name: "Processing",
+      value: processingTotal,
+      share: processingShare,
+    },
+    {
+      name: "Verification",
+      value: verificationCost,
+      share: verificationShare,
+    },
+  ].sort((a, b) => b.value - a.value)[0];
+
+  const priceSource =
+    negotiatedPrice > 0
+      ? "Negotiated buyer price"
+      : marketPrice > 0
+      ? "Market / reference price"
+      : "No price captured";
+
+  const marginDanger = margin <= 0;
+  const marginGood = margin >= 18;
 
   return (
     <ResourceShell
-      title="Analytics Control"
-      subtitle="Read-only cockpit powered by the central release gate summary and working parcel code."
+      title="Analytics"
+      subtitle="Decision analytics reading the saved parcel economics."
     >
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <Stat label="Readiness Score" value={pct(gate?.readiness_score)} />
-        <Stat label="Open Blockers" value={gate?.open_blockers ?? 0} />
-        <Stat label="Hard Blockers" value={gate?.hard_blockers ?? 0} />
-        <Stat label="Pending Blockers" value={gate?.pending_blockers ?? 0} />
-        <Stat label="Release State" value={stateLabel(gate?.release_state)} />
+      <section className="grid gap-3">
+        <Stat label="Parcel" value={parcelCode} gold />
+        <Stat label="Class" value={commodityClass} />
+        <Stat label="Category" value={category} />
+        <Stat label="Resource" value={resource} />
+        <Stat label="Material" value={material} />
+        <Stat label="Stage" value={materialStageLabel(stage)} />
       </section>
 
-      <Card label="Commercial Analytics" title="Revenue and tonnage signal">
-        <div className="space-y-4">
-          <Stat label="Parcel" value={code} />
+      <Card label="Decision Signal" title={marginBand(margin)}>
+        <div className="grid gap-3">
           <Stat
-            label="Class"
-            value={parcel?.commodity_class || "Hard Commodities"}
+            label="Margin Band"
+            value={marginBand(margin)}
+            gold={marginGood}
+            danger={marginDanger}
           />
-          <Stat
-            label="Resource"
-            value={parcel?.resource_type || "Chrome"}
-            gold
-          />
-          <Stat
-            label="Category"
-            value={parcel?.resource_category || "Ferrous Metals"}
-          />
-          <Stat label="Material" value={parcel?.material_type || "ROM"} />
-          <Stat
-            label="Stage"
-            value={stageLabel(parcel?.material_stage)}
-          />
-          <Stat label="Product Quantity" value={tons(productTons)} />
-          <Stat label="Route Quantity" value={tons(parcel?.feedstock_tons)} gold />
-          <Stat label="Effective Price" value={`${money(effectivePrice)}/t`} />
-          <Stat label="Revenue" value={money(revenue)} gold />
-        </div>
-      </Card>
 
-      <Card label="Exposure Analytics" title="Supabase parcel economics">
-        <div className="space-y-4">
-          <Stat label="Route Cost" value={money(parcel?.estimated_route_cost)} />
           <Stat
-            label="Verification / Quality Cost"
-            value={money(parcel?.estimated_total_assay_cost)}
+            label="Route Margin"
+            value={`${margin.toFixed(1)}%`}
+            gold={marginGood}
+            danger={marginDanger}
           />
+
           <Stat
             label="Surplus"
-            value={money(parcel?.estimated_route_surplus)}
-            gold
+            value={money(surplus)}
+            gold={surplus > 0}
+            danger={surplus <= 0}
           />
-          <Stat label="Margin" value={pct(margin)} gold />
-          <Stat label="Margin State" value={gate?.margin_state || "Not captured"} />
-          <Stat label="Price Basis" value={parcel?.price_basis || "Not captured"} />
-        </div>
 
-        <div className="mt-5 rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-red-200">
-            Central Interpretation
-          </p>
-          <p className="mt-3 text-2xl font-black text-red-100">
-            {releaseDecision}
-          </p>
-          <p className="mt-3 text-sm leading-7 text-red-100/80">
-            Analytics reads the same release decision as Dashboard, Finance,
-            Route Builder and Operations. No separate page-level decision logic
-            is used here.
-          </p>
+          <Stat
+            label="Decision Flag"
+            value={
+              margin >= 18
+                ? "Route can proceed to readiness review"
+                : "Improve before release"
+            }
+            gold={margin >= 18}
+            danger={margin < 15}
+          />
         </div>
       </Card>
 
-      <Card label="Gate Analytics" title="Readiness by control family">
-        <div className="space-y-4">
-          <GateFamily
-            label="Documents"
-            complete={gate?.documents_complete}
-            required={gate?.documents_required}
-            blockers={gate?.documents_blockers}
-            state={gate?.documents_state}
+      <Card label="Price Analytics" title="Price basis and buyer gap">
+        <div className="grid gap-3">
+          <Stat label="Price Source" value={priceSource} />
+
+          <Stat
+            label="Market / Reference Price"
+            value={moneyTon(marketPrice)}
           />
-          <GateFamily
-            label="Approvals"
-            complete={gate?.approvals_complete}
-            required={gate?.approvals_required}
-            blockers={gate?.approvals_blockers}
-            state={gate?.approvals_state}
+
+          <Stat
+            label="Negotiated Buyer Price"
+            value={moneyTon(negotiatedPrice)}
           />
-          <GateFamily
-            label="Counterparties"
-            complete={gate?.counterparties_complete}
-            required={gate?.counterparties_required}
-            blockers={gate?.counterparties_blockers}
-            state={gate?.counterparties_state}
+
+          <Stat
+            label="Effective Selling Price"
+            value={moneyTon(effectivePrice)}
+            gold
           />
-          <GateFamily
-            label="Routes"
-            complete={gate?.routes_complete}
-            required={gate?.routes_required}
-            blockers={gate?.routes_blockers}
-            state={gate?.routes_state}
+
+          <Stat
+            label="Target Buyer Price"
+            value={moneyTon(targetBuyerPrice)}
+            note="Indicative price required to move toward an 18% gross margin."
+            gold
+          />
+
+          <Stat
+            label="Buyer Price Gap"
+            value={moneyTon(buyerPriceGap)}
+            note="Additional buyer price needed if margin is below target."
+            danger={buyerPriceGap > 0}
+          />
+        </div>
+      </Card>
+
+      <Card label="Cost Drivers" title="Route cost analysis">
+        <div className="grid gap-3">
+          <Stat
+            label="Largest Cost Driver"
+            value={largestCostDriver.name}
+            note={`${money(largestCostDriver.value)} / ${largestCostDriver.share.toFixed(1)}% of route cost`}
+            gold
+          />
+
+          <Stat
+            label="Acquisition Share"
+            value={`${acquisitionShare.toFixed(1)}%`}
+            note={money(acquisitionTotal)}
+          />
+
+          <Stat
+            label="Logistics Share"
+            value={`${logisticsShare.toFixed(1)}%`}
+            note={money(logisticsTotal)}
+          />
+
+          <Stat
+            label="Processing Share"
+            value={`${processingShare.toFixed(1)}%`}
+            note={money(processingTotal)}
+          />
+
+          <Stat
+            label="Verification Share"
+            value={`${verificationShare.toFixed(1)}%`}
+            note={money(verificationCost)}
+          />
+        </div>
+      </Card>
+
+      <Card label="Improvement Targets" title="Commercial recommendations">
+        <div className="grid gap-3">
+          <Stat
+            label="Cost Reduction Needed"
+            value={money(costGapTo18)}
+            note="Estimated total cost reduction required to reach approximately 18% margin."
+            danger={costGapTo18 > 0}
+          />
+
+          <Stat
+            label="Cost Reduction / Route Unit"
+            value={moneyTon(costReductionUnit)}
+            note="Indicative saving needed per route unit."
+          />
+
+          <Stat
+            label="Price Action"
+            value={
+              buyerPriceGap > 0
+                ? "Push buyer price upward"
+                : "Buyer price acceptable"
+            }
+            note={
+              buyerPriceGap > 0
+                ? `Target increase: ${moneyTon(buyerPriceGap)}`
+                : "No immediate buyer price increase required by current model."
+            }
+            gold={buyerPriceGap <= 0}
+            danger={buyerPriceGap > 0}
+          />
+
+          <Stat
+            label="Cost Action"
+            value={
+              costGapTo18 > 0
+                ? "Reduce route costs"
+                : "Route cost acceptable"
+            }
+            note="Review acquisition, logistics, processing and verification charges."
+            gold={costGapTo18 <= 0}
+            danger={costGapTo18 > 0}
+          />
+        </div>
+      </Card>
+
+      <Card label="Exposure Summary" title="Commercial exposure">
+        <div className="grid gap-3">
+          <Stat
+            label="Product Quantity"
+            value={`${productQty.toFixed(3)} units`}
+          />
+
+          <Stat
+            label="Route Quantity"
+            value={`${routeQty.toFixed(3)} units`}
+          />
+
+          <Stat
+            label="Revenue"
+            value={money(revenue)}
+            gold
+          />
+
+          <Stat
+            label="Route Cost"
+            value={money(routeCost)}
+          />
+
+          <Stat
+            label="Cost / Product Unit"
+            value={
+              productQty > 0
+                ? moneyTon(routeCost / productQty)
+                : moneyTon(0)
+            }
           />
         </div>
       </Card>
     </ResourceShell>
   );
-  }
+}

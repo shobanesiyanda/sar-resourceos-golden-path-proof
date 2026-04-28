@@ -6,7 +6,7 @@ import { createClient } from "../../lib/supabase/client";
 
 type Mode = "password" | "magic";
 
-function Pill({
+function NavPill({
   label,
   active,
 }: {
@@ -17,8 +17,8 @@ function Pill({
     <div
       className={
         active
-          ? "shrink-0 rounded-full bg-[#d7ad32] px-8 py-4 text-lg font-black text-[#07101c]"
-          : "shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-8 py-4 text-lg font-black text-slate-200"
+          ? "shrink-0 rounded-full bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
+          : "shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-5 py-3 text-sm font-black text-slate-200"
       }
     >
       {label}
@@ -116,41 +116,41 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-[#050914] text-white">
-      <div className="sticky top-0 z-50 border-b border-slate-800 bg-[#050914]/95 px-4 py-4">
-        <nav className="mx-auto flex max-w-3xl items-center gap-3 overflow-x-auto rounded-full border border-slate-800 bg-slate-950/60 p-2">
-          <div className="shrink-0 px-5 py-4">
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+      <div className="sticky top-0 z-50 border-b border-slate-800 bg-[#050914]/95 px-4 py-3">
+        <nav className="mx-auto flex max-w-3xl items-center gap-2 overflow-x-auto rounded-full border border-slate-800 bg-slate-950/60 p-2">
+          <div className="shrink-0 px-3 py-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
               Access
             </p>
           </div>
 
-          <Pill label="Login" active />
-          <Pill label="Request Access" />
+          <NavPill label="Login" active />
+          <NavPill label="Request Access" />
         </nav>
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 py-8">
-        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+      <div className="mx-auto max-w-3xl px-4 py-6">
+        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5 shadow-xl">
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#d7ad32]">
             SAR ResourceOS
           </p>
 
-          <h1 className="mt-6 text-5xl font-black leading-tight">
+          <h1 className="mt-5 text-3xl font-black leading-tight text-white">
             Secure internal access.
           </h1>
 
-          <p className="mt-6 text-2xl font-black">
+          <p className="mt-4 text-lg font-black text-white">
             Authorised users only.
           </p>
 
-          <div className="mt-8 flex gap-4">
+          <div className="mt-6 flex gap-3">
             <button
               type="button"
               onClick={() => setMode("password")}
               className={
                 mode === "password"
-                  ? "rounded-full bg-[#d7ad32] px-7 py-4 text-lg font-black text-[#07101c]"
-                  : "rounded-full border border-slate-700 px-7 py-4 text-lg font-black text-slate-300"
+                  ? "rounded-full bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
+                  : "rounded-full border border-slate-700 px-5 py-3 text-sm font-black text-slate-300"
               }
             >
               Password
@@ -161,39 +161,39 @@ export default function LoginPage() {
               onClick={() => setMode("magic")}
               className={
                 mode === "magic"
-                  ? "rounded-full bg-[#d7ad32] px-7 py-4 text-lg font-black text-[#07101c]"
-                  : "rounded-full border border-slate-700 px-7 py-4 text-lg font-black text-slate-300"
+                  ? "rounded-full bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
+                  : "rounded-full border border-slate-700 px-5 py-3 text-sm font-black text-slate-300"
               }
             >
               Magic link
             </button>
           </div>
 
-          <div className="mt-8 space-y-6">
+          <div className="mt-6 space-y-5">
             <div>
-              <label className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
+              <label className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
                 Email
               </label>
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
-                className="mt-3 w-full rounded-3xl border border-slate-700 bg-slate-900/70 px-5 py-5 text-2xl font-black text-white outline-none focus:border-[#d7ad32]"
+                className="mt-2 w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-4 text-lg font-black text-white outline-none focus:border-[#d7ad32]"
               />
             </div>
 
             {mode === "password" ? (
               <div>
-                <label className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
+                <label className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
                   Password
                 </label>
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="Password"
-                  className="mt-3 w-full rounded-3xl border border-slate-700 bg-slate-900/70 px-5 py-5 text-2xl font-black text-white outline-none focus:border-[#d7ad32]"
+                  className="mt-2 w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-4 text-lg font-black text-white outline-none focus:border-[#d7ad32]"
                 />
               </div>
             ) : null}
@@ -204,7 +204,7 @@ export default function LoginPage() {
               onClick={
                 mode === "password" ? signInPassword : sendMagicLink
               }
-              className="w-full rounded-full bg-[#d7ad32] px-6 py-5 text-lg font-black text-[#07101c] disabled:opacity-50"
+              className="w-full rounded-full bg-[#d7ad32] px-5 py-4 text-base font-black text-[#07101c] disabled:opacity-50"
             >
               {working
                 ? "Working..."
@@ -214,7 +214,7 @@ export default function LoginPage() {
             </button>
 
             {notice ? (
-              <div className="rounded-3xl border border-emerald-400/30 bg-emerald-500/10 p-5">
+              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4">
                 <p className="text-sm font-black text-emerald-200">
                   {notice}
                 </p>
@@ -222,7 +222,7 @@ export default function LoginPage() {
             ) : null}
 
             {error ? (
-              <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
+              <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4">
                 <p className="text-sm font-black text-red-200">
                   {error}
                 </p>
@@ -230,17 +230,16 @@ export default function LoginPage() {
             ) : null}
           </div>
 
-          <div className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+          <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
               Access Notice
             </p>
-            <p className="mt-3 text-base leading-7 text-slate-400">
-              Login page never shows internal module navigation. Internal
-              controls only appear inside protected system pages.
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Internal module navigation is hidden until login is complete.
             </p>
           </div>
         </section>
       </div>
     </main>
   );
-    }
+  }

@@ -950,18 +950,16 @@ export default function EconomicsEditTools() {
             }
           />
 
-          <NumField
-            label="Expected Yield %"
-            value={form.yieldPct}
-            onChange={(value) =>
-              setForm({ ...form, yieldPct: value })
-            }
-            help={
-              material.stage === "raw_feedstock"
-                ? "Used to calculate feedstock required."
-                : "Saleable product uses 100% basis."
-            }
-          />
+          {material.stage === "raw_feedstock" ? (
+            <NumField
+              label="Expected Yield %"
+              value={form.yieldPct}
+              onChange={(value) =>
+                setForm({ ...form, yieldPct: value })
+              }
+              help="Used to calculate feedstock required from raw material."
+            />
+          ) : null}
 
           <NumField
             label="Market / Reference Price"

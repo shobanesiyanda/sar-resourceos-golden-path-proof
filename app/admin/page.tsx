@@ -1,92 +1,163 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { createClient } from "../../lib/supabase/client";
 import ResourceShell from "../../components/ResourceShell";
+import { createClient } from "../../lib/supabase/client";
 
-type AnyRow = {
-  id?: string;
-  role?: string | null;
-  is_active?: boolean | null;
-  status?: string | null;
-  email?: string | null;
-  full_name?: string | null;
-  name?: string | null;
+const SEED_CODE = "PAR-CHR-2026-0001";
+
+type Row = Record<string, unknown>;
+
+type LoadState = {
+  loading: boolean;
+  error: string;
+  row: Row | null;
 };
 
-type Counts = {
-  profiles: number;
-  activeUsers: number;
-  adminUsers: number;
-  parcels: number;
-  documents: number;
-  approvals: number;
-  counterparties: number;
-  routes: number;
-};
+function num(value: unknown, fallback = 0) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
 
-function Card(p: { label: string; title: string; children?: React.ReactNode }) {
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
+}
+
+function txt(value: unknown, fallback = "Not captured") {
+  if (typeof value === "string" && value.trim()) return value;
+  return fallback;
+}
+
+function money(value: number) {
+  return `R ${Number(value || 0).toLocaleString("en-ZA", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+function stageLabel(stage: string) {
+  if (stage === "raw_feedstock") return "Raw Feedstock";
+  if (stage === "intermediate_concentrate") {
+    return "Intermediate / Saleable Product";
+  }
+  if (stage === "finished_product") return "Finished Product";
+  return stage || "Not captured";
+}
+
+function adminState(
+  hasCommodity: boolean,
+  hasPrice: boolean,
+  hasCost: boolean,
+  margin: number
+) {
+  if (!hasCommodity) return "System Data Incomplete";
+  if (!hasPrice) return "Price Control Missing";
+  if (!hasCost) return "Cost Control Missing";
+  if (margin < 15) return "Commercial Rules Review";
+  return "Admin Control Review Ready";
+}
+
+function Card({
+  label,
+  title,
+  children,
+}: {
+  label: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-      <p className="text-xs font-black uppercase tracking-[0.3em] text-[#d7ad32]">
-        {p.label}
+    <section className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
+      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
+        {label}
       </p>
-      <h3 className="mt-2 text-2xl font-black">{p.title}</h3>
-      {p.children}
+
+      <h2 className="mt-2 text-xl font-black leading-tight text-white">
+        {title}
+      </h2>
+
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
 
-function Stat(p: { label: string; value: string; note?: string; gold?: boolean }) {
+function Stat({
+  label,
+  value,
+  note,
+  gold,
+  danger,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+  gold?: boolean;
+  danger?: boolean;
+}) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-        {p.label}
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+        {label}
       </p>
+
       <p
-        className={`mt-2 text-3xl font-black ${
-          p.gold ? "text-[#f5d778]" : "text-white"
-        }`}
+        className={
+          danger
+            ? "mt-2 text-xl font-black text-red-200"
+            : gold
+            ? "mt-2 text-xl font-black text-[#f5d778]"
+            : "mt-2 text-xl font-black text-white"
+        }
       >
-        {p.value}
+        {value}
       </p>
-      {p.note ? (
-        <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p>
+
+      {note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">
+          {note}
+        </p>
       ) : null}
     </div>
   );
 }
 
-function UserCard({ user, index }: { user: AnyRow; index: number }) {
-  const active = user.is_active === true;
-  const displayName =
-    user.full_name || user.name || user.email || `User ${index + 1}`;
+function ControlItem({
+  title,
+  state,
+  note,
+}: {
+  title: string;
+  state: "Active" | "Needed" | "Future";
+  note: string;
+}) {
+  const active = state === "Active";
+  const needed = state === "Needed";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-            {user.role || "User"}
-          </p>
-          <h4 className="mt-2 text-xl font-black text-white">{displayName}</h4>
-        </div>
+    <div
+      className={
+        active
+          ? "rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4"
+          : needed
+          ? "rounded-2xl border border-red-400/30 bg-red-500/10 p-4"
+          : "rounded-2xl border border-slate-700 bg-slate-900/40 p-4"
+      }
+    >
+      <p
+        className={
+          active
+            ? "text-sm font-black text-emerald-200"
+            : needed
+            ? "text-sm font-black text-red-200"
+            : "text-sm font-black text-slate-200"
+        }
+      >
+        {state} — {title}
+      </p>
 
-        <span
-          className={[
-            "shrink-0 rounded-full border px-3 py-1 text-xs font-black",
-            active
-              ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200"
-              : "border-red-400/40 bg-red-500/15 text-red-200",
-          ].join(" ")}
-        >
-          {active ? "Active" : "Inactive"}
-        </span>
-      </div>
-
-      <p className="mt-3 text-sm leading-6 text-slate-400">
-        {user.email || "Email not captured in profile record."}
+      <p className="mt-2 text-xs leading-5 text-slate-300">
+        {note}
       </p>
     </div>
   );
@@ -95,184 +166,366 @@ function UserCard({ user, index }: { user: AnyRow; index: number }) {
 export default function AdminPage() {
   const supabase = createClient();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [users, setUsers] = useState<AnyRow[]>([]);
-  const [counts, setCounts] = useState<Counts>({
-    profiles: 0,
-    activeUsers: 0,
-    adminUsers: 0,
-    parcels: 0,
-    documents: 0,
-    approvals: 0,
-    counterparties: 0,
-    routes: 0,
+  const [state, setState] = useState<LoadState>({
+    loading: true,
+    error: "",
+    row: null,
   });
 
   useEffect(() => {
-    async function load() {
-      const { data: auth } = await supabase.auth.getUser();
-
-      if (!auth.user) {
-        window.location.href = "/login";
-        return;
-      }
-
-      const { data: myProfile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", auth.user.id)
-        .single();
-
-      if (!myProfile || myProfile.is_active !== true) {
-        setError("Profile not found or inactive.");
-        setLoading(false);
-        return;
-      }
-
-      if (myProfile.role !== "admin") {
-        setError("Admin access required.");
-        setLoading(false);
-        return;
-      }
-
-      const [
-        profilesRes,
-        parcelsRes,
-        documentsRes,
-        approvalsRes,
-        partiesRes,
-        routesRes,
-      ] = await Promise.all([
-        supabase.from("profiles").select("*"),
-        supabase.from("parcels").select("*"),
-        supabase.from("documents").select("*"),
-        supabase.from("approvals").select("*"),
-        supabase.from("counterparties").select("*"),
-        supabase.from("route_chains").select("*"),
-      ]);
-
-      if (profilesRes.error) {
-        setError(profilesRes.error.message);
-        setLoading(false);
-        return;
-      }
-
-      const profileRows = (profilesRes.data as AnyRow[]) || [];
-      const parcelRows = parcelsRes.data || [];
-      const documentRows = documentsRes.data || [];
-      const approvalRows = approvalsRes.data || [];
-      const partyRows = partiesRes.data || [];
-      const routeRows = routesRes.data || [];
-
-      setUsers(profileRows);
-
-      setCounts({
-        profiles: profileRows.length,
-        activeUsers: profileRows.filter((u) => u.is_active === true).length,
-        adminUsers: profileRows.filter((u) => u.role === "admin").length,
-        parcels: parcelRows.length,
-        documents: documentRows.length,
-        approvals: approvalRows.length,
-        counterparties: partyRows.length,
-        routes: routeRows.length,
+    async function loadAdmin() {
+      setState({
+        loading: true,
+        error: "",
+        row: null,
       });
 
-      setLoading(false);
+      const { data, error } = await supabase
+        .from("parcels")
+        .select("*")
+        .eq("parcel_code", SEED_CODE)
+        .single();
+
+      if (error) {
+        setState({
+          loading: false,
+          error: error.message,
+          row: null,
+        });
+        return;
+      }
+
+      setState({
+        loading: false,
+        error: "",
+        row: (data || null) as Row | null,
+      });
     }
 
-    load();
+    loadAdmin();
   }, [supabase]);
 
-  if (loading) {
+  if (state.loading) {
     return (
-      <ResourceShell title="Admin Control" subtitle="Loading admin control...">
-        <Card label="Loading" title="Reading Supabase admin records..." />
-      </ResourceShell>
-    );
-  }
-
-  if (error) {
-    return (
-      <ResourceShell title="Admin Control" subtitle="Admin module error">
-        <Card label="Error" title="Could not load admin">
-          <p className="mt-3 text-red-200">{error}</p>
+      <ResourceShell
+        title="Admin"
+        subtitle="Reading system control context."
+      >
+        <Card label="Loading" title="Reading admin control data...">
+          <p className="text-sm leading-6 text-slate-400">
+            Loading saved parcel, control fields and system readiness.
+          </p>
         </Card>
       </ResourceShell>
     );
   }
 
+  if (state.error || !state.row) {
+    return (
+      <ResourceShell
+        title="Admin"
+        subtitle="Admin control data could not load."
+      >
+        <Card label="Exception" title="Admin control unavailable">
+          <p className="text-sm leading-6 text-red-200">
+            {state.error || "No active parcel record found."}
+          </p>
+        </Card>
+      </ResourceShell>
+    );
+  }
+
+  const row = state.row;
+
+  const parcelCode = txt(
+    row.working_parcel_code,
+    txt(row.parcel_code, SEED_CODE)
+  );
+
+  const commodityClass = txt(row.commodity_class);
+  const category = txt(row.resource_category);
+  const resource = txt(row.resource_type);
+  const material = txt(row.material_type);
+  const stage = txt(row.material_stage);
+
+  const productQty = num(
+    row.expected_concentrate_tons,
+    num(row.accepted_tons, 0)
+  );
+
+  const routeQty = num(row.feedstock_tons, productQty);
+
+  const marketPrice = num(row.market_reference_price_per_ton, 0);
+  const negotiatedPrice = num(row.negotiated_price_per_ton, 0);
+  const effectivePrice = num(
+    row.effective_price_per_ton,
+    negotiatedPrice > 0 ? negotiatedPrice : marketPrice
+  );
+
+  const acquisitionCostPerUnit = num(row.feedstock_cost_per_ton, 0);
+  const logisticsCostPerUnit = num(
+    row.transport_to_plant_cost_per_ton,
+    0
+  );
+  const processingCostPerUnit = num(row.tolling_cost_per_ton, 0);
+  const verificationCost = num(row.estimated_total_assay_cost, 0);
+
+  const revenue = productQty * effectivePrice;
+  const acquisitionTotal = routeQty * acquisitionCostPerUnit;
+  const logisticsTotal = routeQty * logisticsCostPerUnit;
+  const processingTotal = routeQty * processingCostPerUnit;
+
+  const routeCost =
+    acquisitionTotal +
+    logisticsTotal +
+    processingTotal +
+    verificationCost;
+
+  const surplus = revenue - routeCost;
+  const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
+
+  const hasCommodity =
+    resource !== "Not captured" &&
+    material !== "Not captured";
+
+  const hasQuantity = productQty > 0;
+  const hasPrice = effectivePrice > 0;
+  const hasCost = routeCost > 0;
+  const hasPositiveSurplus = surplus > 0;
+  const hasTargetMargin = margin >= 18;
+
+  const currentAdminState = adminState(
+    hasCommodity,
+    hasPrice,
+    hasCost,
+    margin
+  );
+
   return (
     <ResourceShell
-      title="Admin Control"
-      subtitle="Read-only administration overview for users, live modules, route records, documents, approvals and counterparties."
+      title="Admin"
+      subtitle="System administration control view reading the saved parcel."
     >
-      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Users" value={String(counts.profiles)} />
-        <Stat label="Active Users" value={String(counts.activeUsers)} gold />
-        <Stat label="Admins" value={String(counts.adminUsers)} />
-        <Stat label="Parcels" value={String(counts.parcels)} />
+      <section className="grid gap-3">
+        <Stat label="Parcel" value={parcelCode} gold />
+        <Stat label="Class" value={commodityClass} />
+        <Stat label="Category" value={category} />
+        <Stat label="Resource" value={resource} />
+        <Stat label="Material" value={material} />
+        <Stat label="Stage" value={stageLabel(stage)} />
       </section>
 
-      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Documents" value={String(counts.documents)} />
-        <Stat label="Approvals" value={String(counts.approvals)} />
-        <Stat label="Counterparties" value={String(counts.counterparties)} />
-        <Stat label="Route Chains" value={String(counts.routes)} />
-      </section>
+      <Card label="Admin State" title={currentAdminState}>
+        <div className="grid gap-3">
+          <Stat
+            label="Current State"
+            value={currentAdminState}
+            gold={currentAdminState === "Admin Control Review Ready"}
+            danger={currentAdminState !== "Admin Control Review Ready"}
+            note="Admin state checks whether the saved parcel has key system-control fields captured."
+          />
 
-      <Card label="Admin Register" title="User access overview">
-        <div className="mt-5 space-y-4">
-          {users.length > 0 ? (
-            users.map((user, index) => (
-              <UserCard key={user.id || `user-${index}`} user={user} index={index} />
-            ))
-          ) : (
-            <div className="rounded-2xl border border-[#d7ad32]/30 bg-[#d7ad32]/10 p-4">
-              <p className="font-black text-[#f5d778]">No users loaded.</p>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                User records must exist in profiles before role control can work.
-              </p>
-            </div>
-          )}
+          <Stat
+            label="Route Margin"
+            value={`${margin.toFixed(1)}%`}
+            gold={margin >= 18}
+            danger={margin <= 0}
+          />
+
+          <Stat
+            label="Surplus"
+            value={money(surplus)}
+            gold={surplus > 0}
+            danger={surplus <= 0}
+          />
         </div>
       </Card>
 
-      <Card label="Control Rule" title="Admin changes stay controlled">
-        <div className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 p-4">
-          <p className="text-xl font-black text-red-200">
-            Do not expose admin actions casually.
-          </p>
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            Live v1 keeps this page read-only. Role changes, user activation,
-            deletion, approval authority and module permissions must be added only
-            with proper audit events and access controls.
-          </p>
+      <Card label="System Controls" title="Current active controls">
+        <div className="grid gap-3">
+          <ControlItem
+            title="Auth shell"
+            state="Active"
+            note="Logged-out home, login and signed-in mobile shell have been stabilised."
+          />
+
+          <ControlItem
+            title="Single mobile navigation"
+            state="Active"
+            note="Duplicate global navigation has been removed. Internal pages use one mobile nav."
+          />
+
+          <ControlItem
+            title="Economics editor"
+            state="Active"
+            note="Cascading commodity selector, editable economics fields and yield-stage logic are active."
+          />
+
+          <ControlItem
+            title="Saved parcel reading"
+            state="Active"
+            note="Dashboard, Leads, Route and priority pages read the saved parcel context."
+          />
+
+          <ControlItem
+            title="Commodity catalogue"
+            state="Active"
+            note="Expanded hard and soft commodity catalogue is available in the economics editor."
+          />
         </div>
       </Card>
 
-      <Card label="Next Admin Phase" title="Role actions come later">
-        <p className="mt-3 text-sm leading-7 text-slate-300">
-          The next admin phase should add role-permission management, user activation
-          control, audit log visibility, release-authority rules, module access
-          settings and protected admin actions.
-        </p>
+      <Card label="System Gaps" title="Controls still needed">
+        <div className="grid gap-3">
+          <ControlItem
+            title="Role-based access"
+            state="Needed"
+            note="Admin, finance, operations, approver, field-agent and read-only role rules still need enforcement."
+          />
 
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link
-            href="/dashboard"
-            className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
-          >
-            Back to Dashboard
-          </Link>
-          <Link
-            href="/analytics"
-            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
-          >
-            Open Analytics
-          </Link>
+          <ControlItem
+            title="Catalogue database"
+            state="Needed"
+            note="Current commodity catalogue is still code-based. Later it should move into Supabase tables with admin management."
+          />
+
+          <ControlItem
+            title="Audit log"
+            state="Needed"
+            note="Changes to economics, approvals, documents and finance release should write audit events."
+          />
+
+          <ControlItem
+            title="Approval persistence"
+            state="Needed"
+            note="Approval states are currently readiness views. Later they must write approval decision records."
+          />
+
+          <ControlItem
+            title="Document registry"
+            state="Needed"
+            note="Document readiness is currently logic-based. Later it must link to uploaded files and document statuses."
+          />
+
+          <ControlItem
+            title="Counterparty database"
+            state="Needed"
+            note="Counterparty page currently reads route context. Supplier, buyer, transporter and plant records still need tables."
+          />
+        </div>
+      </Card>
+
+      <Card label="Data Integrity" title="Saved parcel controls">
+        <div className="grid gap-3">
+          <Stat
+            label="Commodity Captured"
+            value={hasCommodity ? "Yes" : "No"}
+            gold={hasCommodity}
+            danger={!hasCommodity}
+          />
+
+          <Stat
+            label="Quantity Captured"
+            value={hasQuantity ? "Yes" : "No"}
+            gold={hasQuantity}
+            danger={!hasQuantity}
+          />
+
+          <Stat
+            label="Effective Price Captured"
+            value={hasPrice ? "Yes" : "No"}
+            gold={hasPrice}
+            danger={!hasPrice}
+          />
+
+          <Stat
+            label="Route Cost Captured"
+            value={hasCost ? "Yes" : "No"}
+            gold={hasCost}
+            danger={!hasCost}
+          />
+
+          <Stat
+            label="Positive Surplus"
+            value={hasPositiveSurplus ? "Yes" : "No"}
+            gold={hasPositiveSurplus}
+            danger={!hasPositiveSurplus}
+          />
+
+          <Stat
+            label="Target Margin"
+            value={hasTargetMargin ? "Yes" : "No"}
+            gold={hasTargetMargin}
+            danger={!hasTargetMargin}
+          />
+        </div>
+      </Card>
+
+      <Card label="Admin Values" title="Current controlled parcel">
+        <div className="grid gap-3">
+          <Stat
+            label="Product Quantity"
+            value={`${productQty.toFixed(3)} units`}
+          />
+
+          <Stat
+            label="Route Quantity"
+            value={`${routeQty.toFixed(3)} units`}
+          />
+
+          <Stat
+            label="Market / Reference Price"
+            value={money(marketPrice)}
+          />
+
+          <Stat
+            label="Negotiated Buyer Price"
+            value={money(negotiatedPrice)}
+          />
+
+          <Stat
+            label="Effective Selling Price"
+            value={money(effectivePrice)}
+            gold={effectivePrice > 0}
+            danger={effectivePrice <= 0}
+          />
+
+          <Stat
+            label="Route Cost"
+            value={money(routeCost)}
+            gold={routeCost > 0}
+            danger={routeCost <= 0}
+          />
+        </div>
+      </Card>
+
+      <Card label="Next Admin Build" title="Future admin controls">
+        <div className="grid gap-3">
+          <ControlItem
+            title="Users and roles"
+            state="Future"
+            note="Create a role-control layer for Admin, Finance, Operations, Approver, Field Agent and Viewer."
+          />
+
+          <ControlItem
+            title="Settings"
+            state="Future"
+            note="Move margin thresholds, release gates and document requirements into configurable settings."
+          />
+
+          <ControlItem
+            title="Catalogue manager"
+            state="Future"
+            note="Admin should eventually manage commodity categories, resources, materials and default assumptions."
+          />
+
+          <ControlItem
+            title="Audit events"
+            state="Future"
+            note="Every save, approval, document change and finance release should create an immutable audit record."
+          />
         </div>
       </Card>
     </ResourceShell>
   );
-  }
+}

@@ -3,22 +3,57 @@
 import { useEffect, useState } from "react";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
-import { stageLabel, stateLabel } from "../../lib/displayLabels";
-import { ActiveGate, ActiveParcel, loadActiveParcel } from "../../lib/activeParcel";
 
-function money(value: number | null | undefined) {
-  const n = Number(value || 0);
-  return `R ${n.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`;
+const SEED_CODE = "PAR-CHR-2026-0001";
+
+type ParcelRow = Record<string, unknown>;
+
+type FinanceState = {
+  loading: boolean;
+  error: string;
+  row: ParcelRow | null;
+};
+
+function num(value: unknown, fallback = 0) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
 }
 
-function pct(value: number | null | undefined) {
-  const n = Number(value || 0);
-  return `${n.toFixed(1)}%`;
+function txt(value: unknown, fallback = "Not captured") {
+  if (typeof value === "string" && value.trim()) return value;
+  return fallback;
 }
 
-function tons(value: number | null | undefined) {
-  const n = Number(value || 0);
-  return n.toFixed(3);
+function money(value: number) {
+  return `R ${Number(value || 0).toLocaleString("en-ZA", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+function moneyTon(value: number) {
+  return `${money(value)}/t`;
+}
+
+function marginLabel(margin: number) {
+  if (margin >= 25) return "Strong Route";
+  if (margin >= 18) return "Target Range";
+  if (margin >= 15) return "Decent / Improve";
+  if (margin > 0) return "Below Target";
+  return "Blocked / Negative";
+}
+
+function readinessLabel(margin: number, surplus: number, routeCost: number) {
+  if (routeCost <= 0) return "Costing Incomplete";
+  if (surplus <= 0) return "Finance Blocked";
+  if (margin >= 18) return "Finance Review Ready";
+  if (margin >= 15) return "Improve Before Funding";
+  return "Below Finance Threshold";
 }
 
 function Card({
@@ -28,17 +63,17 @@ function Card({
 }: {
   label: string;
   title: string;
-  children?: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5 shadow-2xl">
-      <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+    <section className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
+      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
         {label}
       </p>
-      <h2 className="mt-3 text-2xl font-black leading-tight text-white">
+      <h2 className="mt-2 text-xl font-black leading-tight text-white">
         {title}
       </h2>
-      {children ? <div className="mt-4">{children}</div> : null}
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
@@ -48,51 +83,37 @@ function Stat({
   value,
   note,
   gold,
+  danger,
 }: {
   label: string;
-  value: string | number;
+  value: string;
   note?: string;
   gold?: boolean;
+  danger?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
         {label}
       </p>
+
       <p
         className={
-          gold
-            ? "mt-3 text-3xl font-black text-[#f5d778]"
-            : "mt-3 text-3xl font-black text-white"
+          danger
+            ? "mt-2 text-xl font-black text-red-200"
+            : gold
+            ? "mt-2 text-xl font-black text-[#f5d778]"
+            : "mt-2 text-xl font-black text-white"
         }
       >
         {value}
       </p>
-      {note ? (
-        <p className="mt-2 text-sm leading-6 text-slate-400">{note}</p>
-      ) : null}
-    </div>
-  );
-}
 
-function GateStat({
-  label,
-  state,
-  note,
-}: {
-  label: string;
-  state: string;
-  note: string;
-}) {
-  return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
-        {label}
-      </p>
-      <span className="mt-3 inline-flex rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200">
-        {state}
-      </span>
-      <p className="mt-3 text-sm leading-6 text-slate-400">{note}</p>
+      {note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">
+          {note}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -100,115 +121,333 @@ function GateStat({
 export default function FinancePage() {
   const supabase = createClient();
 
-  const [loading, setLoading] = useState(true);
-  const [parcel, setParcel] = useState<ActiveParcel | null>(null);
-  const [gate, setGate] = useState<ActiveGate | null>(null);
+  const [state, setState] = useState<FinanceState>({
+    loading: true,
+    error: "",
+    row: null,
+  });
 
   useEffect(() => {
-    async function load() {
-      const result = await loadActiveParcel(supabase);
-      setParcel(result.parcel);
-      setGate(result.gate);
-      setLoading(false);
+    async function loadFinance() {
+      setState({
+        loading: true,
+        error: "",
+        row: null,
+      });
+
+      const { data, error } = await supabase
+        .from("parcels")
+        .select("*")
+        .eq("parcel_code", SEED_CODE)
+        .single();
+
+      if (error) {
+        setState({
+          loading: false,
+          error: error.message,
+          row: null,
+        });
+        return;
+      }
+
+      setState({
+        loading: false,
+        error: "",
+        row: (data || null) as ParcelRow | null,
+      });
     }
 
-    load();
+    loadFinance();
   }, [supabase]);
 
-  if (loading) {
+  if (state.loading) {
     return (
-      <ResourceShell title="Finance Control" subtitle="Loading finance view...">
-        <Card label="Loading" title="Reading finance control data..." />
+      <ResourceShell
+        title="Finance"
+        subtitle="Reading finance control data."
+      >
+        <Card label="Loading" title="Reading saved parcel economics...">
+          <p className="text-sm leading-6 text-slate-400">
+            Loading route cost, revenue, surplus and finance readiness.
+          </p>
+        </Card>
       </ResourceShell>
     );
   }
 
-  if (!parcel || !gate) {
+  if (state.error || !state.row) {
     return (
-      <ResourceShell title="Finance Control" subtitle="No active parcel found.">
-        <Card label="No Data" title="Active parcel could not be loaded." />
+      <ResourceShell
+        title="Finance"
+        subtitle="Finance control could not load."
+      >
+        <Card label="Exception" title="Finance data unavailable">
+          <p className="text-sm leading-6 text-red-200">
+            {state.error || "No active parcel record found."}
+          </p>
+        </Card>
       </ResourceShell>
     );
   }
 
-  const revenue = parcel.productQuantity * parcel.effectivePrice;
-  const margin =
-    gate.routeMarginPercent || parcel.estimatedMarginPercent || 0;
+  const row = state.row;
+
+  const parcelCode = txt(
+    row.working_parcel_code,
+    txt(row.parcel_code, SEED_CODE)
+  );
+
+  const commodityClass = txt(row.commodity_class);
+  const category = txt(row.resource_category);
+  const resource = txt(row.resource_type);
+  const material = txt(row.material_type);
+  const materialStage = txt(row.material_stage);
+
+  const productQty = num(
+    row.expected_concentrate_tons,
+    num(row.accepted_tons, 0)
+  );
+
+  const routeQty = num(row.feedstock_tons, productQty);
+
+  const marketPrice = num(row.market_reference_price_per_ton, 0);
+  const negotiatedPrice = num(row.negotiated_price_per_ton, 0);
+  const effectivePrice = num(
+    row.effective_price_per_ton,
+    negotiatedPrice > 0 ? negotiatedPrice : marketPrice
+  );
+
+  const acquisitionCostPerUnit = num(row.feedstock_cost_per_ton, 0);
+  const logisticsCostPerUnit = num(
+    row.transport_to_plant_cost_per_ton,
+    0
+  );
+  const processingCostPerUnit = num(row.tolling_cost_per_ton, 0);
+  const verificationCost = num(row.estimated_total_assay_cost, 0);
+
+  const revenue = productQty * effectivePrice;
+  const acquisitionTotal = routeQty * acquisitionCostPerUnit;
+  const logisticsTotal = routeQty * logisticsCostPerUnit;
+  const processingTotal = routeQty * processingCostPerUnit;
+
+  const routeCost =
+    acquisitionTotal +
+    logisticsTotal +
+    processingTotal +
+    verificationCost;
+
+  const surplus = revenue - routeCost;
+  const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
+
+  const dailyOperatingCashNeed = routeCost / 5;
+  const threeDayBuffer = dailyOperatingCashNeed * 3;
+  const fourDayBuffer = dailyOperatingCashNeed * 4;
+  const recommendedBuffer = (threeDayBuffer + fourDayBuffer) / 2;
+
+  const financeReadiness = readinessLabel(
+    margin,
+    surplus,
+    routeCost
+  );
+
+  const target18Cost = revenue * 0.82;
+  const costGap = Math.max(routeCost - target18Cost, 0);
+
+  const targetBuyerPrice =
+    margin >= 18 || productQty <= 0
+      ? effectivePrice
+      : Math.ceil(routeCost / (productQty * 0.82));
+
+  const costReductionUnit =
+    routeQty > 0 ? Math.ceil(costGap / routeQty) : 0;
+
+  const blocked = financeReadiness.includes("Blocked");
 
   return (
     <ResourceShell
-      title="Finance Control"
-      subtitle="Read-only exposure, route cost, margin and release-control view using the active working parcel."
+      title="Finance"
+      subtitle="Finance readiness view reading the saved parcel economics."
     >
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Parcel" value={parcel.parcelCode} />
-        <Stat label="Resource" value={parcel.resource} gold />
-        <Stat label="Material" value={parcel.material} />
-        <Stat label="Finance State" value={stateLabel(gate.releaseState)} />
+      <section className="grid gap-3">
+        <Stat label="Parcel" value={parcelCode} gold />
+        <Stat label="Class" value={commodityClass} />
+        <Stat label="Category" value={category} />
+        <Stat label="Resource" value={resource} />
+        <Stat label="Material" value={material} />
+        <Stat label="Stage" value={materialStage} />
       </section>
 
-      <Card label="Finance Exposure" title="Cost and margin breakdown">
-        <div className="space-y-4">
-          <Stat label="Commodity Class" value={parcel.commodityClass} />
-          <Stat label="Category" value={parcel.category} />
-          <Stat label="Material Stage" value={stageLabel(parcel.materialStage)} />
-          <Stat label="Revenue" value={money(revenue)} gold />
-          <Stat label="Product Quantity" value={tons(parcel.productQuantity)} />
-          <Stat label="Effective Price" value={`${money(parcel.effectivePrice)}/t`} />
-          <Stat label="Price Basis" value={parcel.priceBasis} />
-          <Stat label="Feedstock / Acquisition Cost" value={money(parcel.estimatedFeedstockCost)} />
-          <Stat label="Transport / Logistics Cost" value={money(parcel.estimatedTransportCost)} />
-          <Stat label="Tolling / Processing Cost" value={money(parcel.estimatedTollingCost)} />
-          <Stat label="Verification / Quality Cost" value={money(parcel.estimatedAssayCost)} />
-          <Stat label="Route Cost" value={money(parcel.estimatedRouteCost)} />
-          <Stat label="Indicative Surplus" value={money(parcel.estimatedSurplus)} gold />
-          <Stat label="Route Margin" value={pct(margin)} gold />
+      <Card label="Finance Readiness" title={financeReadiness}>
+        <div className="grid gap-3">
+          <Stat
+            label="Decision"
+            value={financeReadiness}
+            gold={!blocked}
+            danger={blocked}
+            note="Readiness is based on route cost, surplus and gross margin."
+          />
+
+          <Stat
+            label="Margin Band"
+            value={marginLabel(margin)}
+            gold={margin >= 18}
+            danger={margin <= 0}
+          />
+
+          <Stat
+            label="Gross Margin"
+            value={`${margin.toFixed(1)}%`}
+            gold={margin >= 18}
+            danger={margin <= 0}
+          />
         </div>
       </Card>
 
-      <Card label="Finance Release Gate" title="Finance follows the release gate engine">
-        <div className="space-y-4">
-          <Stat label="Central Decision" value={gate.releaseDecision} />
-          <Stat label="Open Blockers" value={gate.openBlockers} />
-          <Stat label="Hard Blockers" value={gate.hardBlockers} />
-          <Stat label="Pending Blockers" value={gate.pendingBlockers} />
+      <Card label="Revenue" title="Buyer price and revenue">
+        <div className="grid gap-3">
+          <Stat
+            label="Product Quantity"
+            value={`${productQty.toFixed(3)} units`}
+          />
 
-          <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-red-200">
-              Finance Control Rule
-            </p>
-            <p className="mt-3 text-2xl font-black text-red-100">
-              Do not release finance yet
-            </p>
-            <p className="mt-3 text-sm leading-7 text-red-100/80">
-              Do not release settlement, purchase funding, dispatch funding or
-              transport payment until the central release gate result is clear.
-            </p>
-          </div>
+          <Stat
+            label="Market / Reference Price"
+            value={moneyTon(marketPrice)}
+          />
+
+          <Stat
+            label="Negotiated Buyer Price"
+            value={moneyTon(negotiatedPrice)}
+          />
+
+          <Stat
+            label="Effective Selling Price"
+            value={moneyTon(effectivePrice)}
+            gold
+          />
+
+          <Stat
+            label="Expected Revenue"
+            value={money(revenue)}
+            gold
+          />
         </div>
       </Card>
 
-      <Card label="Readiness Families" title="Hard blocker position">
-        <div className="space-y-4">
-          <GateStat
-            label="Documents"
-            state={stateLabel(gate.documentsState)}
-            note="Document evidence must be complete before finance release."
+      <Card label="Route Cost" title="Cost breakdown">
+        <div className="grid gap-3">
+          <Stat
+            label="Route Quantity"
+            value={`${routeQty.toFixed(3)} units`}
           />
-          <GateStat
-            label="Approvals"
-            state={stateLabel(gate.approvalsState)}
-            note="Approval authority must be cleared before payment action."
+
+          <Stat
+            label="Acquisition Total"
+            value={money(acquisitionTotal)}
+            note={`${moneyTon(acquisitionCostPerUnit)} × ${routeQty.toFixed(3)}`}
           />
-          <GateStat
-            label="Counterparties"
-            state={stateLabel(gate.counterpartiesState)}
-            note="Supplier, buyer, plant and transporter controls must be verified."
+
+          <Stat
+            label="Logistics Total"
+            value={money(logisticsTotal)}
+            note={`${moneyTon(logisticsCostPerUnit)} × ${routeQty.toFixed(3)}`}
           />
-          <GateStat
-            label="Routes"
-            state={stateLabel(gate.routesState)}
-            note="Route chain and movement basis must be confirmed before dispatch."
+
+          <Stat
+            label="Processing / Tolling Total"
+            value={money(processingTotal)}
+            note={`${moneyTon(processingCostPerUnit)} × ${routeQty.toFixed(3)}`}
+          />
+
+          <Stat
+            label="Verification / Quality Cost"
+            value={money(verificationCost)}
+          />
+
+          <Stat
+            label="Total Route Cost"
+            value={money(routeCost)}
+            gold
+          />
+        </div>
+      </Card>
+
+      <Card label="Surplus" title="Commercial result">
+        <div className="grid gap-3">
+          <Stat
+            label="Surplus Before Finance Cost"
+            value={money(surplus)}
+            gold={surplus > 0}
+            danger={surplus <= 0}
+          />
+
+          <Stat
+            label="Route Margin"
+            value={`${margin.toFixed(1)}%`}
+            gold={margin >= 18}
+            danger={margin <= 0}
+          />
+
+          <Stat
+            label="Target Buyer Price"
+            value={moneyTon(targetBuyerPrice)}
+            note="Indicative price needed to move toward an 18% gross margin."
+            gold
+          />
+
+          <Stat
+            label="Cost Reduction Required"
+            value={money(costGap)}
+            note={`Indicative saving required: ${moneyTon(costReductionUnit)} by route unit.`}
+          />
+        </div>
+      </Card>
+
+      <Card label="Working Capital" title="Operating cash buffer">
+        <div className="grid gap-3">
+          <Stat
+            label="Estimated Daily Cash Need"
+            value={money(dailyOperatingCashNeed)}
+            note="Route cost divided by a 5-day operating week."
+          />
+
+          <Stat
+            label="3-Day Buffer"
+            value={money(threeDayBuffer)}
+          />
+
+          <Stat
+            label="4-Day Buffer"
+            value={money(fourDayBuffer)}
+          />
+
+          <Stat
+            label="Recommended Buffer"
+            value={money(recommendedBuffer)}
+            gold
+            note="Midpoint of the 3–4 day operating cash buffer range."
+          />
+        </div>
+      </Card>
+
+      <Card label="Finance Actions" title="Next control actions">
+        <div className="grid gap-3">
+          <Stat
+            label="Action 1"
+            value="Confirm buyer price"
+            note="Check whether negotiated buyer price is supported by PO, contract or written buyer confirmation."
+          />
+
+          <Stat
+            label="Action 2"
+            value="Confirm route costs"
+            note="Validate acquisition, logistics, processing and verification costs before finance release."
+          />
+
+          <Stat
+            label="Action 3"
+            value="Check readiness blockers"
+            note="Do not release funding if supplier, buyer, route, plant, transport or documents are incomplete."
           />
         </div>
       </Card>

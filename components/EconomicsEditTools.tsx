@@ -7,7 +7,11 @@ import { createClient } from "../lib/supabase/client";
 const SEED_CODE = "PAR-CHR-2026-0001";
 
 type CommodityClass = "Hard Commodities" | "Soft Commodities";
-type Stage = "raw_feedstock" | "saleable_product" | "finished_product";
+
+type Stage =
+  | "raw_feedstock"
+  | "saleable_product"
+  | "finished_product";
 
 type Material = {
   name: string;
@@ -44,6 +48,28 @@ type FormState = {
   priceNote: string;
 };
 
+function mat(
+  name: string,
+  stage: Stage,
+  yieldPct: number,
+  price = 0,
+  acquisition = 0,
+  logistics = 0,
+  processing = 0,
+  verification = 0
+): Material {
+  return {
+    name,
+    stage,
+    yieldPct,
+    price,
+    acquisition,
+    logistics,
+    processing,
+    verification,
+  };
+}
+
 const RESOURCES: Resource[] = [
   {
     cls: "Hard Commodities",
@@ -51,46 +77,45 @@ const RESOURCES: Resource[] = [
     resource: "Chrome",
     code: "CHR",
     materials: [
-      {
-        name: "ROM",
-        stage: "raw_feedstock",
-        yieldPct: 40,
-        price: 2550,
-        acquisition: 0,
-        logistics: 180,
-        processing: 350,
-        verification: 3500,
-      },
-      {
-        name: "Tailings",
-        stage: "raw_feedstock",
-        yieldPct: 35,
-        price: 2550,
-        acquisition: 0,
-        logistics: 180,
-        processing: 350,
-        verification: 3500,
-      },
-      {
-        name: "Concentrate 40/42",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 2550,
-        acquisition: 0,
-        logistics: 180,
-        processing: 0,
-        verification: 3500,
-      },
-      {
-        name: "Concentrate 42/44",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 2800,
-        acquisition: 0,
-        logistics: 180,
-        processing: 0,
-        verification: 3500,
-      },
+      mat("ROM", "raw_feedstock", 40, 2550, 0, 180, 350, 3500),
+      mat("Tailings", "raw_feedstock", 35, 2550, 0, 180, 350, 3500),
+      mat("LG Chrome Ore", "raw_feedstock", 45, 2550, 0, 180, 350, 3500),
+      mat("MG Chrome Ore", "raw_feedstock", 50, 2550, 0, 180, 350, 3500),
+      mat("Chrome Concentrate 38/40", "saleable_product", 100, 2300, 0, 180, 0, 3500),
+      mat("Chrome Concentrate 40/42", "saleable_product", 100, 2550, 0, 180, 0, 3500),
+      mat("Chrome Concentrate 42/44", "saleable_product", 100, 2800, 0, 180, 0, 3500),
+      mat("Foundry Chrome Sand", "finished_product", 100, 0, 0, 180, 0, 3500),
+      mat("Metallurgical Chrome", "finished_product", 100, 0, 0, 180, 0, 3500),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Ferrous Metals",
+    resource: "Manganese",
+    code: "MAN",
+    materials: [
+      mat("ROM Manganese", "raw_feedstock", 55, 0, 0, 180, 250, 2500),
+      mat("Manganese Tailings", "raw_feedstock", 35, 0, 0, 180, 250, 2500),
+      mat("Mn Ore 28/30", "saleable_product", 100, 0, 0, 180, 0, 2500),
+      mat("Mn Ore 32/34", "saleable_product", 100, 0, 0, 180, 0, 2500),
+      mat("Mn Ore 36/38", "saleable_product", 100, 0, 0, 180, 0, 2500),
+      mat("Mn Ore 40/42", "saleable_product", 100, 0, 0, 180, 0, 2500),
+      mat("Manganese Lump", "finished_product", 100, 0, 0, 180, 0, 2500),
+      mat("Manganese Fines", "finished_product", 100, 0, 0, 180, 0, 2500),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Ferrous Metals",
+    resource: "Iron Ore",
+    code: "IRO",
+    materials: [
+      mat("ROM Iron Ore", "raw_feedstock", 70, 0, 0, 180, 250, 2500),
+      mat("Iron Ore Fines", "saleable_product", 100, 0, 0, 180, 0, 2500),
+      mat("Iron Ore Lump", "saleable_product", 100, 0, 0, 180, 0, 2500),
+      mat("Iron Ore Concentrate", "saleable_product", 100, 0, 0, 180, 0, 2500),
+      mat("Magnetite", "saleable_product", 100, 0, 0, 180, 0, 2500),
+      mat("Hematite", "saleable_product", 100, 0, 0, 180, 0, 2500),
     ],
   },
   {
@@ -99,46 +124,14 @@ const RESOURCES: Resource[] = [
     resource: "Coal",
     code: "COA",
     materials: [
-      {
-        name: "ROM Coal",
-        stage: "raw_feedstock",
-        yieldPct: 70,
-        price: 0,
-        acquisition: 0,
-        logistics: 180,
-        processing: 0,
-        verification: 1200,
-      },
-      {
-        name: "RB1",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 0,
-        acquisition: 0,
-        logistics: 180,
-        processing: 0,
-        verification: 1200,
-      },
-      {
-        name: "RB2",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 0,
-        acquisition: 0,
-        logistics: 180,
-        processing: 0,
-        verification: 1200,
-      },
-      {
-        name: "RB3",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 0,
-        acquisition: 0,
-        logistics: 180,
-        processing: 0,
-        verification: 1200,
-      },
+      mat("ROM Coal", "raw_feedstock", 70, 0, 0, 180, 0, 1200),
+      mat("RB1", "saleable_product", 100, 0, 0, 180, 0, 1200),
+      mat("RB2", "saleable_product", 100, 0, 0, 180, 0, 1200),
+      mat("RB3", "saleable_product", 100, 0, 0, 180, 0, 1200),
+      mat("Peas", "saleable_product", 100, 0, 0, 180, 0, 1200),
+      mat("Nuts", "saleable_product", 100, 0, 0, 180, 0, 1200),
+      mat("Duff", "saleable_product", 100, 0, 0, 180, 0, 1200),
+      mat("Anthracite", "saleable_product", 100, 0, 0, 180, 0, 1200),
     ],
   },
   {
@@ -147,36 +140,78 @@ const RESOURCES: Resource[] = [
     resource: "Gold",
     code: "GOL",
     materials: [
-      {
-        name: "Gold Ore",
-        stage: "raw_feedstock",
-        yieldPct: 3,
-        price: 0,
-        acquisition: 0,
-        logistics: 300,
-        processing: 0,
-        verification: 3500,
-      },
-      {
-        name: "Dore",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 0,
-        acquisition: 0,
-        logistics: 300,
-        processing: 0,
-        verification: 3500,
-      },
-      {
-        name: "Bullion",
-        stage: "finished_product",
-        yieldPct: 100,
-        price: 0,
-        acquisition: 0,
-        logistics: 300,
-        processing: 0,
-        verification: 3500,
-      },
+      mat("Gold Ore", "raw_feedstock", 3, 0, 0, 300, 0, 3500),
+      mat("Gold Tailings", "raw_feedstock", 2, 0, 0, 300, 0, 3500),
+      mat("Dore", "saleable_product", 100, 0, 0, 300, 0, 3500),
+      mat("Bullion", "finished_product", 100, 0, 0, 300, 0, 3500),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Base Metals",
+    resource: "Copper",
+    code: "COP",
+    materials: [
+      mat("Copper Ore", "raw_feedstock", 8, 0, 0, 250, 350, 3000),
+      mat("Copper Concentrate", "saleable_product", 100, 0, 0, 250, 0, 3000),
+      mat("Copper Cathode", "finished_product", 100, 0, 0, 250, 0, 3000),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Base Metals",
+    resource: "Nickel",
+    code: "NIC",
+    materials: [
+      mat("Nickel Ore", "raw_feedstock", 8, 0, 0, 250, 350, 3000),
+      mat("Nickel Concentrate", "saleable_product", 100, 0, 0, 250, 0, 3000),
+      mat("Nickel Matte", "finished_product", 100, 0, 0, 250, 0, 3000),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "PGMs",
+    resource: "Platinum Group Metals",
+    code: "PGM",
+    materials: [
+      mat("PGM Ore", "raw_feedstock", 5, 0, 0, 250, 350, 3500),
+      mat("PGM Concentrate", "saleable_product", 100, 0, 0, 250, 0, 3500),
+      mat("Platinum", "finished_product", 100, 0, 0, 250, 0, 3500),
+      mat("Palladium", "finished_product", 100, 0, 0, 250, 0, 3500),
+      mat("Rhodium", "finished_product", 100, 0, 0, 250, 0, 3500),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Battery / Strategic Minerals",
+    resource: "Lithium",
+    code: "LIT",
+    materials: [
+      mat("Spodumene Ore", "raw_feedstock", 55, 0, 0, 250, 400, 3500),
+      mat("Spodumene Concentrate", "saleable_product", 100, 0, 0, 250, 0, 3500),
+      mat("Lithium Carbonate", "finished_product", 100, 0, 0, 250, 0, 3500),
+      mat("Lithium Hydroxide", "finished_product", 100, 0, 0, 250, 0, 3500),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Industrial Minerals",
+    resource: "Silica",
+    code: "SIL",
+    materials: [
+      mat("Silica Sand", "saleable_product", 100, 0, 0, 150, 0, 1200),
+      mat("Quartz", "saleable_product", 100, 0, 0, 150, 0, 1200),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Industrial Minerals",
+    resource: "Limestone",
+    code: "LIM",
+    materials: [
+      mat("Limestone ROM", "raw_feedstock", 85, 0, 0, 150, 150, 1200),
+      mat("Limestone Aggregate", "saleable_product", 100, 0, 0, 150, 0, 1200),
+      mat("Agricultural Lime", "finished_product", 100, 0, 0, 150, 0, 1200),
     ],
   },
   {
@@ -185,26 +220,42 @@ const RESOURCES: Resource[] = [
     resource: "Maize",
     code: "MAI",
     materials: [
-      {
-        name: "White Maize",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 500,
-        acquisition: 0,
-        logistics: 0,
-        processing: 0,
-        verification: 0,
-      },
-      {
-        name: "Yellow Maize",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 0,
-        acquisition: 0,
-        logistics: 0,
-        processing: 0,
-        verification: 0,
-      },
+      mat("White Maize", "saleable_product", 100, 500),
+      mat("Yellow Maize", "saleable_product", 100),
+      mat("Maize Meal", "finished_product", 100),
+    ],
+  },
+  {
+    cls: "Soft Commodities",
+    category: "Grains",
+    resource: "Wheat",
+    code: "WHE",
+    materials: [
+      mat("Milling Wheat", "saleable_product", 100),
+      mat("Feed Wheat", "saleable_product", 100),
+      mat("Wheat Flour", "finished_product", 100),
+    ],
+  },
+  {
+    cls: "Soft Commodities",
+    category: "Oilseeds",
+    resource: "Soya Beans",
+    code: "SOY",
+    materials: [
+      mat("Soya Beans", "saleable_product", 100),
+      mat("Soya Meal", "finished_product", 100),
+      mat("Soya Oil", "finished_product", 100),
+    ],
+  },
+  {
+    cls: "Soft Commodities",
+    category: "Oilseeds",
+    resource: "Sunflower",
+    code: "SUN",
+    materials: [
+      mat("Sunflower Seed", "saleable_product", 100),
+      mat("Sunflower Oil", "finished_product", 100),
+      mat("Sunflower Cake", "finished_product", 100),
     ],
   },
   {
@@ -213,48 +264,34 @@ const RESOURCES: Resource[] = [
     resource: "Fertiliser",
     code: "FER",
     materials: [
-      {
-        name: "Urea",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 0,
-        acquisition: 0,
-        logistics: 0,
-        processing: 0,
-        verification: 0,
-      },
-      {
-        name: "MAP",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 0,
-        acquisition: 0,
-        logistics: 0,
-        processing: 0,
-        verification: 0,
-      },
-      {
-        name: "LAN",
-        stage: "saleable_product",
-        yieldPct: 100,
-        price: 0,
-        acquisition: 0,
-        logistics: 0,
-        processing: 0,
-        verification: 0,
-      },
+      mat("Urea", "saleable_product", 100),
+      mat("MAP", "saleable_product", 100),
+      mat("DAP", "saleable_product", 100),
+      mat("LAN", "saleable_product", 100),
+      mat("NPK", "saleable_product", 100),
+      mat("Potash", "saleable_product", 100),
+    ],
+  },
+  {
+    cls: "Soft Commodities",
+    category: "Animal Feed",
+    resource: "Feed Inputs",
+    code: "FED",
+    materials: [
+      mat("Feed Maize", "saleable_product", 100),
+      mat("Soya Meal", "saleable_product", 100),
+      mat("Sunflower Cake", "saleable_product", 100),
+      mat("Molasses", "saleable_product", 100),
     ],
   },
 ];
 
 function num(value: unknown, fallback = 0) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
-
   if (typeof value === "string" && value.trim()) {
     const parsed = Number(value);
     if (Number.isFinite(parsed)) return parsed;
   }
-
   return fallback;
 }
 
@@ -279,7 +316,9 @@ function moneyTon(value: number) {
 
 function stageLabel(stage: Stage) {
   if (stage === "raw_feedstock") return "Raw Feedstock";
-  if (stage === "saleable_product") return "Intermediate / Saleable Product";
+  if (stage === "saleable_product") {
+    return "Intermediate / Saleable Product";
+  }
   return "Finished Product";
 }
 
@@ -291,9 +330,7 @@ function dbStage(stage: Stage) {
 function firstResource(cls: CommodityClass, category?: string) {
   return (
     RESOURCES.find(
-      (item) =>
-        item.cls === cls &&
-        (!category || item.category === category)
+      (x) => x.cls === cls && (!category || x.category === category)
     ) || RESOURCES[0]
   );
 }
@@ -301,17 +338,17 @@ function firstResource(cls: CommodityClass, category?: string) {
 function getResource(form: FormState) {
   return (
     RESOURCES.find(
-      (item) =>
-        item.cls === form.cls &&
-        item.category === form.category &&
-        item.resource === form.resource
+      (x) =>
+        x.cls === form.cls &&
+        x.category === form.category &&
+        x.resource === form.resource
     ) || firstResource(form.cls, form.category)
   );
 }
 
 function getMaterial(resource: Resource, materialName: string) {
   return (
-    resource.materials.find((item) => item.name === materialName) ||
+    resource.materials.find((x) => x.name === materialName) ||
     resource.materials[0]
   );
 }
@@ -327,7 +364,6 @@ function decisionLabel(margin: number) {
   if (margin > 0) return "Below Target";
   return "Blocked / Negative";
 }
-
 function Card({
   label,
   title,
@@ -514,21 +550,26 @@ export default function EconomicsEditTools() {
   const acquisitionTotal = routeQty * form.acquisitionCost;
   const logisticsTotal = routeQty * form.logisticsCost;
   const processingTotal = routeQty * form.processingCost;
+
   const routeCost =
     acquisitionTotal +
     logisticsTotal +
     processingTotal +
     form.verificationCost;
+
   const surplus = revenue - routeCost;
   const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
 
   const target18Cost = revenue * 0.82;
   const costGap = Math.max(routeCost - target18Cost, 0);
+
   const targetBuyerPrice =
     margin >= 18 || form.productQty <= 0
       ? effectivePrice
       : Math.ceil(routeCost / (form.productQty * 0.82));
+
   const costReduction = Math.ceil(costGap);
+
   const costReductionUnit =
     routeQty > 0 ? Math.ceil(costGap / routeQty) : 0;
 
@@ -726,14 +767,6 @@ export default function EconomicsEditTools() {
         feedstock_cost_per_ton: form.acquisitionCost,
         transport_to_plant_cost_per_ton: form.logisticsCost,
         tolling_cost_per_ton: form.processingCost,
-
-        estimated_feedstock_cost: acquisitionTotal,
-        estimated_transport_cost: logisticsTotal,
-        estimated_tolling_cost: processingTotal,
-        estimated_total_assay_cost: form.verificationCost,
-        estimated_route_cost: routeCost,
-        estimated_route_surplus: surplus,
-        estimated_route_margin_percent: margin,
       })
       .eq("id", parcelId);
 
@@ -909,15 +942,21 @@ export default function EconomicsEditTools() {
             value={routeQty.toFixed(3)}
             gold
           />
+
           <Stat
             label="Effective Price"
             value={moneyTon(effectivePrice)}
             gold
           />
+
           <Stat label="Revenue" value={money(revenue)} />
+
           <Stat label="Route Cost" value={money(routeCost)} />
+
           <Stat label="Surplus" value={money(surplus)} gold />
+
           <Stat label="Margin" value={`${margin.toFixed(1)}%`} gold />
+
           <Stat label="Decision" value={decisionLabel(margin)} />
         </div>
       </Card>
@@ -930,16 +969,19 @@ export default function EconomicsEditTools() {
             note="Indicative price needed to move toward an 18% gross margin."
             gold
           />
+
           <Stat
             label="Total Cost Reduction Needed"
             value={money(costReduction)}
             note="Estimated reduction needed across acquisition, logistics, processing or verification costs."
           />
+
           <Stat
             label="Cost Reduction / Route Unit"
             value={moneyTon(costReductionUnit)}
             note="Indicative saving required per route ton or product unit."
           />
+
           <Stat
             label="Commercial Actions"
             value="Negotiate price, cost or charges"
@@ -949,4 +991,4 @@ export default function EconomicsEditTools() {
       </Card>
     </ResourceShell>
   );
-      }
+                            }

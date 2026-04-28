@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import AuthQuickAccess from "../components/AuthQuickAccess";
 
 export const metadata: Metadata = {
   title: "SAR ResourceOS",
   description:
-    "SAR ResourceOS live chrome parcel control system for opportunity intake, route pricing, release gating, parcel execution and finance readiness.",
+    "SAR ResourceOS internal resource transaction control system for opportunity intake, route economics, release gating, execution readiness and finance control.",
 };
 
 export default function RootLayout({
@@ -15,10 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
-        <AuthQuickAccess />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

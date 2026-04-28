@@ -1,129 +1,149 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase/client";
 
-type AuthState = "checking" | "signed_in" | "signed_out";
-
-function statusLabel(state: AuthState) {
-  if (state === "checking") return "Checking";
-  if (state === "signed_in") return "Signed In";
-  return "Access";
-}
-
-function NavPill({
-  href,
-  label,
-  active,
-}: {
-  href: string;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={
-        active
-          ? "shrink-0 rounded-full bg-[#d7ad32] px-6 py-4 text-base font-black text-[#07101c]"
-          : "shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-6 py-4 text-base font-black text-slate-200"
-      }
-    >
-      {label}
-    </Link>
-  );
-}
+type SessionState = "checking" | "signed_in" | "signed_out";
 
 export default function HomePage() {
   const supabase = createClient();
-
-  const [authState, setAuthState] = useState<AuthState>("checking");
+  const [sessionState, setSessionState] =
+    useState<SessionState>("checking");
 
   useEffect(() => {
-    async function checkAuth() {
-      const { data } = await supabase.auth.getUser();
-      setAuthState(data.user ? "signed_in" : "signed_out");
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+
+      setSessionState(
+        data.session ? "signed_in" : "signed_out"
+      );
     }
 
-    checkAuth();
+    checkSession();
+
+    const { data: listener } =
+      supabase.auth.onAuthStateChange((_event, session) => {
+        setSessionState(session ? "signed_in" : "signed_out");
+      });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, [supabase]);
 
-  const signedIn = authState === "signed_in";
+  const signedIn = sessionState === "signed_in";
+  const checking = sessionState === "checking";
 
   return (
     <main className="min-h-screen bg-[#050914] text-white">
-      <div className="sticky top-0 z-50 border-b border-slate-800 bg-[#050914]/95 px-4 py-4 backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto rounded-full border border-slate-800 bg-slate-950/60 p-2">
-          <div className="shrink-0 px-4 py-3">
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
-              {statusLabel(authState)}
+      <div className="sticky top-0 z-50 border-b border-slate-800 bg-[#050914]/95 px-3 py-3">
+        <nav className="mx-auto flex max-w-md items-center gap-2 overflow-x-auto rounded-full border border-slate-800 bg-slate-950/60 p-2">
+          <div className="shrink-0 px-3 py-2">
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
+              {checking
+                ? "Checking"
+                : signedIn
+                ? "Signed In"
+                : "Access"}
             </p>
           </div>
 
           {signedIn ? (
             <>
-              <NavPill href="/dashboard" label="Dash" active />
-              <NavPill href="/leads" label="Leads" />
-              <NavPill href="/route-builder" label="Route" />
-              <NavPill href="/operations" label="Ops" />
-              <NavPill href="/finance" label="Finance" />
-              <NavPill href="/analytics" label="Analytics" />
-              <NavPill href="/documents" label="Docs" />
-              <NavPill href="/logout" label="Out" />
+              <Link
+                href="/dashboard"
+                className="shrink-0 rounded-full bg-[#d7ad32] px-4 py-2 text-xs font-black text-[#07101c]"
+              >
+                Dash
+              </Link>
+
+              <Link
+                href="/leads"
+                className="shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-4 py-2 text-xs font-black text-slate-200"
+              >
+                Leads
+              </Link>
+
+              <Link
+                href="/route"
+                className="shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-4 py-2 text-xs font-black text-slate-200"
+              >
+                Route
+              </Link>
             </>
           ) : (
             <>
-              <NavPill href="/login" label="Login" active />
-              <NavPill href="/login" label="Request Access" />
+              <Link
+                href="/login"
+                className="shrink-0 rounded-full bg-[#d7ad32] px-4 py-2 text-xs font-black text-[#07101c]"
+              >
+                Login
+              </Link>
+
+              <Link
+                href="/login"
+                className="shrink-0 rounded-full border border-slate-800 bg-slate-900/40 px-4 py-2 text-xs font-black text-slate-200"
+              >
+                Request Access
+              </Link>
             </>
           )}
         </nav>
       </div>
 
-      <div className="mx-auto flex min-h-[calc(100vh-96px)] max-w-3xl items-center px-4 py-8">
-        <section className="w-full rounded-3xl border border-slate-800 bg-slate-950/40 p-6 shadow-2xl">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+      <div className="mx-auto max-w-md px-4 py-5">
+        <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
             SAR ResourceOS
           </p>
 
-          <h1 className="mt-5 text-5xl font-black leading-tight text-white">
+          <h1 className="mt-4 text-2xl font-black leading-tight text-white">
             Secure internal access.
           </h1>
 
-          <p className="mt-6 text-2xl font-black leading-tight text-white">
+          <p className="mt-3 text-sm font-black text-white">
             Authorised users only.
           </p>
 
-          <div className="mt-10 space-y-4">
-            <Link
-              href={signedIn ? "/dashboard" : "/login"}
-              className="inline-flex w-full justify-center rounded-full bg-[#d7ad32] px-6 py-5 text-lg font-black text-[#07101c]"
-            >
-              {signedIn ? "Open Dashboard" : "Login"}
-            </Link>
-
-            {!signedIn ? (
+          <div className="mt-5">
+            {signedIn ? (
               <Link
-                href="/login"
-                className="inline-flex w-full justify-center rounded-full border border-slate-700 bg-slate-900/40 px-6 py-5 text-lg font-black text-slate-200"
+                href="/dashboard"
+                className="block w-full rounded-full bg-[#d7ad32] px-4 py-3 text-center text-sm font-black text-[#07101c]"
               >
-                Request Access
+                Open Dashboard
               </Link>
-            ) : null}
+            ) : (
+              <div className="grid gap-3">
+                <Link
+                  href="/login"
+                  className="block w-full rounded-full bg-[#d7ad32] px-4 py-3 text-center text-sm font-black text-[#07101c]"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  href="/login"
+                  className="block w-full rounded-full border border-slate-700 px-4 py-3 text-center text-sm font-black text-slate-200"
+                >
+                  Request Access
+                </Link>
+              </div>
+            )}
           </div>
 
-          <div className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+          <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/40 p-3">
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
               Access Notice
             </p>
-            <p className="mt-3 text-base leading-7 text-slate-400">
-              Access is restricted to authorised Shobane African Resources
-              users.
+
+            <p className="mt-2 text-xs leading-5 text-slate-400">
+              Access is restricted to authorised Shobane African Resources users.
             </p>
           </div>
         </section>
       </div>
     </main>
   );
-      }
+           }

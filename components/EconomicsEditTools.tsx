@@ -1,138 +1,323 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ResourceShell from "./ResourceShell";
 import { createClient } from "../lib/supabase/client";
 
-const SEED = "PAR-CHR-2026-0001";
+const SEED_CODE = "PAR-CHR-2026-0001";
 
-const items = [
-  {
-    cls: "Hard Commodities",
-    cat: "Ferrous Metals",
-    res: "Chrome",
-    mat: "ROM",
-    code: "CHR",
-    stage: "raw_feedstock",
-    yield: 40,
-    price: 2550,
-  },
-  {
-    cls: "Hard Commodities",
-    cat: "Energy Minerals",
-    res: "Coal",
-    mat: "ROM Coal",
-    code: "COA",
-    stage: "raw_feedstock",
-    yield: 70,
-    price: 0,
-  },
-  {
-    cls: "Hard Commodities",
-    cat: "Precious Metals",
-    res: "Gold",
-    mat: "Gold Ore",
-    code: "GOL",
-    stage: "raw_feedstock",
-    yield: 3,
-    price: 0,
-  },
-  {
-    cls: "Soft Commodities",
-    cat: "Grains",
-    res: "Maize",
-    mat: "White Maize",
-    code: "MAI",
-    stage: "intermediate_concentrate",
-    yield: 100,
-    price: 480,
-  },
-  {
-    cls: "Soft Commodities",
-    cat: "Agricultural Inputs",
-    res: "Fertiliser",
-    mat: "Urea",
-    code: "FER",
-    stage: "intermediate_concentrate",
-    yield: 100,
-    price: 0,
-  },
-];
+type Stage = "raw_feedstock" | "saleable_product" | "finished_product";
 
-type Form = {
-  item: number;
-  product: number;
+type Item = {
+  className: "Hard Commodities" | "Soft Commodities";
+  group: string;
+  resource: string;
+  material: string;
+  code: string;
+  stage: Stage;
+  defaultYield: number;
+  defaultPrice: number;
+  defaultAcquisition: number;
+  defaultLogistics: number;
+  defaultProcessing: number;
+  defaultVerification: number;
+};
+
+type FormState = {
+  itemIndex: number;
+  productQty: number;
   yieldPct: number;
   marketPrice: number;
   negotiatedPrice: number;
-  acquisition: number;
-  logistics: number;
-  processing: number;
-  verification: number;
-  note: string;
+  acquisitionCost: number;
+  logisticsCost: number;
+  processingCost: number;
+  verificationCost: number;
+  priceNote: string;
 };
 
-function money(n: number) {
-  return `R ${Number(n || 0).toLocaleString("en-ZA", {
+const ITEMS: Item[] = [
+  {
+    className: "Hard Commodities",
+    group: "Ferrous Metals",
+    resource: "Chrome",
+    material: "ROM",
+    code: "CHR",
+    stage: "raw_feedstock",
+    defaultYield: 40,
+    defaultPrice: 2550,
+    defaultAcquisition: 0,
+    defaultLogistics: 180,
+    defaultProcessing: 350,
+    defaultVerification: 3500,
+  },
+  {
+    className: "Hard Commodities",
+    group: "Ferrous Metals",
+    resource: "Chrome",
+    material: "Tailings",
+    code: "CHR",
+    stage: "raw_feedstock",
+    defaultYield: 35,
+    defaultPrice: 2550,
+    defaultAcquisition: 0,
+    defaultLogistics: 180,
+    defaultProcessing: 350,
+    defaultVerification: 3500,
+  },
+  {
+    className: "Hard Commodities",
+    group: "Ferrous Metals",
+    resource: "Chrome",
+    material: "Concentrate 40/42",
+    code: "CHR",
+    stage: "saleable_product",
+    defaultYield: 100,
+    defaultPrice: 2550,
+    defaultAcquisition: 0,
+    defaultLogistics: 180,
+    defaultProcessing: 0,
+    defaultVerification: 3500,
+  },
+  {
+    className: "Hard Commodities",
+    group: "Energy Minerals",
+    resource: "Coal",
+    material: "ROM Coal",
+    code: "COA",
+    stage: "raw_feedstock",
+    defaultYield: 70,
+    defaultPrice: 0,
+    defaultAcquisition: 0,
+    defaultLogistics: 180,
+    defaultProcessing: 0,
+    defaultVerification: 1200,
+  },
+  {
+    className: "Hard Commodities",
+    group: "Energy Minerals",
+    resource: "Coal",
+    material: "RB1",
+    code: "COA",
+    stage: "saleable_product",
+    defaultYield: 100,
+    defaultPrice: 0,
+    defaultAcquisition: 0,
+    defaultLogistics: 180,
+    defaultProcessing: 0,
+    defaultVerification: 1200,
+  },
+  {
+    className: "Hard Commodities",
+    group: "Precious Metals",
+    resource: "Gold",
+    material: "Gold Ore",
+    code: "GOL",
+    stage: "raw_feedstock",
+    defaultYield: 3,
+    defaultPrice: 0,
+    defaultAcquisition: 0,
+    defaultLogistics: 300,
+    defaultProcessing: 0,
+    defaultVerification: 3500,
+  },
+  {
+    className: "Hard Commodities",
+    group: "Precious Metals",
+    resource: "Gold",
+    material: "Dore",
+    code: "GOL",
+    stage: "saleable_product",
+    defaultYield: 100,
+    defaultPrice: 0,
+    defaultAcquisition: 0,
+    defaultLogistics: 300,
+    defaultProcessing: 0,
+    defaultVerification: 3500,
+  },
+  {
+    className: "Hard Commodities",
+    group: "Precious Metals",
+    resource: "Gold",
+    material: "Bullion",
+    code: "GOL",
+    stage: "finished_product",
+    defaultYield: 100,
+    defaultPrice: 0,
+    defaultAcquisition: 0,
+    defaultLogistics: 300,
+    defaultProcessing: 0,
+    defaultVerification: 3500,
+  },
+  {
+    className: "Soft Commodities",
+    group: "Grains",
+    resource: "Maize",
+    material: "White Maize",
+    code: "MAI",
+    stage: "saleable_product",
+    defaultYield: 100,
+    defaultPrice: 500,
+    defaultAcquisition: 0,
+    defaultLogistics: 0,
+    defaultProcessing: 0,
+    defaultVerification: 0,
+  },
+  {
+    className: "Soft Commodities",
+    group: "Grains",
+    resource: "Maize",
+    material: "Yellow Maize",
+    code: "MAI",
+    stage: "saleable_product",
+    defaultYield: 100,
+    defaultPrice: 0,
+    defaultAcquisition: 0,
+    defaultLogistics: 0,
+    defaultProcessing: 0,
+    defaultVerification: 0,
+  },
+  {
+    className: "Soft Commodities",
+    group: "Agricultural Inputs",
+    resource: "Fertiliser",
+    material: "Urea",
+    code: "FER",
+    stage: "saleable_product",
+    defaultYield: 100,
+    defaultPrice: 0,
+    defaultAcquisition: 0,
+    defaultLogistics: 0,
+    defaultProcessing: 0,
+    defaultVerification: 0,
+  },
+];
+
+function n(value: unknown, fallback = 0) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function s(value: unknown, fallback = "") {
+  if (typeof value === "string" && value.trim()) return value;
+  return fallback;
+}
+
+function money(value: number) {
+  return `R ${Number(value || 0).toLocaleString("en-ZA", {
     maximumFractionDigits: 0,
   })}`;
 }
 
-function stageName(v: string) {
-  if (v === "raw_feedstock") return "Raw Feedstock";
-  if (v === "intermediate_concentrate") return "Intermediate / Saleable Product";
-  if (v === "finished_product") return "Finished Product";
-  return "Not captured";
+function moneyPerTon(value: number) {
+  return `${money(value)}/t`;
 }
 
-function Field({
+function stageLabel(stage: Stage) {
+  if (stage === "raw_feedstock") return "Raw Feedstock";
+  if (stage === "saleable_product") return "Intermediate / Saleable Product";
+  return "Finished Product";
+}
+
+function decisionLabel(margin: number) {
+  if (margin >= 25) return "Strong Route";
+  if (margin >= 18) return "Target Range";
+  if (margin >= 15) return "Decent / Improve";
+  if (margin > 0) return "Below Target";
+  return "Blocked / Negative";
+}
+
+function fullCode(item: Item) {
+  return `PAR-${item.code}-2026-0001`;
+}
+
+function compactStageForDb(stage: Stage) {
+  if (stage === "saleable_product") return "intermediate_concentrate";
+  return stage;
+}
+
+function Card({
   label,
-  value,
-  set,
+  title,
+  children,
 }: {
   label: string;
-  value: number;
-  set: (v: number) => void;
+  title: string;
+  children?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-      <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
+    <section className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
+      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
         {label}
       </p>
-      <input
-        type="number"
-        inputMode="decimal"
-        value={value}
-        onChange={(e) => set(Number(e.target.value || 0))}
-        className="mt-3 w-full rounded-3xl border border-slate-800 bg-[#060b16] px-5 py-5 text-2xl font-black text-white outline-none focus:border-[#d7ad32]"
-      />
-    </div>
+      <h2 className="mt-2 text-xl font-black leading-tight text-white">
+        {title}
+      </h2>
+      {children ? <div className="mt-4">{children}</div> : null}
+    </section>
   );
 }
 
 function Stat({
   label,
   value,
+  note,
   gold,
 }: {
   label: string;
   value: string;
+  note?: string;
   gold?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-      <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
         {label}
       </p>
       <p
         className={
           gold
-            ? "mt-3 text-3xl font-black text-[#f5d778]"
-            : "mt-3 text-3xl font-black text-white"
+            ? "mt-2 text-xl font-black text-[#f5d778]"
+            : "mt-2 text-xl font-black text-white"
         }
       >
         {value}
       </p>
+      {note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">{note}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function NumField({
+  label,
+  value,
+  onChange,
+  help,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  help?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+      <label className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+        {label}
+      </label>
+      <input
+        type="number"
+        inputMode="decimal"
+        value={String(value)}
+        onChange={(event) => onChange(n(event.target.value))}
+        className="mt-2 w-full rounded-2xl border border-slate-800 bg-[#060b16] px-4 py-3 text-lg font-black text-white outline-none focus:border-[#d7ad32]"
+      />
+      {help ? <p className="mt-2 text-sm leading-6 text-slate-400">{help}</p> : null}
     </div>
   );
 }
@@ -145,72 +330,122 @@ export default function EconomicsEditTools() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
-  const [form, setForm] = useState<Form>({
-    item: 0,
-    product: 250,
+  const [form, setForm] = useState<FormState>({
+    itemIndex: 0,
+    productQty: 250,
     yieldPct: 40,
     marketPrice: 2550,
     negotiatedPrice: 2550,
-    acquisition: 0,
-    logistics: 0,
-    processing: 0,
-    verification: 0,
-    note: "",
+    acquisitionCost: 0,
+    logisticsCost: 180,
+    processingCost: 350,
+    verificationCost: 3500,
+    priceNote: "",
   });
 
-  const selected = items[form.item];
-  const parcelCode = `PAR-${selected.code}-2026-0001`;
-  const routeQty =
-    selected.stage === "raw_feedstock"
-      ? form.yieldPct > 0
-        ? form.product / (form.yieldPct / 100)
-        : 0
-      : form.product;
+  const item = ITEMS[form.itemIndex] || ITEMS[0];
 
-  const price = form.negotiatedPrice || form.marketPrice;
-  const revenue = form.product * price;
+  const routeQty =
+    item.stage === "raw_feedstock" && form.yieldPct > 0
+      ? form.productQty / (form.yieldPct / 100)
+      : form.productQty;
+
+  const effectivePrice =
+    form.negotiatedPrice > 0 ? form.negotiatedPrice : form.marketPrice;
+
+  const revenue = form.productQty * effectivePrice;
+  const acquisitionTotal = routeQty * form.acquisitionCost;
+  const logisticsTotal = routeQty * form.logisticsCost;
+  const processingTotal = routeQty * form.processingCost;
   const routeCost =
-    routeQty * form.acquisition +
-    routeQty * form.logistics +
-    routeQty * form.processing +
-    form.verification;
+    acquisitionTotal + logisticsTotal + processingTotal + form.verificationCost;
   const surplus = revenue - routeCost;
   const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
+
+  const target18Surplus = revenue * 0.18;
+  const target18Cost = Math.max(revenue - target18Surplus, 0);
+  const costGapTo18 = Math.max(routeCost - target18Cost, 0);
+  const targetPrice18 =
+    form.productQty > 0 ? routeCost / (form.productQty * 0.82) : 0;
+
+  const recommendedBuyerPrice =
+    margin >= 18 ? effectivePrice : Math.ceil(targetPrice18);
+
+  const recommendedCostReduction = Math.ceil(costGapTo18);
+  const recommendedPerRouteTon =
+    routeQty > 0 ? Math.ceil(costGapTo18 / routeQty) : 0;
+
+  const parcelCode = fullCode(item);
+
+  const groupedOptions = useMemo(() => {
+    return ITEMS.map((x, index) => ({
+      index,
+      label: `${x.className} / ${x.group} / ${x.resource} - ${x.material}`,
+    }));
+  }, []);
 
   useEffect(() => {
     async function load() {
       const { data } = await supabase
         .from("parcels")
         .select("*")
-        .eq("parcel_code", SEED)
+        .eq("parcel_code", SEED_CODE)
         .single();
 
       if (!data) return;
 
+      const foundIndex = ITEMS.findIndex(
+        (x) =>
+          x.resource === data.resource_type &&
+          x.material === data.material_type
+      );
+
+      const nextIndex = foundIndex >= 0 ? foundIndex : 0;
+      const nextItem = ITEMS[nextIndex];
+
       setParcelId(String(data.id || ""));
 
-      const found = items.find((x) => x.res === data.resource_type) || items[0];
-
       setForm({
-        item: items.indexOf(found),
-        product: Number(data.expected_concentrate_tons || data.accepted_tons || 250),
-        yieldPct: Number(data.expected_yield_percent || found.yield),
-        marketPrice: Number(data.market_reference_price_per_ton || found.price),
-        negotiatedPrice: Number(
-          data.negotiated_price_per_ton ||
-            data.effective_price_per_ton ||
-            found.price
+        itemIndex: nextIndex,
+        productQty: n(data.expected_concentrate_tons, n(data.accepted_tons, 250)),
+        yieldPct: n(data.expected_yield_percent, nextItem.defaultYield),
+        marketPrice: n(data.market_reference_price_per_ton, nextItem.defaultPrice),
+        negotiatedPrice: n(
+          data.negotiated_price_per_ton,
+          n(data.effective_price_per_ton, nextItem.defaultPrice)
         ),
-        acquisition: Number(data.feedstock_cost_per_ton || 0),
-        logistics: Number(data.transport_to_plant_cost_per_ton || 0),
-        processing: Number(data.tolling_cost_per_ton || 0),
-        verification: Number(data.estimated_total_assay_cost || 0),
-        note: String(data.price_override_note || ""),
+        acquisitionCost: n(data.feedstock_cost_per_ton, nextItem.defaultAcquisition),
+        logisticsCost: n(
+          data.transport_to_plant_cost_per_ton,
+          nextItem.defaultLogistics
+        ),
+        processingCost: n(data.tolling_cost_per_ton, nextItem.defaultProcessing),
+        verificationCost: n(
+          data.estimated_total_assay_cost,
+          nextItem.defaultVerification
+        ),
+        priceNote: s(data.price_override_note, ""),
       });
     }
 
     load();
   }, [supabase]);
+
+  function changeItem(index: number) {
+    const next = ITEMS[index] || ITEMS[0];
+
+    setForm((current) => ({
+      ...current,
+      itemIndex: index,
+      yieldPct: next.defaultYield,
+      marketPrice: next.defaultPrice,
+      negotiatedPrice: next.defaultPrice,
+      acquisitionCost: next.defaultAcquisition,
+      logisticsCost: next.defaultLogistics,
+      processingCost: next.defaultProcessing,
+      verificationCost: next.defaultVerification,
+    }));
+  }
 
   async function save() {
     setSaving(true);
@@ -218,7 +453,7 @@ export default function EconomicsEditTools() {
     setError("");
 
     if (!parcelId) {
-      setError("No parcel record found.");
+      setError("No active parcel record found.");
       setSaving(false);
       return;
     }
@@ -227,23 +462,23 @@ export default function EconomicsEditTools() {
       .from("parcels")
       .update({
         working_parcel_code: parcelCode,
-        commodity_class: selected.cls,
-        resource_category: selected.cat,
-        resource_type: selected.res,
-        material_type: selected.mat,
-        material_stage: selected.stage,
-        expected_concentrate_tons: form.product,
+        commodity_class: item.className,
+        resource_category: item.group,
+        resource_type: item.resource,
+        material_type: item.material,
+        material_stage: compactStageForDb(item.stage),
+        expected_concentrate_tons: form.productQty,
         feedstock_tons: routeQty,
         expected_yield_percent: form.yieldPct,
         market_reference_price_per_ton: form.marketPrice,
         negotiated_price_per_ton: form.negotiatedPrice,
-        effective_price_per_ton: price,
-        expected_price_per_ton: price,
-        feedstock_cost_per_ton: form.acquisition,
-        transport_to_plant_cost_per_ton: form.logistics,
-        tolling_cost_per_ton: form.processing,
+        effective_price_per_ton: effectivePrice,
+        expected_price_per_ton: effectivePrice,
+        feedstock_cost_per_ton: form.acquisitionCost,
+        transport_to_plant_cost_per_ton: form.logisticsCost,
+        tolling_cost_per_ton: form.processingCost,
         price_basis: "market_reference_with_negotiated_override",
-        price_override_note: form.note,
+        price_override_note: form.priceNote,
       })
       .eq("id", parcelId);
 
@@ -253,94 +488,165 @@ export default function EconomicsEditTools() {
       return;
     }
 
-    setNotice("Saved.");
+    setNotice("Lead economics saved.");
     setSaving(false);
   }
 
   return (
     <ResourceShell
       title="Edit Lead Economics"
-      subtitle="Mobile-safe editable economics control."
+      subtitle="Editable economics with commodity-specific parcel code, market price and negotiated price override."
     >
-      <section className="grid gap-4">
+      <section className="grid gap-3">
         <Stat label="Parcel" value={parcelCode} />
-        <Stat label="Class" value={selected.cls} />
-        <Stat label="Category" value={selected.cat} />
-        <Stat label="Resource" value={selected.res} gold />
-        <Stat label="Material" value={selected.mat} />
-        <Stat label="Stage" value={stageName(selected.stage)} />
+        <Stat label="Class" value={item.className} />
+        <Stat label="Category" value={item.group} />
+        <Stat label="Resource" value={item.resource} gold />
+        <Stat label="Material" value={item.material} />
+        <Stat label="Stage" value={stageLabel(item.stage)} />
       </section>
 
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
-          Select Commodity
-        </p>
-
+      <Card label="Select Commodity" title="Commodity and product">
         <select
-          value={form.item}
-          onChange={(e) => {
-            const i = Number(e.target.value);
-            const next = items[i];
-            setForm((f) => ({
-              ...f,
-              item: i,
-              yieldPct: next.yield,
-              marketPrice: next.price,
-              negotiatedPrice: next.price,
-            }));
-          }}
-          className="mt-4 w-full rounded-3xl border border-slate-800 bg-[#060b16] px-5 py-5 text-xl font-black text-white"
+          value={form.itemIndex}
+          onChange={(event) => changeItem(n(event.target.value))}
+          className="w-full rounded-2xl border border-slate-700 bg-[#060b16] px-4 py-3 text-base font-black text-white outline-none focus:border-[#d7ad32]"
         >
-          {items.map((x, i) => (
-            <option key={x.code} value={i}>
-              {x.res} - {x.mat}
+          {groupedOptions.map((option) => (
+            <option key={option.index} value={option.index}>
+              {option.label}
             </option>
           ))}
         </select>
-      </section>
+      </Card>
 
-      <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
-          Inputs
-        </p>
+      <Card label="Inputs" title="Route economics">
+        <div className="space-y-3">
+          <NumField
+            label="Product Quantity"
+            value={form.productQty}
+            onChange={(value) => setForm({ ...form, productQty: value })}
+          />
+          <NumField
+            label="Expected Yield %"
+            value={form.yieldPct}
+            onChange={(value) => setForm({ ...form, yieldPct: value })}
+            help={
+              item.stage === "raw_feedstock"
+                ? "Used to calculate feedstock required."
+                : "Saleable product uses 100% basis."
+            }
+          />
+          <NumField
+            label="Market / Reference Price"
+            value={form.marketPrice}
+            onChange={(value) => setForm({ ...form, marketPrice: value })}
+            help="Future live market feed value. Editable for now."
+          />
+          <NumField
+            label="Negotiated Buyer Price"
+            value={form.negotiatedPrice}
+            onChange={(value) => setForm({ ...form, negotiatedPrice: value })}
+            help="Buyer price override used as effective selling price."
+          />
+          <NumField
+            label="Acquisition Cost / Unit"
+            value={form.acquisitionCost}
+            onChange={(value) => setForm({ ...form, acquisitionCost: value })}
+          />
+          <NumField
+            label="Logistics / Handling Cost / Unit"
+            value={form.logisticsCost}
+            onChange={(value) => setForm({ ...form, logisticsCost: value })}
+          />
+          <NumField
+            label="Processing / Tolling Cost / Unit"
+            value={form.processingCost}
+            onChange={(value) => setForm({ ...form, processingCost: value })}
+          />
+          <NumField
+            label="Verification / Quality Cost"
+            value={form.verificationCost}
+            onChange={(value) => setForm({ ...form, verificationCost: value })}
+          />
 
-        <Field label="Product Quantity" value={form.product} set={(v) => setForm({ ...form, product: v })} />
-        <Field label="Expected Yield %" value={form.yieldPct} set={(v) => setForm({ ...form, yieldPct: v })} />
-        <Field label="Market / Reference Price" value={form.marketPrice} set={(v) => setForm({ ...form, marketPrice: v })} />
-        <Field label="Negotiated Price Override" value={form.negotiatedPrice} set={(v) => setForm({ ...form, negotiatedPrice: v })} />
-        <Field label="Acquisition Cost / Unit" value={form.acquisition} set={(v) => setForm({ ...form, acquisition: v })} />
-        <Field label="Logistics Cost / Unit" value={form.logistics} set={(v) => setForm({ ...form, logistics: v })} />
-        <Field label="Processing Cost / Unit" value={form.processing} set={(v) => setForm({ ...form, processing: v })} />
-        <Field label="Verification Cost" value={form.verification} set={(v) => setForm({ ...form, verification: v })} />
+          <textarea
+            value={form.priceNote}
+            onChange={(event) =>
+              setForm({ ...form, priceNote: event.target.value })
+            }
+            placeholder="Price note or override reason"
+            className="w-full rounded-2xl border border-slate-800 bg-[#060b16] px-4 py-3 text-sm font-bold leading-6 text-white outline-none focus:border-[#d7ad32]"
+          />
 
-        <textarea
-          value={form.note}
-          onChange={(e) => setForm({ ...form, note: e.target.value })}
-          placeholder="Price note / override reason"
-          className="w-full rounded-3xl border border-slate-800 bg-[#060b16] px-5 py-5 text-lg font-bold text-white"
-        />
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className="w-full rounded-full bg-[#d7ad32] px-5 py-4 text-base font-black text-[#07101c] disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save Lead Economics"}
+          </button>
 
-        <button
-          type="button"
-          disabled={saving}
-          onClick={save}
-          className="w-full rounded-full bg-[#d7ad32] px-6 py-5 text-lg font-black text-[#07101c]"
-        >
-          {saving ? "Saving..." : "Save Lead Economics"}
-        </button>
+          {notice ? (
+            <p className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm font-black text-emerald-200">
+              {notice}
+            </p>
+          ) : null}
 
-        {notice ? <p className="text-emerald-300">{notice}</p> : null}
-        {error ? <p className="text-red-300">{error}</p> : null}
-      </section>
+          {error ? (
+            <p className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-black text-red-200">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      </Card>
 
-      <section className="grid gap-4">
-        <Stat label="Route Quantity" value={routeQty.toFixed(3)} gold />
-        <Stat label="Effective Price" value={`${money(price)}/t`} gold />
-        <Stat label="Revenue" value={money(revenue)} />
-        <Stat label="Route Cost" value={money(routeCost)} />
-        <Stat label="Surplus" value={money(surplus)} gold />
-        <Stat label="Margin" value={`${margin.toFixed(1)}%`} gold />
-      </section>
+      <Card label="Live Result" title="Calculated economics">
+        <div className="grid gap-3">
+          <Stat
+            label={item.stage === "raw_feedstock" ? "Feedstock Required" : "Route Quantity"}
+            value={routeQty.toFixed(3)}
+            gold
+          />
+          <Stat label="Effective Price" value={moneyPerTon(effectivePrice)} gold />
+          <Stat label="Revenue" value={money(revenue)} />
+          <Stat label="Acquisition Total" value={money(acquisitionTotal)} />
+          <Stat label="Logistics Total" value={money(logisticsTotal)} />
+          <Stat label="Processing Total" value={money(processingTotal)} />
+          <Stat label="Verification Cost" value={money(form.verificationCost)} />
+          <Stat label="Route Cost" value={money(routeCost)} />
+          <Stat label="Surplus" value={money(surplus)} gold />
+          <Stat label="Margin" value={`${margin.toFixed(1)}%`} gold />
+          <Stat label="Decision" value={decisionLabel(margin)} />
+        </div>
+      </Card>
+
+      <Card label="Recommendations" title="Indicative improvement targets">
+        <div className="grid gap-3">
+          <Stat
+            label="Target Buyer Price"
+            value={moneyPerTon(recommendedBuyerPrice)}
+            note="Indicative price needed to move toward an 18% gross margin."
+            gold
+          />
+          <Stat
+            label="Total Cost Reduction Needed"
+            value={money(recommendedCostReduction)}
+            note="Estimated reduction needed across acquisition, logistics, processing or verification costs."
+          />
+          <Stat
+            label="Cost Reduction / Route Unit"
+            value={moneyPerTon(recommendedPerRouteTon)}
+            note="Indicative saving required per route ton or product unit."
+          />
+          <Stat
+            label="Commercial Actions"
+            value="Negotiate price, cost or charges"
+            note="Reduce acquisition cost, reduce logistics, reduce processing/tolling, push buyer price, or move verification/handling charges to plant or buyer side."
+          />
+        </div>
+      </Card>
     </ResourceShell>
   );
-    }
+  }

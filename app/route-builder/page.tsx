@@ -1,25 +1,68 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
-import { stageLabel, stateLabel } from "../../lib/displayLabels";
-import { ActiveGate, ActiveParcel, loadActiveParcel } from "../../lib/activeParcel";
 
-function money(value: number | null | undefined) {
-  const n = Number(value || 0);
-  return `R ${n.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`;
+const SEED_CODE = "PAR-CHR-2026-0001";
+
+type Row = Record<string, unknown>;
+
+type LoadState = {
+  loading: boolean;
+  error: string;
+  row: Row | null;
+};
+
+function num(value: unknown, fallback = 0) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
 }
 
-function pct(value: number | null | undefined) {
-  const n = Number(value || 0);
-  return `${n.toFixed(1)}%`;
+function txt(value: unknown, fallback = "Not captured") {
+  if (typeof value === "string" && value.trim()) return value;
+  return fallback;
 }
 
-function tons(value: number | null | undefined) {
-  const n = Number(value || 0);
-  return n.toFixed(3);
+function money(value: number) {
+  return `R ${Number(value || 0).toLocaleString("en-ZA", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+function moneyUnit(value: number) {
+  return `${money(value)}/unit`;
+}
+
+function stageLabel(stage: string) {
+  if (stage === "raw_feedstock") return "Raw Feedstock";
+  if (stage === "intermediate_concentrate") {
+    return "Intermediate / Saleable Product";
+  }
+  if (stage === "finished_product") return "Finished Product";
+  return stage || "Not captured";
+}
+
+function routeState(
+  hasCommodity: boolean,
+  hasQuantity: boolean,
+  hasPrice: boolean,
+  hasCost: boolean,
+  margin: number
+) {
+  if (!hasCommodity) return "Missing Commodity";
+  if (!hasQuantity) return "Missing Quantity";
+  if (!hasPrice) return "Missing Buyer Price";
+  if (!hasCost) return "Route Cost Incomplete";
+  if (margin < 15) return "Commercial Hold";
+  if (margin < 18) return "Improve Route";
+  return "Route Review Ready";
 }
 
 function Card({
@@ -29,17 +72,19 @@ function Card({
 }: {
   label: string;
   title: string;
-  children?: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5 shadow-2xl">
-      <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d7ad32]">
+    <section className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
+      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
         {label}
       </p>
-      <h2 className="mt-3 text-2xl font-black leading-tight text-white">
+
+      <h2 className="mt-2 text-xl font-black leading-tight text-white">
         {title}
       </h2>
-      {children ? <div className="mt-4">{children}</div> : null}
+
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
@@ -49,48 +94,71 @@ function Stat({
   value,
   note,
   gold,
+  danger,
 }: {
   label: string;
-  value: string | number;
+  value: string;
   note?: string;
   gold?: boolean;
+  danger?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
         {label}
       </p>
+
       <p
         className={
-          gold
-            ? "mt-3 text-3xl font-black text-[#f5d778]"
-            : "mt-3 text-3xl font-black text-white"
+          danger
+            ? "mt-2 text-xl font-black text-red-200"
+            : gold
+            ? "mt-2 text-xl font-black text-[#f5d778]"
+            : "mt-2 text-xl font-black text-white"
         }
       >
         {value}
       </p>
+
       {note ? (
-        <p className="mt-2 text-sm leading-6 text-slate-400">{note}</p>
+        <p className="mt-2 text-sm leading-6 text-slate-400">
+          {note}
+        </p>
       ) : null}
     </div>
   );
 }
 
-function GateItem({
-  label,
-  value,
+function Gate({
+  title,
+  ready,
+  note,
 }: {
-  label: string;
-  value: string | null | undefined;
+  title: string;
+  ready: boolean;
+  note: string;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
-        {label}
+    <div
+      className={
+        ready
+          ? "rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4"
+          : "rounded-2xl border border-red-400/30 bg-red-500/10 p-4"
+      }
+    >
+      <p
+        className={
+          ready
+            ? "text-sm font-black text-emerald-200"
+            : "text-sm font-black text-red-200"
+        }
+      >
+        {ready ? "Ready" : "Blocked"} — {title}
       </p>
-      <span className="mt-3 inline-flex rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200">
-        {stateLabel(value)}
-      </span>
+
+      <p className="mt-2 text-xs leading-5 text-slate-300">
+        {note}
+      </p>
     </div>
   );
 }
@@ -98,171 +166,373 @@ function GateItem({
 export default function RouteBuilderPage() {
   const supabase = createClient();
 
-  const [loading, setLoading] = useState(true);
-  const [parcel, setParcel] = useState<ActiveParcel | null>(null);
-  const [gate, setGate] = useState<ActiveGate | null>(null);
+  const [state, setState] = useState<LoadState>({
+    loading: true,
+    error: "",
+    row: null,
+  });
 
   useEffect(() => {
-    async function load() {
-      const result = await loadActiveParcel(supabase);
-      setParcel(result.parcel);
-      setGate(result.gate);
-      setLoading(false);
+    async function loadRoute() {
+      setState({
+        loading: true,
+        error: "",
+        row: null,
+      });
+
+      const { data, error } = await supabase
+        .from("parcels")
+        .select("*")
+        .eq("parcel_code", SEED_CODE)
+        .single();
+
+      if (error) {
+        setState({
+          loading: false,
+          error: error.message,
+          row: null,
+        });
+        return;
+      }
+
+      setState({
+        loading: false,
+        error: "",
+        row: (data || null) as Row | null,
+      });
     }
 
-    load();
+    loadRoute();
   }, [supabase]);
 
-  if (loading) {
+  if (state.loading) {
     return (
       <ResourceShell
-        title="Route Builder Control Module"
-        subtitle="Loading route chain..."
+        title="Route Builder"
+        subtitle="Reading saved parcel route context."
       >
-        <Card label="Loading" title="Reading route control data..." />
+        <Card label="Loading" title="Reading route control data...">
+          <p className="text-sm leading-6 text-slate-400">
+            Loading saved parcel, route quantity, price, cost and readiness.
+          </p>
+        </Card>
       </ResourceShell>
     );
   }
 
-  if (!parcel || !gate) {
+  if (state.error || !state.row) {
     return (
       <ResourceShell
-        title="Route Builder Control Module"
-        subtitle="No active parcel found."
+        title="Route Builder"
+        subtitle="Route data could not load."
       >
-        <Card label="No Data" title="Active parcel could not be loaded." />
+        <Card label="Exception" title="Route builder unavailable">
+          <p className="text-sm leading-6 text-red-200">
+            {state.error || "No active parcel record found."}
+          </p>
+        </Card>
       </ResourceShell>
     );
   }
 
-  const margin =
-    gate.routeMarginPercent || parcel.estimatedMarginPercent || 0;
+  const row = state.row;
+
+  const parcelCode = txt(
+    row.working_parcel_code,
+    txt(row.parcel_code, SEED_CODE)
+  );
+
+  const commodityClass = txt(row.commodity_class);
+  const category = txt(row.resource_category);
+  const resource = txt(row.resource_type);
+  const material = txt(row.material_type);
+  const stage = txt(row.material_stage);
+
+  const productQty = num(
+    row.expected_concentrate_tons,
+    num(row.accepted_tons, 0)
+  );
+
+  const routeQty = num(row.feedstock_tons, productQty);
+
+  const marketPrice = num(row.market_reference_price_per_ton, 0);
+  const negotiatedPrice = num(row.negotiated_price_per_ton, 0);
+
+  const effectivePrice = num(
+    row.effective_price_per_ton,
+    negotiatedPrice > 0 ? negotiatedPrice : marketPrice
+  );
+
+  const acquisitionCostPerUnit = num(row.feedstock_cost_per_ton, 0);
+  const logisticsCostPerUnit = num(
+    row.transport_to_plant_cost_per_ton,
+    0
+  );
+  const processingCostPerUnit = num(row.tolling_cost_per_ton, 0);
+  const verificationCost = num(row.estimated_total_assay_cost, 0);
+
+  const revenue = productQty * effectivePrice;
+  const acquisitionTotal = routeQty * acquisitionCostPerUnit;
+  const logisticsTotal = routeQty * logisticsCostPerUnit;
+  const processingTotal = routeQty * processingCostPerUnit;
+
+  const routeCost =
+    acquisitionTotal +
+    logisticsTotal +
+    processingTotal +
+    verificationCost;
+
+  const surplus = revenue - routeCost;
+  const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
+
+  const costPerProductUnit =
+    productQty > 0 ? routeCost / productQty : 0;
+
+  const grossSurplusPerProductUnit =
+    productQty > 0 ? surplus / productQty : 0;
+
+  const hasCommodity =
+    resource !== "Not captured" &&
+    material !== "Not captured";
+
+  const hasQuantity = productQty > 0;
+  const hasPrice = effectivePrice > 0;
+  const hasCost = routeCost > 0;
+  const hasPositiveSurplus = surplus > 0;
+  const hasTargetMargin = margin >= 18;
+
+  const currentRouteState = routeState(
+    hasCommodity,
+    hasQuantity,
+    hasPrice,
+    hasCost,
+    margin
+  );
+
+  const routeNeedsProcessing =
+    stage === "raw_feedstock" ||
+    processingCostPerUnit > 0 ||
+    processingTotal > 0;
 
   return (
     <ResourceShell
-      title="Route Builder Control Module"
-      subtitle="Route-chain view powered by central release result and active working parcel."
+      title="Route Builder"
+      subtitle="Route builder view reading the saved parcel economics."
     >
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Parcel" value={parcel.parcelCode} />
-        <Stat label="Resource" value={parcel.resource} gold />
-        <Stat label="Material" value={parcel.material} />
-        <Stat label="Route State" value={stateLabel(gate.releaseState)} />
+      <section className="grid gap-3">
+        <Stat label="Parcel" value={parcelCode} gold />
+        <Stat label="Class" value={commodityClass} />
+        <Stat label="Category" value={category} />
+        <Stat label="Resource" value={resource} />
+        <Stat label="Material" value={material} />
+        <Stat label="Stage" value={stageLabel(stage)} />
       </section>
 
-      <Card label="Route Identity" title="Commodity and material basis">
-        <div className="space-y-4">
-          <Stat label="Commodity Class" value={parcel.commodityClass} />
-          <Stat label="Category" value={parcel.category} />
-          <Stat label="Material Stage" value={stageLabel(parcel.materialStage)} />
+      <Card label="Route State" title={currentRouteState}>
+        <div className="grid gap-3">
+          <Stat
+            label="Current State"
+            value={currentRouteState}
+            gold={currentRouteState === "Route Review Ready"}
+            danger={currentRouteState !== "Route Review Ready"}
+            note="Route state is based on commodity, quantity, buyer price, route cost and margin."
+          />
+
+          <Stat
+            label="Margin"
+            value={`${margin.toFixed(1)}%`}
+            gold={margin >= 18}
+            danger={margin <= 0}
+          />
+
+          <Stat
+            label="Surplus"
+            value={money(surplus)}
+            gold={surplus > 0}
+            danger={surplus <= 0}
+          />
         </div>
       </Card>
 
-      <Card label="Route Chain" title="Supplier to plant to buyer">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">
-                Route Chain
-              </p>
-              <p className="mt-3 text-2xl font-black text-white">
-                {parcel.originLocation} to {parcel.plantLocation} to{" "}
-                {parcel.deliveryLocation}
-              </p>
-            </div>
-            <span className="rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200">
-              {stateLabel(gate.routesState)}
-            </span>
-          </div>
+      <Card label="Route Quantity" title="Movement basis">
+        <div className="grid gap-3">
+          <Stat
+            label="Product Quantity"
+            value={`${productQty.toFixed(3)} units`}
+            note="Quantity intended for sale or delivery."
+          />
 
-          <div className="mt-5 space-y-4">
-            <Stat label="Origin / Loading" value={parcel.originLocation} />
-            <Stat label="Plant / Processing" value={parcel.plantLocation} />
-            <Stat label="Delivery / Offtake" value={parcel.deliveryLocation} />
-            <Stat label="Transporter" value={parcel.transporterName} />
-            <Stat label="Route Note" value={parcel.routeNote} />
-          </div>
-        </div>
-      </Card>
-
-      <Card label="Release Gate Result" title="Route Builder follows the central decision">
-        <div className="space-y-4">
-          <Stat label="Release Decision" value={gate.releaseDecision} />
-          <Stat label="Open Blockers" value={gate.openBlockers} />
-          <Stat label="Hard Blockers" value={gate.hardBlockers} />
-          <Stat label="Pending Blockers" value={gate.pendingBlockers} />
-          <Stat label="Margin Blocker" value={gate.marginBlocker ? "Yes" : "No"} />
-
-          <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-red-200">
-              Release Decision
-            </p>
-            <p className="mt-3 text-2xl font-black text-red-100">
-              {gate.releaseDecision}
-            </p>
-            <p className="mt-3 text-sm leading-7 text-red-100/80">
-              Route Builder reads the same central release decision as Dashboard,
-              Analytics, Finance and Operations.
-            </p>
-          </div>
-        </div>
-      </Card>
-
-      <Card label="Route Economics Basis" title="Tonnage and margin signal">
-        <div className="space-y-4">
-          <Stat label="Product Quantity" value={tons(parcel.productQuantity)} />
           <Stat
             label={
-              parcel.materialStage === "raw_feedstock"
-                ? "Feedstock Required"
-                : "Route Product Quantity"
+              stage === "raw_feedstock"
+                ? "Feedstock / Route Quantity"
+                : "Route Quantity"
             }
-            value={tons(parcel.routeQuantity)}
-            note={
-              parcel.materialStage === "raw_feedstock"
-                ? `${pct(parcel.expectedYieldPercent)} expected yield`
-                : "Saleable / finished product basis = product quantity"
-            }
+            value={`${routeQty.toFixed(3)} units`}
             gold
+            note={
+              stage === "raw_feedstock"
+                ? "Raw feedstock route quantity is calculated from yield."
+                : "Saleable or finished product routes on product quantity basis."
+            }
           />
-          <Stat label="Route Cost" value={money(parcel.estimatedRouteCost)} />
-          <Stat label="Surplus" value={money(parcel.estimatedSurplus)} gold />
-          <Stat label="Route Margin" value={pct(margin)} gold />
+
+          <Stat
+            label="Cost / Product Unit"
+            value={moneyUnit(costPerProductUnit)}
+          />
+
+          <Stat
+            label="Surplus / Product Unit"
+            value={moneyUnit(grossSurplusPerProductUnit)}
+            gold={grossSurplusPerProductUnit > 0}
+            danger={grossSurplusPerProductUnit <= 0}
+          />
         </div>
       </Card>
 
-      <Card label="Central Route Control" title="Route cannot proceed yet">
-        <div className="space-y-4">
-          <div className="rounded-3xl border border-red-400/30 bg-red-500/10 p-5">
-            <p className="text-2xl font-black text-red-100">
-              Route release remains blocked.
-            </p>
-            <p className="mt-3 text-sm leading-7 text-red-100/80">
-              Do not authorize loading, plant dispatch, buyer movement,
-              transport release or finance handoff until the central release
-              gate result is clear.
-            </p>
-          </div>
+      <Card label="Route Cost" title="Route cost build-up">
+        <div className="grid gap-3">
+          <Stat
+            label="Acquisition"
+            value={money(acquisitionTotal)}
+            note={`${moneyUnit(acquisitionCostPerUnit)} × ${routeQty.toFixed(3)}`}
+          />
 
-          <GateItem label="Documents" value={gate.documentsState} />
-          <GateItem label="Approvals" value={gate.approvalsState} />
-          <GateItem label="Counterparties" value={gate.counterpartiesState} />
-          <GateItem label="Routes" value={gate.routesState} />
+          <Stat
+            label="Logistics / Handling"
+            value={money(logisticsTotal)}
+            note={`${moneyUnit(logisticsCostPerUnit)} × ${routeQty.toFixed(3)}`}
+          />
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link
-              href="/dashboard"
-              className="rounded-full bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
-            >
-              Back to Dashboard
-            </Link>
-            <Link
-              href="/documents"
-              className="rounded-full border border-slate-700 px-5 py-3 text-sm font-black text-white"
-            >
-              Documents
-            </Link>
-          </div>
+          <Stat
+            label="Processing / Tolling"
+            value={money(processingTotal)}
+            note={`${moneyUnit(processingCostPerUnit)} × ${routeQty.toFixed(3)}`}
+          />
+
+          <Stat
+            label="Verification / Quality"
+            value={money(verificationCost)}
+          />
+
+          <Stat
+            label="Total Route Cost"
+            value={money(routeCost)}
+            gold={routeCost > 0}
+            danger={routeCost <= 0}
+          />
+        </div>
+      </Card>
+
+      <Card label="Buyer Route" title="Revenue basis">
+        <div className="grid gap-3">
+          <Stat
+            label="Market / Reference Price"
+            value={moneyUnit(marketPrice)}
+          />
+
+          <Stat
+            label="Negotiated Buyer Price"
+            value={moneyUnit(negotiatedPrice)}
+          />
+
+          <Stat
+            label="Effective Selling Price"
+            value={moneyUnit(effectivePrice)}
+            gold={effectivePrice > 0}
+            danger={effectivePrice <= 0}
+          />
+
+          <Stat
+            label="Expected Revenue"
+            value={money(revenue)}
+            gold={revenue > 0}
+            danger={revenue <= 0}
+          />
+        </div>
+      </Card>
+
+      <Card label="Route Gates" title="Readiness checks">
+        <div className="grid gap-3">
+          <Gate
+            title="Commodity and material selected"
+            ready={hasCommodity}
+            note="Route cannot proceed without commodity, resource and material."
+          />
+
+          <Gate
+            title="Quantity captured"
+            ready={hasQuantity}
+            note="Product and route quantity must be available for logistics and finance."
+          />
+
+          <Gate
+            title="Buyer price captured"
+            ready={hasPrice}
+            note="Market/reference price or negotiated buyer price must be captured."
+          />
+
+          <Gate
+            title="Route costs captured"
+            ready={hasCost}
+            note="Acquisition, logistics, processing and verification costs must be complete."
+          />
+
+          <Gate
+            title="Positive surplus"
+            ready={hasPositiveSurplus}
+            note="Route should show positive surplus before release review."
+          />
+
+          <Gate
+            title="Target margin"
+            ready={hasTargetMargin}
+            note="Route should target 18% or higher gross margin before release."
+          />
+        </div>
+      </Card>
+
+      <Card label="Route Capture Still Needed" title="Next route fields">
+        <div className="grid gap-3">
+          <Stat
+            label="Origin / Loading Point"
+            value="Not yet captured"
+            note="Add source site, loading point, stockpile or warehouse."
+            danger
+          />
+
+          <Stat
+            label="Processing / Plant Point"
+            value={routeNeedsProcessing ? "Required" : "Optional"}
+            note={
+              routeNeedsProcessing
+                ? "This route appears to need plant, tolling or processing control."
+                : "This material may route as saleable or finished product without processing."
+            }
+            danger={routeNeedsProcessing}
+          />
+
+          <Stat
+            label="Buyer / Delivery Point"
+            value="Not yet captured"
+            note="Add buyer site, delivery point, port, depot or offtake location."
+            danger
+          />
+
+          <Stat
+            label="Transporter / Trucking"
+            value="Not yet captured"
+            note="Add transporter, vehicle type, rate basis and movement capacity."
+            danger
+          />
+
+          <Stat
+            label="Delivery Basis"
+            value="Not yet captured"
+            note="Add Ex-works, FOT, FOB, CIF or other route basis."
+            danger
+          />
         </div>
       </Card>
     </ResourceShell>

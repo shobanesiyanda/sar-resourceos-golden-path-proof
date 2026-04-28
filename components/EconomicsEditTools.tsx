@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import ResourceShell from "./ResourceShell";
 import { createClient } from "../lib/supabase/client";
 
@@ -247,7 +247,7 @@ const RESOURCES: Resource[] = [
   },
 ];
 
-function toNumber(value: unknown, fallback = 0) {
+function num(value: unknown, fallback = 0) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
 
   if (typeof value === "string" && value.trim()) {
@@ -258,9 +258,13 @@ function toNumber(value: unknown, fallback = 0) {
   return fallback;
 }
 
-function toText(value: unknown, fallback = "") {
+function txt(value: unknown, fallback = "") {
   if (typeof value === "string" && value.trim()) return value;
   return fallback;
+}
+
+function uniq(values: string[]) {
+  return Array.from(new Set(values));
 }
 
 function money(value: number) {
@@ -269,7 +273,7 @@ function money(value: number) {
   })}`;
 }
 
-function moneyPerTon(value: number) {
+function moneyTon(value: number) {
   return `${money(value)}/t`;
 }
 
@@ -279,16 +283,12 @@ function stageLabel(stage: Stage) {
   return "Finished Product";
 }
 
-function stageForDb(stage: Stage) {
+function dbStage(stage: Stage) {
   if (stage === "saleable_product") return "intermediate_concentrate";
   return stage;
 }
 
-function unique(values: string[]) {
-  return Array.from(new Set(values));
-}
-
-function firstResourceFor(cls: CommodityClass, category?: string) {
+function firstResource(cls: CommodityClass, category?: string) {
   return (
     RESOURCES.find(
       (item) =>
@@ -298,18 +298,18 @@ function firstResourceFor(cls: CommodityClass, category?: string) {
   );
 }
 
-function findResource(form: FormState) {
+function getResource(form: FormState) {
   return (
     RESOURCES.find(
       (item) =>
         item.cls === form.cls &&
         item.category === form.category &&
         item.resource === form.resource
-    ) || firstResourceFor(form.cls, form.category)
+    ) || firstResource(form.cls, form.category)
   );
 }
 
-function findMaterial(resource: Resource, materialName: string) {
+function getMaterial(resource: Resource, materialName: string) {
   return (
     resource.materials.find((item) => item.name === materialName) ||
     resource.materials[0]
@@ -335,7 +335,7 @@ function Card({
 }: {
   label: string;
   title: string;
-  children?: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
@@ -345,7 +345,7 @@ function Card({
       <h2 className="mt-2 text-xl font-black leading-tight text-white">
         {title}
       </h2>
-      {children ? <div className="mt-4">{children}</div> : null}
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
@@ -405,9 +405,9 @@ function SelectField({
         onChange={(event) => onChange(event.target.value)}
         className="mt-2 w-full rounded-2xl border border-slate-800 bg-[#060b16] px-4 py-3 text-base font-black text-white outline-none focus:border-[#d7ad32]"
       >
-        {options.map((item) => (
-          <option key={item} value={item}>
-            {item}
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
           </option>
         ))}
       </select>
@@ -435,7 +435,7 @@ function NumField({
         type="number"
         inputMode="decimal"
         value={String(value)}
-        onChange={(event) => onChange(toNumber(event.target.value))}
+        onChange={(event) => onChange(num(event.target.value))}
         className="mt-2 w-full rounded-2xl border border-slate-800 bg-[#060b16] px-4 py-3 text-lg font-black text-white outline-none focus:border-[#d7ad32]"
       />
       {help ? (
@@ -471,29 +471,34 @@ export default function EconomicsEditTools() {
     priceNote: "",
   });
 
-  const resource = findResource(form);
-  const material = findMaterial(resource, form.material);
+  const resource = getResource(form);
+  const material = getMaterial(resource, form.material);
   const workingParcelCode = parcelCode(resource);
 
-  const categories = useMemo(() => {
-    return unique(
-      RESOURCES.filter((item) => item.cls === form.cls).map(
-        (item) => item.category
-      )
-    );
-  }, [form.cls]);
+  const categories = useMemo(
+    () =>
+      uniq(
+        RESOURCES.filter((item) => item.cls === form.cls).map(
+          (item) => item.category
+        )
+      ),
+    [form.cls]
+  );
 
-  const resourceOptions = useMemo(() => {
-    return RESOURCES.filter(
-      (item) =>
-        item.cls === form.cls &&
-        item.category === form.category
-    ).map((item) => item.resource);
-  }, [form.cls, form.category]);
+  const resourceOptions = useMemo(
+    () =>
+      RESOURCES.filter(
+        (item) =>
+          item.cls === form.cls &&
+          item.category === form.category
+      ).map((item) => item.resource),
+    [form.cls, form.category]
+  );
 
-  const materialOptions = useMemo(() => {
-    return resource.materials.map((item) => item.name);
-  }, [resource]);
+  const materialOptions = useMemo(
+    () => resource.materials.map((item) => item.name),
+    [resource]
+  );
 
   const routeQty =
     material.stage === "raw_feedstock" && form.yieldPct > 0
@@ -501,7 +506,9 @@ export default function EconomicsEditTools() {
       : form.productQty;
 
   const effectivePrice =
-    form.negotiatedPrice > 0 ? form.negotiatedPrice : form.marketPrice;
+    form.negotiatedPrice > 0
+      ? form.negotiatedPrice
+      : form.marketPrice;
 
   const revenue = form.productQty * effectivePrice;
   const acquisitionTotal = routeQty * form.acquisitionCost;
@@ -516,14 +523,14 @@ export default function EconomicsEditTools() {
   const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
 
   const target18Cost = revenue * 0.82;
-  const costGapTo18 = Math.max(routeCost - target18Cost, 0);
-  const recommendedBuyerPrice =
+  const costGap = Math.max(routeCost - target18Cost, 0);
+  const targetBuyerPrice =
     margin >= 18 || form.productQty <= 0
       ? effectivePrice
       : Math.ceil(routeCost / (form.productQty * 0.82));
-  const recommendedCostReduction = Math.ceil(costGapTo18);
-  const recommendedPerRouteUnit =
-    routeQty > 0 ? Math.ceil(costGapTo18 / routeQty) : 0;
+  const costReduction = Math.ceil(costGap);
+  const costReductionUnit =
+    routeQty > 0 ? Math.ceil(costGap / routeQty) : 0;
 
   useEffect(() => {
     async function load() {
@@ -558,47 +565,47 @@ export default function EconomicsEditTools() {
         category: rowResource.category,
         resource: rowResource.resource,
         material: rowMaterial.name,
-        productQty: toNumber(
+        productQty: num(
           row.expected_concentrate_tons,
-          toNumber(row.accepted_tons, 250)
+          num(row.accepted_tons, 250)
         ),
-        yieldPct: toNumber(
+        yieldPct: num(
           row.expected_yield_percent,
           rowMaterial.yieldPct
         ),
-        marketPrice: toNumber(
+        marketPrice: num(
           row.market_reference_price_per_ton,
           rowMaterial.price
         ),
-        negotiatedPrice: toNumber(
+        negotiatedPrice: num(
           row.negotiated_price_per_ton,
-          toNumber(row.effective_price_per_ton, rowMaterial.price)
+          num(row.effective_price_per_ton, rowMaterial.price)
         ),
-        acquisitionCost: toNumber(
+        acquisitionCost: num(
           row.feedstock_cost_per_ton,
           rowMaterial.acquisition
         ),
-        logisticsCost: toNumber(
+        logisticsCost: num(
           row.transport_to_plant_cost_per_ton,
           rowMaterial.logistics
         ),
-        processingCost: toNumber(
+        processingCost: num(
           row.tolling_cost_per_ton,
           rowMaterial.processing
         ),
-        verificationCost: toNumber(
+        verificationCost: num(
           row.estimated_total_assay_cost,
           rowMaterial.verification
         ),
-        priceNote: toText(row.price_override_note, ""),
+        priceNote: txt(row.price_override_note, ""),
       });
     }
 
     load();
   }, [supabase]);
 
-  function applyClass(nextClass: string) {
-    const nextResource = firstResourceFor(nextClass as CommodityClass);
+  function applyClass(value: string) {
+    const nextResource = firstResource(value as CommodityClass);
     const nextMaterial = nextResource.materials[0];
 
     setForm((current) => ({
@@ -618,8 +625,8 @@ export default function EconomicsEditTools() {
     }));
   }
 
-  function applyCategory(nextCategory: string) {
-    const nextResource = firstResourceFor(form.cls, nextCategory);
+  function applyCategory(value: string) {
+    const nextResource = firstResource(form.cls, value);
     const nextMaterial = nextResource.materials[0];
 
     setForm((current) => ({
@@ -638,13 +645,13 @@ export default function EconomicsEditTools() {
     }));
   }
 
-  function applyResource(nextResourceName: string) {
+  function applyResource(value: string) {
     const nextResource =
       RESOURCES.find(
         (item) =>
           item.cls === form.cls &&
           item.category === form.category &&
-          item.resource === nextResourceName
+          item.resource === value
       ) || resource;
 
     const nextMaterial = nextResource.materials[0];
@@ -664,11 +671,10 @@ export default function EconomicsEditTools() {
     }));
   }
 
-  function applyMaterial(nextMaterialName: string) {
+  function applyMaterial(value: string) {
     const nextMaterial =
-      resource.materials.find(
-        (item) => item.name === nextMaterialName
-      ) || material;
+      resource.materials.find((item) => item.name === value) ||
+      material;
 
     setForm((current) => ({
       ...current,
@@ -703,19 +709,31 @@ export default function EconomicsEditTools() {
         resource_category: form.category,
         resource_type: form.resource,
         material_type: form.material,
-        material_stage: stageForDb(material.stage),
+        material_stage: dbStage(material.stage),
+
         expected_concentrate_tons: form.productQty,
+        accepted_tons: form.productQty,
         feedstock_tons: routeQty,
         expected_yield_percent: form.yieldPct,
+
         market_reference_price_per_ton: form.marketPrice,
         negotiated_price_per_ton: form.negotiatedPrice,
         effective_price_per_ton: effectivePrice,
         expected_price_per_ton: effectivePrice,
+        price_basis: "market_reference_with_negotiated_override",
+        price_override_note: form.priceNote,
+
         feedstock_cost_per_ton: form.acquisitionCost,
         transport_to_plant_cost_per_ton: form.logisticsCost,
         tolling_cost_per_ton: form.processingCost,
-        price_basis: "market_reference_with_negotiated_override",
-        price_override_note: form.priceNote,
+
+        estimated_feedstock_cost: acquisitionTotal,
+        estimated_transport_cost: logisticsTotal,
+        estimated_tolling_cost: processingTotal,
+        estimated_total_assay_cost: form.verificationCost,
+        estimated_route_cost: routeCost,
+        estimated_route_surplus: surplus,
+        estimated_route_margin_percent: margin,
       })
       .eq("id", parcelId);
 
@@ -732,7 +750,7 @@ export default function EconomicsEditTools() {
   return (
     <ResourceShell
       title="Edit Lead Economics"
-      subtitle="Editable economics with cascading commodity selection and negotiated price override."
+      subtitle="Cascading commodity selection with editable economics controls."
     >
       <section className="grid gap-3">
         <Stat label="Parcel" value={workingParcelCode} />
@@ -775,6 +793,111 @@ export default function EconomicsEditTools() {
         </div>
       </Card>
 
+      <Card label="Editable Economics" title="Input controls">
+        <div className="space-y-3">
+          <NumField
+            label="Product Quantity"
+            value={form.productQty}
+            onChange={(value) =>
+              setForm({ ...form, productQty: value })
+            }
+          />
+
+          <NumField
+            label="Expected Yield %"
+            value={form.yieldPct}
+            onChange={(value) =>
+              setForm({ ...form, yieldPct: value })
+            }
+            help={
+              material.stage === "raw_feedstock"
+                ? "Used to calculate feedstock required."
+                : "Saleable product uses 100% basis."
+            }
+          />
+
+          <NumField
+            label="Market / Reference Price"
+            value={form.marketPrice}
+            onChange={(value) =>
+              setForm({ ...form, marketPrice: value })
+            }
+            help="Future live market feed value. Editable for negotiated routes."
+          />
+
+          <NumField
+            label="Negotiated Buyer Price"
+            value={form.negotiatedPrice}
+            onChange={(value) =>
+              setForm({ ...form, negotiatedPrice: value })
+            }
+            help="Buyer price override used as effective selling price."
+          />
+
+          <NumField
+            label="Acquisition Cost / Unit"
+            value={form.acquisitionCost}
+            onChange={(value) =>
+              setForm({ ...form, acquisitionCost: value })
+            }
+          />
+
+          <NumField
+            label="Logistics / Handling Cost / Unit"
+            value={form.logisticsCost}
+            onChange={(value) =>
+              setForm({ ...form, logisticsCost: value })
+            }
+          />
+
+          <NumField
+            label="Processing / Tolling Cost / Unit"
+            value={form.processingCost}
+            onChange={(value) =>
+              setForm({ ...form, processingCost: value })
+            }
+          />
+
+          <NumField
+            label="Verification / Quality Cost"
+            value={form.verificationCost}
+            onChange={(value) =>
+              setForm({ ...form, verificationCost: value })
+            }
+          />
+
+          <textarea
+            value={form.priceNote}
+            onChange={(event) =>
+              setForm({ ...form, priceNote: event.target.value })
+            }
+            placeholder="Price note or override reason"
+            className="w-full rounded-2xl border border-slate-800 bg-[#060b16] px-4 py-3 text-sm font-bold leading-6 text-white outline-none focus:border-[#d7ad32]"
+          />
+
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className="w-full rounded-full bg-[#d7ad32] px-5 py-4 text-base font-black text-[#07101c] disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save Lead Economics"}
+          </button>
+
+          {notice ? (
+            <p className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm font-black text-emerald-200">
+              {notice}
+            </p>
+          ) : null}
+
+          {error ? (
+            <p className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm font-black text-red-200">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      </Card>
+
       <Card label="Live Result" title="Calculated economics">
         <div className="grid gap-3">
           <Stat
@@ -788,7 +911,7 @@ export default function EconomicsEditTools() {
           />
           <Stat
             label="Effective Price"
-            value={moneyPerTon(effectivePrice)}
+            value={moneyTon(effectivePrice)}
             gold
           />
           <Stat label="Revenue" value={money(revenue)} />
@@ -803,18 +926,18 @@ export default function EconomicsEditTools() {
         <div className="grid gap-3">
           <Stat
             label="Target Buyer Price"
-            value={moneyPerTon(recommendedBuyerPrice)}
+            value={moneyTon(targetBuyerPrice)}
             note="Indicative price needed to move toward an 18% gross margin."
             gold
           />
           <Stat
             label="Total Cost Reduction Needed"
-            value={money(recommendedCostReduction)}
+            value={money(costReduction)}
             note="Estimated reduction needed across acquisition, logistics, processing or verification costs."
           />
           <Stat
             label="Cost Reduction / Route Unit"
-            value={moneyPerTon(recommendedPerRouteUnit)}
+            value={moneyTon(costReductionUnit)}
             note="Indicative saving required per route ton or product unit."
           />
           <Stat
@@ -826,4 +949,4 @@ export default function EconomicsEditTools() {
       </Card>
     </ResourceShell>
   );
-}
+      }

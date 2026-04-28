@@ -293,7 +293,14 @@ export default function FinancePage() {
     <ResourceShell title="Finance" subtitle="Finance readiness view reading the saved parcel economics.">
       <ParcelHeader model={model} />
 
-      <Card label="Finance Readiness" title={marginBand(model.margin)}>
+      <Card
+  label="Finance Readiness"
+  title={
+    !model.hasCost
+      ? "Costing Incomplete"
+      : marginBand(model.margin)
+  }
+>
         <div className="grid gap-3">
           <Stat label="Revenue" value={moneyValue(model.revenue)} gold={model.revenue > 0} danger={model.revenue <= 0} />
           <Stat label="Route Cost" value={moneyValue(model.routeCost)} gold={model.routeCost > 0} danger={model.routeCost <= 0} note="Shows Not captured until acquisition, logistics, processing or verification costs are saved." />

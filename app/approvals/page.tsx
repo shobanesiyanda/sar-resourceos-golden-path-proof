@@ -1,141 +1,206 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { createClient } from "../../lib/supabase/client";
 import ResourceShell from "../../components/ResourceShell";
+import { createClient } from "../../lib/supabase/client";
 
-const PARCEL_CODE = "PAR-CHR-2026-0001";
+const SEED_CODE = "PAR-CHR-2026-0001";
 
-type Parcel = {
-  id: string;
-  parcel_code: string;
-  commodity: string | null;
-  resource_type: string | null;
-  material_type: string | null;
+type Row = Record<string, unknown>;
+
+type LoadState = {
+  loading: boolean;
+  error: string;
+  row: Row | null;
 };
 
-type ApprovalAny = {
-  id?: string;
-  status?: string | null;
-  notes?: string | null;
-  note?: string | null;
-  approval_type?: string | null;
-  type?: string | null;
-  approval_name?: string | null;
-  name?: string | null;
-  title?: string | null;
-  approval_title?: string | null;
-  label?: string | null;
-  description?: string | null;
-  approver_role?: string | null;
-  approver?: string | null;
-};
+function num(value: unknown, fallback = 0) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
 
-function approvalId(a: ApprovalAny, index: number) {
-  return a.id || `approval-${index}`;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
 }
 
-function approvalTitle(a: ApprovalAny) {
+function txt(value: unknown, fallback = "Not captured") {
+  if (typeof value === "string" && value.trim()) return value;
+  return fallback;
+}
+
+function money(value: number) {
+  return `R ${Number(value || 0).toLocaleString("en-ZA", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+function moneyUnit(value: number) {
+  return `${money(value)}/unit`;
+}
+
+function stageLabel(stage: string) {
+  if (stage === "raw_feedstock") return "Raw Feedstock";
+  if (stage === "intermediate_concentrate") {
+    return "Intermediate / Saleable Product";
+  }
+  if (stage === "finished_product") return "Finished Product";
+  return stage || "Not captured";
+}
+
+function approvalState(
+  hasCommodity: boolean,
+  hasQuantity: boolean,
+  hasPrice: boolean,
+  hasCost: boolean,
+  surplus: number,
+  margin: number
+) {
+  if (!hasCommodity) return "Blocked — Commodity Missing";
+  if (!hasQuantity) return "Blocked — Quantity Missing";
+  if (!hasPrice) return "Blocked — Buyer Price Missing";
+  if (!hasCost) return "Blocked — Route Cost Missing";
+  if (surplus <= 0) return "Blocked — Negative Surplus";
+  if (margin < 15) return "Held — Commercial Risk";
+  if (margin < 18) return "Review — Improve Margin";
+  return "Approval Review Ready";
+}
+
+function Card({
+  label,
+  title,
+  children,
+}: {
+  label: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    a.approval_title ||
-    a.approval_name ||
-    a.title ||
-    a.name ||
-    a.label ||
-    a.approval_type ||
-    a.type ||
-    "Required approval"
-  );
-}
-
-function approvalType(a: ApprovalAny) {
-  return a.approval_type || a.type || "Approval";
-}
-
-function approvalNote(a: ApprovalAny) {
-  return a.notes || a.note || a.description || "No approval note captured yet.";
-}
-
-function approver(a: ApprovalAny) {
-  return a.approver_role || a.approver || "Approval owner not assigned";
-}
-
-function statusClass(status: string | null | undefined) {
-  if (status === "Complete" || status === "Approved") {
-    return "border-emerald-400/40 bg-emerald-500/15 text-emerald-200";
-  }
-
-  if (status === "Blocked" || status === "Rejected") {
-    return "border-red-400/40 bg-red-500/15 text-red-200";
-  }
-
-  if (status === "Pending") {
-    return "border-[#d7ad32]/40 bg-[#d7ad32]/15 text-[#f5d778]";
-  }
-
-  return "border-white/10 bg-white/[0.03] text-slate-300";
-}
-
-function openCount(rows: ApprovalAny[]) {
-  return rows.filter((r) => r.status === "Pending" || r.status === "Blocked").length;
-}
-
-function approvedCount(rows: ApprovalAny[]) {
-  return rows.filter((r) => r.status === "Approved" || r.status === "Complete").length;
-}
-
-function Card(p: { label: string; title: string; children?: React.ReactNode }) {
-  return (
-    <section className="mb-6 rounded-3xl border border-white/10 bg-[#080d18] p-5 shadow-2xl">
-      <p className="text-xs font-black uppercase tracking-[0.3em] text-[#d7ad32]">
-        {p.label}
+    <section className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
+      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
+        {label}
       </p>
-      <h3 className="mt-2 text-2xl font-black">{p.title}</h3>
-      {p.children}
+
+      <h2 className="mt-2 text-xl font-black leading-tight text-white">
+        {title}
+      </h2>
+
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
 
-function Stat(p: { label: string; value: string; note?: string; gold?: boolean }) {
+function Stat({
+  label,
+  value,
+  note,
+  gold,
+  danger,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+  gold?: boolean;
+  danger?: boolean;
+}) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-        {p.label}
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+        {label}
       </p>
-      <p className={`mt-2 text-3xl font-black ${p.gold ? "text-[#f5d778]" : "text-white"}`}>
-        {p.value}
+
+      <p
+        className={
+          danger
+            ? "mt-2 text-xl font-black text-red-200"
+            : gold
+            ? "mt-2 text-xl font-black text-[#f5d778]"
+            : "mt-2 text-xl font-black text-white"
+        }
+      >
+        {value}
       </p>
-      {p.note ? <p className="mt-2 text-sm leading-6 text-slate-400">{p.note}</p> : null}
+
+      {note ? (
+        <p className="mt-2 text-sm leading-6 text-slate-400">
+          {note}
+        </p>
+      ) : null}
     </div>
   );
 }
 
-function ApprovalCard({ approval, index }: { approval: ApprovalAny; index: number }) {
+function Gate({
+  title,
+  ready,
+  note,
+}: {
+  title: string;
+  ready: boolean;
+  note: string;
+}) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-            {approvalType(approval)}
-          </p>
-          <h4 className="mt-2 text-xl font-black text-white">
-            {approvalTitle(approval)}
-          </h4>
-        </div>
+    <div
+      className={
+        ready
+          ? "rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4"
+          : "rounded-2xl border border-red-400/30 bg-red-500/10 p-4"
+      }
+    >
+      <p
+        className={
+          ready
+            ? "text-sm font-black text-emerald-200"
+            : "text-sm font-black text-red-200"
+        }
+      >
+        {ready ? "Pass" : "Blocked"} — {title}
+      </p>
 
-        <span
-          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${statusClass(
-            approval.status
-          )}`}
-        >
-          {approval.status || "Draft"}
-        </span>
-      </div>
+      <p className="mt-2 text-xs leading-5 text-slate-300">
+        {note}
+      </p>
+    </div>
+  );
+}
 
-      <p className="mt-3 text-sm font-bold text-[#f5d778]">{approver(approval)}</p>
-      <p className="mt-2 text-sm leading-6 text-slate-400">
-        {approvalNote(approval)}
+function ApprovalCard({
+  title,
+  state,
+  note,
+}: {
+  title: string;
+  state: "Pending" | "Ready" | "Blocked" | "Future";
+  note: string;
+}) {
+  const ready = state === "Ready";
+  const blocked = state === "Blocked";
+
+  return (
+    <div
+      className={
+        ready
+          ? "rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4"
+          : blocked
+          ? "rounded-2xl border border-red-400/30 bg-red-500/10 p-4"
+          : "rounded-2xl border border-slate-700 bg-slate-900/40 p-4"
+      }
+    >
+      <p
+        className={
+          ready
+            ? "text-sm font-black text-emerald-200"
+            : blocked
+            ? "text-sm font-black text-red-200"
+            : "text-sm font-black text-slate-200"
+        }
+      >
+        {state} — {title}
+      </p>
+
+      <p className="mt-2 text-xs leading-5 text-slate-300">
+        {note}
       </p>
     </div>
   );
@@ -144,163 +209,346 @@ function ApprovalCard({ approval, index }: { approval: ApprovalAny; index: numbe
 export default function ApprovalsPage() {
   const supabase = createClient();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [parcel, setParcel] = useState<Parcel | null>(null);
-  const [approvals, setApprovals] = useState<ApprovalAny[]>([]);
+  const [state, setState] = useState<LoadState>({
+    loading: true,
+    error: "",
+    row: null,
+  });
 
   useEffect(() => {
-    async function load() {
-      const { data: auth } = await supabase.auth.getUser();
+    async function loadApprovals() {
+      setState({
+        loading: true,
+        error: "",
+        row: null,
+      });
 
-      if (!auth.user) {
-        window.location.href = "/login";
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role, is_active")
-        .eq("id", auth.user.id)
-        .single();
-
-      if (!profile || profile.is_active !== true) {
-        setError("Profile not found or inactive.");
-        setLoading(false);
-        return;
-      }
-
-      const { data: parcelData, error: parcelError } = await supabase
+      const { data, error } = await supabase
         .from("parcels")
-        .select("id, parcel_code, commodity, resource_type, material_type")
-        .eq("parcel_code", PARCEL_CODE)
+        .select("*")
+        .eq("parcel_code", SEED_CODE)
         .single();
 
-      if (parcelError || !parcelData) {
-        setError("Parcel not found.");
-        setLoading(false);
+      if (error) {
+        setState({
+          loading: false,
+          error: error.message,
+          row: null,
+        });
         return;
       }
 
-      const { data: approvalData, error: approvalError } = await supabase
-        .from("approvals")
-        .select("*")
-        .eq("parcel_id", parcelData.id);
-
-      if (approvalError) {
-        setError(approvalError.message);
-        setLoading(false);
-        return;
-      }
-
-      setParcel(parcelData as Parcel);
-      setApprovals((approvalData as ApprovalAny[]) || []);
-      setLoading(false);
+      setState({
+        loading: false,
+        error: "",
+        row: (data || null) as Row | null,
+      });
     }
 
-    load();
+    loadApprovals();
   }, [supabase]);
 
-  if (loading) {
+  if (state.loading) {
     return (
-      <ResourceShell title="Approvals Control" subtitle="Loading approval queue...">
-        <Card label="Loading" title="Reading Supabase approval records..." />
-      </ResourceShell>
-    );
-  }
-
-  if (error || !parcel) {
-    return (
-      <ResourceShell title="Approvals Control" subtitle="Approvals module error">
-        <Card label="Error" title="Could not load approvals">
-          <p className="mt-3 text-red-200">
-            {error || "Could not load approvals page."}
+      <ResourceShell
+        title="Approvals"
+        subtitle="Reading approval readiness."
+      >
+        <Card label="Loading" title="Reading approval control data...">
+          <p className="text-sm leading-6 text-slate-400">
+            Loading saved parcel, margin, cost and release gates.
           </p>
         </Card>
       </ResourceShell>
     );
   }
 
-  const approved = approvedCount(approvals);
-  const open = openCount(approvals);
-  const blocked = approvals.filter((a) => a.status === "Blocked").length;
-  const pending = approvals.filter((a) => a.status === "Pending").length;
+  if (state.error || !state.row) {
+    return (
+      <ResourceShell
+        title="Approvals"
+        subtitle="Approval data could not load."
+      >
+        <Card label="Exception" title="Approval queue unavailable">
+          <p className="text-sm leading-6 text-red-200">
+            {state.error || "No active parcel record found."}
+          </p>
+        </Card>
+      </ResourceShell>
+    );
+  }
+
+  const row = state.row;
+
+  const parcelCode = txt(
+    row.working_parcel_code,
+    txt(row.parcel_code, SEED_CODE)
+  );
+
+  const commodityClass = txt(row.commodity_class);
+  const category = txt(row.resource_category);
+  const resource = txt(row.resource_type);
+  const material = txt(row.material_type);
+  const stage = txt(row.material_stage);
+
+  const productQty = num(
+    row.expected_concentrate_tons,
+    num(row.accepted_tons, 0)
+  );
+
+  const routeQty = num(row.feedstock_tons, productQty);
+
+  const marketPrice = num(row.market_reference_price_per_ton, 0);
+  const negotiatedPrice = num(row.negotiated_price_per_ton, 0);
+  const effectivePrice = num(
+    row.effective_price_per_ton,
+    negotiatedPrice > 0 ? negotiatedPrice : marketPrice
+  );
+
+  const acquisitionCostPerUnit = num(row.feedstock_cost_per_ton, 0);
+  const logisticsCostPerUnit = num(
+    row.transport_to_plant_cost_per_ton,
+    0
+  );
+  const processingCostPerUnit = num(row.tolling_cost_per_ton, 0);
+  const verificationCost = num(row.estimated_total_assay_cost, 0);
+
+  const revenue = productQty * effectivePrice;
+  const acquisitionTotal = routeQty * acquisitionCostPerUnit;
+  const logisticsTotal = routeQty * logisticsCostPerUnit;
+  const processingTotal = routeQty * processingCostPerUnit;
+
+  const routeCost =
+    acquisitionTotal +
+    logisticsTotal +
+    processingTotal +
+    verificationCost;
+
+  const surplus = revenue - routeCost;
+  const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
+
+  const hasCommodity =
+    resource !== "Not captured" &&
+    material !== "Not captured";
+
+  const hasQuantity = productQty > 0;
+  const hasPrice = effectivePrice > 0;
+  const hasCost = routeCost > 0;
+  const hasPositiveSurplus = surplus > 0;
+  const hasTargetMargin = margin >= 18;
+
+  const currentApprovalState = approvalState(
+    hasCommodity,
+    hasQuantity,
+    hasPrice,
+    hasCost,
+    surplus,
+    margin
+  );
+
+  const readyForApproval =
+    hasCommodity &&
+    hasQuantity &&
+    hasPrice &&
+    hasCost &&
+    hasPositiveSurplus &&
+    hasTargetMargin;
+
+  const commercialApprovalState =
+    readyForApproval ? "Ready" : margin >= 15 ? "Pending" : "Blocked";
+
+  const operationsApprovalState =
+    hasCommodity && hasQuantity && hasCost ? "Pending" : "Blocked";
+
+  const financeApprovalState =
+    readyForApproval ? "Ready" : hasPositiveSurplus ? "Pending" : "Blocked";
+
+  const documentApprovalState =
+    hasCommodity && hasPrice && hasCost ? "Pending" : "Blocked";
 
   return (
     <ResourceShell
-      title="Approvals Control"
-      subtitle="Read-only approval queue for plant approval, supplier approval, route approval, finance approval and controlled release gates."
+      title="Approvals"
+      subtitle="Approval readiness view reading the saved parcel economics."
     >
-      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Parcel" value={parcel.parcel_code} />
-        <Stat label="Resource" value={parcel.resource_type || parcel.commodity || "Not Set"} gold />
-        <Stat label="Material" value={parcel.material_type || "Not Set"} />
-        <Stat label="Approvals" value={`${approved}/${approvals.length}`} gold={open === 0} />
+      <section className="grid gap-3">
+        <Stat label="Parcel" value={parcelCode} gold />
+        <Stat label="Class" value={commodityClass} />
+        <Stat label="Category" value={category} />
+        <Stat label="Resource" value={resource} />
+        <Stat label="Material" value={material} />
+        <Stat label="Stage" value={stageLabel(stage)} />
       </section>
 
-      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Open Items" value={String(open)} />
-        <Stat label="Blocked" value={String(blocked)} />
-        <Stat label="Pending" value={String(pending)} />
-        <Stat label="Release Impact" value={open > 0 ? "Blocked" : "Clear"} gold={open === 0} />
-      </section>
+      <Card label="Approval State" title={currentApprovalState}>
+        <div className="grid gap-3">
+          <Stat
+            label="Current Approval State"
+            value={currentApprovalState}
+            gold={readyForApproval}
+            danger={!readyForApproval}
+            note="This state is based on commodity, quantity, price, route cost, surplus and margin."
+          />
 
-      <Card label="Approval Queue" title="Required release approvals">
-        <div className="mt-5 space-y-4">
-          {approvals.length > 0 ? (
-            approvals.map((approval, index) => (
-              <ApprovalCard
-                key={approvalId(approval, index)}
-                approval={approval}
-                index={index}
-              />
-            ))
-          ) : (
-            <div className="rounded-2xl border border-[#d7ad32]/30 bg-[#d7ad32]/10 p-4">
-              <p className="font-black text-[#f5d778]">No approvals loaded.</p>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                Seed approval records before enabling route, dispatch or finance release.
-              </p>
-            </div>
-          )}
+          <Stat
+            label="Margin"
+            value={`${margin.toFixed(1)}%`}
+            gold={margin >= 18}
+            danger={margin <= 0}
+          />
+
+          <Stat
+            label="Surplus"
+            value={money(surplus)}
+            gold={surplus > 0}
+            danger={surplus <= 0}
+          />
         </div>
       </Card>
 
-      <Card label="Control Rule" title="Approvals block release until cleared">
-        <div className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 p-4">
-          <p className="text-xl font-black text-red-200">
-            Do not approve by assumption.
-          </p>
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            Supplier source approval, plant tolling approval, transport readiness,
-            buyer/offtake support, margin approval and finance handoff must be approved
-            before controlled release.
-          </p>
+      <Card label="Release Gates" title="Approval gate checks">
+        <div className="grid gap-3">
+          <Gate
+            title="Commodity and material selected"
+            ready={hasCommodity}
+            note="Approvals cannot start without commodity, resource and material."
+          />
+
+          <Gate
+            title="Quantity captured"
+            ready={hasQuantity}
+            note="Product and route quantity must be available."
+          />
+
+          <Gate
+            title="Buyer price captured"
+            ready={hasPrice}
+            note="Market/reference price or negotiated buyer price must be captured."
+          />
+
+          <Gate
+            title="Route cost captured"
+            ready={hasCost}
+            note="Acquisition, logistics, processing and verification costs must be complete."
+          />
+
+          <Gate
+            title="Positive surplus"
+            ready={hasPositiveSurplus}
+            note="Route should show positive commercial surplus before approval."
+          />
+
+          <Gate
+            title="Target margin reached"
+            ready={hasTargetMargin}
+            note="Approval target is 18% or higher gross margin."
+          />
         </div>
       </Card>
 
-      <Card label="Next Approval Phase" title="Approval actions come later">
-        <p className="mt-3 text-sm leading-7 text-slate-300">
-          This Live v1 page reads approval readiness records only. The next approval
-          phase will add role-based approve/hold/reject actions, delegated authority,
-          exception approval, audit events and release-rule enforcement.
-        </p>
+      <Card label="Approval Queue" title="Role-based approvals">
+        <div className="grid gap-3">
+          <ApprovalCard
+            title="Commercial Approval"
+            state={commercialApprovalState}
+            note="Commercial approver checks buyer price, source cost, margin and counterparty risk."
+          />
 
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link
-            href="/documents"
-            className="rounded-full border border-[#d7ad32]/60 bg-[#d7ad32] px-5 py-3 text-sm font-black text-[#07101c]"
-          >
-            Open Documents
-          </Link>
-          <Link
-            href="/finance"
-            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-black text-white"
-          >
-            Open Finance
-          </Link>
+          <ApprovalCard
+            title="Operations Approval"
+            state={operationsApprovalState}
+            note="Operations approver checks material, quantity, route basis, movement readiness and dispatch blockers."
+          />
+
+          <ApprovalCard
+            title="Document Approval"
+            state={documentApprovalState}
+            note="Document approver checks supplier, buyer, transport, plant and quality evidence."
+          />
+
+          <ApprovalCard
+            title="Finance Approval"
+            state={financeApprovalState}
+            note="Finance approver checks route cost, funding need, surplus, margin and payment readiness."
+          />
+
+          <ApprovalCard
+            title="Executive Override"
+            state="Future"
+            note="Executive override is only for exceptions and should require audit notes and approval reason."
+          />
+        </div>
+      </Card>
+
+      <Card label="Approval Values" title="Commercial basis">
+        <div className="grid gap-3">
+          <Stat
+            label="Product Quantity"
+            value={`${productQty.toFixed(3)} units`}
+          />
+
+          <Stat
+            label="Route Quantity"
+            value={`${routeQty.toFixed(3)} units`}
+          />
+
+          <Stat
+            label="Effective Selling Price"
+            value={moneyUnit(effectivePrice)}
+            gold={effectivePrice > 0}
+            danger={effectivePrice <= 0}
+          />
+
+          <Stat
+            label="Revenue"
+            value={money(revenue)}
+            gold={revenue > 0}
+            danger={revenue <= 0}
+          />
+
+          <Stat
+            label="Route Cost"
+            value={money(routeCost)}
+            gold={routeCost > 0}
+            danger={routeCost <= 0}
+          />
+
+          <Stat
+            label="Surplus"
+            value={money(surplus)}
+            gold={surplus > 0}
+            danger={surplus <= 0}
+          />
+        </div>
+      </Card>
+
+      <Card label="Next Actions" title="Approval control actions">
+        <div className="grid gap-3">
+          <Stat
+            label="Action 1"
+            value="Confirm documents"
+            note="Supplier, buyer, route, plant, transport and quality evidence must support the route."
+          />
+
+          <Stat
+            label="Action 2"
+            value="Confirm counterparties"
+            note="All release-critical counterparties must be verified before approval."
+          />
+
+          <Stat
+            label="Action 3"
+            value="Confirm finance readiness"
+            note="Finance approval should only proceed if route cost, surplus and margin are acceptable."
+          />
+
+          <Stat
+            label="Action 4"
+            value="Record approval decision"
+            note="Final implementation should write approval state, approver, timestamp and audit notes."
+          />
         </div>
       </Card>
     </ResourceShell>
   );
-  }
+        }

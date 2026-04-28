@@ -81,6 +81,8 @@ const RESOURCES: Resource[] = [
       mat("Tailings", "raw_feedstock", 35, 2550, 0, 180, 350, 3500),
       mat("LG Chrome Ore", "raw_feedstock", 45, 2550, 0, 180, 350, 3500),
       mat("MG Chrome Ore", "raw_feedstock", 50, 2550, 0, 180, 350, 3500),
+      mat("Chrome Lumpy Ore", "saleable_product", 100, 0, 0, 180, 0, 3500),
+      mat("Chrome Fines", "saleable_product", 100, 0, 0, 180, 0, 3500),
       mat("Chrome Concentrate 38/40", "saleable_product", 100, 2300, 0, 180, 0, 3500),
       mat("Chrome Concentrate 40/42", "saleable_product", 100, 2550, 0, 180, 0, 3500),
       mat("Chrome Concentrate 42/44", "saleable_product", 100, 2800, 0, 180, 0, 3500),
@@ -132,6 +134,18 @@ const RESOURCES: Resource[] = [
       mat("Nuts", "saleable_product", 100, 0, 0, 180, 0, 1200),
       mat("Duff", "saleable_product", 100, 0, 0, 180, 0, 1200),
       mat("Anthracite", "saleable_product", 100, 0, 0, 180, 0, 1200),
+      mat("Thermal Coal", "saleable_product", 100, 0, 0, 180, 0, 1200),
+      mat("Metallurgical Coal", "saleable_product", 100, 0, 0, 180, 0, 1200),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Energy Minerals",
+    resource: "Uranium",
+    code: "URA",
+    materials: [
+      mat("Uranium Ore", "raw_feedstock", 5, 0, 0, 300, 500, 5000),
+      mat("Uranium Concentrate", "saleable_product", 100, 0, 0, 300, 0, 5000),
     ],
   },
   {
@@ -142,8 +156,34 @@ const RESOURCES: Resource[] = [
     materials: [
       mat("Gold Ore", "raw_feedstock", 3, 0, 0, 300, 0, 3500),
       mat("Gold Tailings", "raw_feedstock", 2, 0, 0, 300, 0, 3500),
+      mat("Gold Concentrate", "saleable_product", 100, 0, 0, 300, 0, 3500),
       mat("Dore", "saleable_product", 100, 0, 0, 300, 0, 3500),
       mat("Bullion", "finished_product", 100, 0, 0, 300, 0, 3500),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Precious Metals",
+    resource: "Silver",
+    code: "SILV",
+    materials: [
+      mat("Silver Ore", "raw_feedstock", 5, 0, 0, 300, 0, 3500),
+      mat("Silver Concentrate", "saleable_product", 100, 0, 0, 300, 0, 3500),
+      mat("Silver Bullion", "finished_product", 100, 0, 0, 300, 0, 3500),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "PGMs",
+    resource: "Platinum Group Metals",
+    code: "PGM",
+    materials: [
+      mat("PGM Ore", "raw_feedstock", 5, 0, 0, 250, 350, 3500),
+      mat("PGM Tailings", "raw_feedstock", 3, 0, 0, 250, 350, 3500),
+      mat("PGM Concentrate", "saleable_product", 100, 0, 0, 250, 0, 3500),
+      mat("Platinum", "finished_product", 100, 0, 0, 250, 0, 3500),
+      mat("Palladium", "finished_product", 100, 0, 0, 250, 0, 3500),
+      mat("Rhodium", "finished_product", 100, 0, 0, 250, 0, 3500),
     ],
   },
   {
@@ -170,15 +210,24 @@ const RESOURCES: Resource[] = [
   },
   {
     cls: "Hard Commodities",
-    category: "PGMs",
-    resource: "Platinum Group Metals",
-    code: "PGM",
+    category: "Base Metals",
+    resource: "Zinc",
+    code: "ZIN",
     materials: [
-      mat("PGM Ore", "raw_feedstock", 5, 0, 0, 250, 350, 3500),
-      mat("PGM Concentrate", "saleable_product", 100, 0, 0, 250, 0, 3500),
-      mat("Platinum", "finished_product", 100, 0, 0, 250, 0, 3500),
-      mat("Palladium", "finished_product", 100, 0, 0, 250, 0, 3500),
-      mat("Rhodium", "finished_product", 100, 0, 0, 250, 0, 3500),
+      mat("Zinc Ore", "raw_feedstock", 8, 0, 0, 250, 350, 3000),
+      mat("Zinc Concentrate", "saleable_product", 100, 0, 0, 250, 0, 3000),
+      mat("Zinc Metal", "finished_product", 100, 0, 0, 250, 0, 3000),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Base Metals",
+    resource: "Lead",
+    code: "LEA",
+    materials: [
+      mat("Lead Ore", "raw_feedstock", 8, 0, 0, 250, 350, 3000),
+      mat("Lead Concentrate", "saleable_product", 100, 0, 0, 250, 0, 3000),
+      mat("Lead Metal", "finished_product", 100, 0, 0, 250, 0, 3000),
     ],
   },
   {
@@ -195,9 +244,31 @@ const RESOURCES: Resource[] = [
   },
   {
     cls: "Hard Commodities",
+    category: "Battery / Strategic Minerals",
+    resource: "Cobalt",
+    code: "COB",
+    materials: [
+      mat("Cobalt Ore", "raw_feedstock", 8, 0, 0, 250, 400, 3500),
+      mat("Cobalt Concentrate", "saleable_product", 100, 0, 0, 250, 0, 3500),
+      mat("Cobalt Hydroxide", "finished_product", 100, 0, 0, 250, 0, 3500),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
+    category: "Battery / Strategic Minerals",
+    resource: "Graphite",
+    code: "GRA",
+    materials: [
+      mat("Graphite Ore", "raw_feedstock", 50, 0, 0, 200, 300, 2500),
+      mat("Graphite Concentrate", "saleable_product", 100, 0, 0, 200, 0, 2500),
+      mat("Flake Graphite", "finished_product", 100, 0, 0, 200, 0, 2500),
+    ],
+  },
+  {
+    cls: "Hard Commodities",
     category: "Industrial Minerals",
     resource: "Silica",
-    code: "SIL",
+    code: "SLC",
     materials: [
       mat("Silica Sand", "saleable_product", 100, 0, 0, 150, 0, 1200),
       mat("Quartz", "saleable_product", 100, 0, 0, 150, 0, 1200),
@@ -215,6 +286,18 @@ const RESOURCES: Resource[] = [
     ],
   },
   {
+    cls: "Hard Commodities",
+    category: "Construction Materials",
+    resource: "Aggregates",
+    code: "AGG",
+    materials: [
+      mat("Crusher Run", "saleable_product", 100, 0, 0, 120, 0, 800),
+      mat("Road Stone", "saleable_product", 100, 0, 0, 120, 0, 800),
+      mat("Building Sand", "saleable_product", 100, 0, 0, 120, 0, 800),
+      mat("Plaster Sand", "saleable_product", 100, 0, 0, 120, 0, 800),
+    ],
+  },
+  {
     cls: "Soft Commodities",
     category: "Grains",
     resource: "Maize",
@@ -222,6 +305,7 @@ const RESOURCES: Resource[] = [
     materials: [
       mat("White Maize", "saleable_product", 100, 500),
       mat("Yellow Maize", "saleable_product", 100),
+      mat("Feed Maize", "saleable_product", 100),
       mat("Maize Meal", "finished_product", 100),
     ],
   },
@@ -234,6 +318,18 @@ const RESOURCES: Resource[] = [
       mat("Milling Wheat", "saleable_product", 100),
       mat("Feed Wheat", "saleable_product", 100),
       mat("Wheat Flour", "finished_product", 100),
+      mat("Bran", "finished_product", 100),
+    ],
+  },
+  {
+    cls: "Soft Commodities",
+    category: "Grains",
+    resource: "Sorghum",
+    code: "SOR",
+    materials: [
+      mat("White Sorghum", "saleable_product", 100),
+      mat("Red Sorghum", "saleable_product", 100),
+      mat("Feed Sorghum", "saleable_product", 100),
     ],
   },
   {
@@ -260,6 +356,28 @@ const RESOURCES: Resource[] = [
   },
   {
     cls: "Soft Commodities",
+    category: "Pulses",
+    resource: "Beans",
+    code: "BEA",
+    materials: [
+      mat("Dry Beans", "saleable_product", 100),
+      mat("Sugar Beans", "saleable_product", 100),
+      mat("Cowpeas", "saleable_product", 100),
+    ],
+  },
+  {
+    cls: "Soft Commodities",
+    category: "Sugar",
+    resource: "Sugar",
+    code: "SUG",
+    materials: [
+      mat("Raw Sugar", "saleable_product", 100),
+      mat("Refined Sugar", "finished_product", 100),
+      mat("Molasses", "saleable_product", 100),
+    ],
+  },
+  {
+    cls: "Soft Commodities",
     category: "Agricultural Inputs",
     resource: "Fertiliser",
     code: "FER",
@@ -270,6 +388,7 @@ const RESOURCES: Resource[] = [
       mat("LAN", "saleable_product", 100),
       mat("NPK", "saleable_product", 100),
       mat("Potash", "saleable_product", 100),
+      mat("Ammonium Sulphate", "saleable_product", 100),
     ],
   },
   {
@@ -282,6 +401,29 @@ const RESOURCES: Resource[] = [
       mat("Soya Meal", "saleable_product", 100),
       mat("Sunflower Cake", "saleable_product", 100),
       mat("Molasses", "saleable_product", 100),
+      mat("Lucerne", "saleable_product", 100),
+    ],
+  },
+  {
+    cls: "Soft Commodities",
+    category: "Livestock Products",
+    resource: "Beef",
+    code: "BEE",
+    materials: [
+      mat("Live Cattle", "raw_feedstock", 55),
+      mat("Carcass Beef", "saleable_product", 100),
+      mat("Boxed Beef", "finished_product", 100),
+    ],
+  },
+  {
+    cls: "Soft Commodities",
+    category: "Livestock Products",
+    resource: "Poultry",
+    code: "POU",
+    materials: [
+      mat("Live Broilers", "raw_feedstock", 72),
+      mat("Whole Chicken", "saleable_product", 100),
+      mat("IQF Portions", "finished_product", 100),
     ],
   },
 ];
@@ -363,7 +505,7 @@ function decisionLabel(margin: number) {
   if (margin >= 15) return "Decent / Improve";
   if (margin > 0) return "Below Target";
   return "Blocked / Negative";
-}
+  }
 function Card({
   label,
   title,
@@ -550,7 +692,6 @@ export default function EconomicsEditTools() {
   const acquisitionTotal = routeQty * form.acquisitionCost;
   const logisticsTotal = routeQty * form.logisticsCost;
   const processingTotal = routeQty * form.processingCost;
-
   const routeCost =
     acquisitionTotal +
     logisticsTotal +
@@ -559,9 +700,7 @@ export default function EconomicsEditTools() {
 
   const surplus = revenue - routeCost;
   const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
-
-  const target18Cost = revenue * 0.82;
-  const costGap = Math.max(routeCost - target18Cost, 0);
+  const costGap = Math.max(routeCost - revenue * 0.82, 0);
 
   const targetBuyerPrice =
     margin >= 18 || form.productQty <= 0
@@ -645,8 +784,7 @@ export default function EconomicsEditTools() {
     load();
   }, [supabase]);
 
-  function applyClass(value: string) {
-    const nextResource = firstResource(value as CommodityClass);
+  function resetFromResource(nextResource: Resource) {
     const nextMaterial = nextResource.materials[0];
 
     setForm((current) => ({
@@ -666,24 +804,14 @@ export default function EconomicsEditTools() {
     }));
   }
 
+  function applyClass(value: string) {
+    const nextResource = firstResource(value as CommodityClass);
+    resetFromResource(nextResource);
+  }
+
   function applyCategory(value: string) {
     const nextResource = firstResource(form.cls, value);
-    const nextMaterial = nextResource.materials[0];
-
-    setForm((current) => ({
-      ...current,
-      category: nextResource.category,
-      resource: nextResource.resource,
-      material: nextMaterial.name,
-      yieldPct: nextMaterial.yieldPct,
-      marketPrice: nextMaterial.price,
-      negotiatedPrice: nextMaterial.price,
-      acquisitionCost: nextMaterial.acquisition,
-      logisticsCost: nextMaterial.logistics,
-      processingCost: nextMaterial.processing,
-      verificationCost: nextMaterial.verification,
-      priceNote: "",
-    }));
+    resetFromResource(nextResource);
   }
 
   function applyResource(value: string) {
@@ -695,21 +823,7 @@ export default function EconomicsEditTools() {
           item.resource === value
       ) || resource;
 
-    const nextMaterial = nextResource.materials[0];
-
-    setForm((current) => ({
-      ...current,
-      resource: nextResource.resource,
-      material: nextMaterial.name,
-      yieldPct: nextMaterial.yieldPct,
-      marketPrice: nextMaterial.price,
-      negotiatedPrice: nextMaterial.price,
-      acquisitionCost: nextMaterial.acquisition,
-      logisticsCost: nextMaterial.logistics,
-      processingCost: nextMaterial.processing,
-      verificationCost: nextMaterial.verification,
-      priceNote: "",
-    }));
+    resetFromResource(nextResource);
   }
 
   function applyMaterial(value: string) {
@@ -884,14 +998,6 @@ export default function EconomicsEditTools() {
           />
 
           <NumField
-            label="Processing / Tolling Cost / Unit"
-            value={form.processingCost}
-            onChange={(value) =>
-              setForm({ ...form, processingCost: value })
-            }
-          />
-
-          <NumField
             label="Verification / Quality Cost"
             value={form.verificationCost}
             onChange={(value) =>
@@ -950,13 +1056,9 @@ export default function EconomicsEditTools() {
           />
 
           <Stat label="Revenue" value={money(revenue)} />
-
           <Stat label="Route Cost" value={money(routeCost)} />
-
           <Stat label="Surplus" value={money(surplus)} gold />
-
           <Stat label="Margin" value={`${margin.toFixed(1)}%`} gold />
-
           <Stat label="Decision" value={decisionLabel(margin)} />
         </div>
       </Card>
@@ -991,4 +1093,4 @@ export default function EconomicsEditTools() {
       </Card>
     </ResourceShell>
   );
-                            }
+}

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+type Status = "Approved" | "Pending" | "Held" | "Blocked" | "Exception" | "Complete";
+
 type SARExecutiveShellProps = {
   systemName: "SAR BusinessOS" | "SAR ResourceOS" | "SAR AccountingOS" | "SAR Intelligence Layer";
   systemCode: "BUSINESSOS" | "RESOURCEOS" | "ACCOUNTINGOS" | "INTELLIGENCE";
@@ -24,12 +26,12 @@ export function SARExecutiveShell({
   return (
     <main className="min-h-screen bg-[#050608] text-white">
       <div className="flex min-h-screen overflow-hidden">
-        <aside className="hidden w-[248px] shrink-0 border-r border-[#27210f] bg-[#090b0f] lg:flex lg:flex-col">
-          <div className="border-b border-[#27210f] px-5 py-5">
-            <div className="text-3xl font-black tracking-[0.22em] text-[#d5a936]">
+        <aside className="hidden w-[238px] shrink-0 border-r border-[#27210f] bg-[#080a0f] lg:flex lg:flex-col">
+          <div className="border-b border-[#27210f] px-5 py-4">
+            <div className="text-[30px] font-black leading-none tracking-[0.22em] text-[#d5a936]">
               SAR
             </div>
-            <div className="mt-1 text-[10px] font-semibold tracking-[0.34em] text-[#a98a37]">
+            <div className="mt-1 text-[10px] font-semibold tracking-[0.32em] text-[#a98a37]">
               {systemCode}
             </div>
           </div>
@@ -42,7 +44,7 @@ export function SARExecutiveShell({
                 <button
                   key={item}
                   className={[
-                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium transition",
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-[12px] font-medium transition",
                     isActive
                       ? "bg-[#1f1a0b] text-[#f2ca63] shadow-[inset_3px_0_0_#d5a936]"
                       : "text-[#9ca3af] hover:bg-[#11151c] hover:text-white",
@@ -68,13 +70,17 @@ export function SARExecutiveShell({
         </aside>
 
         <section className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 border-b border-[#27210f] bg-[#080a0f]/95 backdrop-blur">
-            <div className="flex h-[68px] items-center gap-4 px-4 lg:px-6">
-              <div className="min-w-0">
-                <div className="text-[13px] font-bold tracking-wide text-[#d5a936]">
+          <header className="sticky top-0 z-30 border-b border-[#27210f] bg-[#080a0f]/95 backdrop-blur">
+            <div className="flex h-[62px] items-center gap-3 px-3 sm:px-4 lg:h-[68px] lg:px-6">
+              <button className="grid h-9 w-9 place-items-center rounded-xl border border-[#2a3140] bg-[#0d1117] text-[#d5a936] lg:hidden">
+                <span className="text-lg leading-none">☰</span>
+              </button>
+
+              <div className="min-w-0 shrink-0">
+                <div className="truncate text-[13px] font-bold tracking-wide text-[#d5a936] sm:text-[14px]">
                   {systemName}
                 </div>
-                <div className="mt-0.5 text-[11px] text-[#7d8593]">
+                <div className="mt-0.5 hidden text-[10px] text-[#7d8593] sm:block">
                   Executive Control Portal
                 </div>
               </div>
@@ -109,16 +115,56 @@ export function SARExecutiveShell({
                 </div>
               </div>
             </div>
+
+            <div className="border-t border-[#141a24] px-3 py-2 lg:hidden">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {navItems.map((item) => {
+                  const isActive = item === activeNav;
+
+                  return (
+                    <button
+                      key={item}
+                      className={[
+                        "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold",
+                        isActive
+                          ? "border-[#d5a936]/50 bg-[#1f1a0b] text-[#f2ca63]"
+                          : "border-[#202736] bg-[#0c1017] text-[#8b949e]",
+                      ].join(" ")}
+                    >
+                      {item}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {rightPanel ? (
+              <div className="border-t border-[#141a24] px-3 py-2 xl:hidden">
+                <div className="flex items-center justify-between rounded-xl border border-[#3a2f12] bg-[#11151c] px-3 py-2">
+                  <div>
+                    <div className="text-[11px] font-semibold text-[#f2ca63]">
+                      AI / Actions Panel
+                    </div>
+                    <div className="text-[10px] text-[#8b949e]">
+                      Urgent recommendations available
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-[#d5a936] px-2 py-1 text-[10px] font-black text-black">
+                    Live
+                  </span>
+                </div>
+              </div>
+            ) : null}
           </header>
 
           <div className="flex min-h-0 flex-1 overflow-hidden">
-            <div className="min-w-0 flex-1 overflow-y-auto px-4 py-4 lg:px-6">
-              <div className="mb-4 flex flex-col gap-2 border-b border-[#1d2430] pb-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 lg:px-5 lg:py-4">
+              <div className="mb-3 flex flex-col gap-2 border-b border-[#1d2430] pb-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <h1 className="text-xl font-semibold tracking-tight text-white lg:text-2xl">
+                  <h1 className="text-[22px] font-semibold tracking-tight text-white lg:text-2xl">
                     {pageTitle}
                   </h1>
-                  <p className="mt-1 text-xs text-[#8b949e]">
+                  <p className="mt-1 max-w-4xl text-[12px] leading-5 text-[#8b949e]">
                     {pageSubtitle}
                   </p>
                 </div>
@@ -137,7 +183,7 @@ export function SARExecutiveShell({
             </div>
 
             {rightPanel ? (
-              <aside className="hidden w-[360px] shrink-0 overflow-y-auto border-l border-[#27210f] bg-[#080a0f] p-4 xl:block">
+              <aside className="hidden w-[350px] shrink-0 overflow-y-auto border-l border-[#27210f] bg-[#080a0f] p-4 xl:block">
                 {rightPanel}
               </aside>
             ) : null}
@@ -150,7 +196,7 @@ export function SARExecutiveShell({
 
 function TopbarIcon({ label }: { label: string }) {
   return (
-    <div className="relative grid h-9 w-9 place-items-center rounded-xl border border-[#2a3140] bg-[#0d1117] text-[#aab2c0]">
+    <div className="relative grid h-8 w-8 place-items-center rounded-xl border border-[#2a3140] bg-[#0d1117] text-[#aab2c0] sm:h-9 sm:w-9">
       <span className="h-2.5 w-2.5 rounded-full bg-[#8b949e]" />
       <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#d5a936] px-1 text-[9px] font-bold text-black">
         {label}
@@ -170,14 +216,14 @@ export function ControlCard({
   value: string;
   trend?: string;
   footer?: string;
-  status?: "Approved" | "Pending" | "Held" | "Blocked" | "Exception" | "Complete";
+  status?: Status;
 }) {
   return (
     <div className="rounded-2xl border border-[#202736] bg-[#0c1017] p-3 shadow-[0_0_0_1px_rgba(213,169,54,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] font-medium text-[#8b949e]">{label}</div>
-          <div className="mt-1 text-xl font-semibold tracking-tight text-white">
+          <div className="mt-1 text-[24px] font-semibold leading-none tracking-tight text-white sm:text-[26px]">
             {value}
           </div>
         </div>
@@ -192,12 +238,8 @@ export function ControlCard({
   );
 }
 
-export function StatusChip({
-  status,
-}: {
-  status: "Approved" | "Pending" | "Held" | "Blocked" | "Exception" | "Complete";
-}) {
-  const styles: Record<typeof status, string> = {
+export function StatusChip({ status }: { status: Status }) {
+  const styles: Record<Status, string> = {
     Approved: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
     Complete: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
     Pending: "border-[#d5a936]/30 bg-[#d5a936]/10 text-[#f2ca63]",
@@ -242,7 +284,7 @@ export function DenseTable({
   rows: Array<{
     label: string;
     value: string;
-    status: "Approved" | "Pending" | "Held" | "Blocked" | "Exception" | "Complete";
+    status: Status;
   }>;
 }) {
   return (
@@ -261,4 +303,4 @@ export function DenseTable({
       ))}
     </div>
   );
-  }
+                                  }

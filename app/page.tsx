@@ -4,7 +4,7 @@ import {
   DenseTable,
   SARExecutiveShell,
   StatusChip,
-} from "@/components/SARExecutiveShell";
+} from "../components/SARExecutiveShell";
 
 const businessNav = [
   "Dashboard",

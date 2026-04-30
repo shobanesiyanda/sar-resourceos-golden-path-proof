@@ -33,7 +33,7 @@ export default function Page() {
       pageSubtitle="Shobane African Resources — company control room across approvals, compliance, documents, HR, procurement, risk and reporting."
       rightPanel={<AIRecommendationsPanel />}
     >
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <ControlCard
           label="Open Approvals"
           value="28"
@@ -76,7 +76,7 @@ export default function Page() {
         <NetworkSummaryPanel />
       </section>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-5">
+      <section className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <DensePanel title="Today’s Control Summary">
           <DenseTable
             rows={[
@@ -143,7 +143,7 @@ export default function Page() {
 
 function ExecutiveMapPanel() {
   return (
-    <section className="min-h-[390px] rounded-2xl border border-[#202736] bg-[#0c1017] p-4">
+    <section className="rounded-2xl border border-[#202736] bg-[#0c1017] p-3 sm:p-4">
       <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 className="text-[14px] font-semibold text-white">
@@ -162,8 +162,26 @@ function ExecutiveMapPanel() {
         </div>
       </div>
 
-      <div className="grid min-h-[318px] gap-3 lg:grid-cols-[170px_1fr]">
-        <div className="rounded-xl border border-[#1d2430] bg-[#080b11] p-3">
+      <div className="mb-3 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+        {["Africa Focus", "Routes", "Demand", "Supply", "Concentration"].map(
+          (item, index) => (
+            <span
+              key={item}
+              className={[
+                "shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-semibold",
+                index === 0
+                  ? "border-[#d5a936]/50 bg-[#1f1a0b] text-[#f2ca63]"
+                  : "border-[#202736] bg-[#080b11] text-[#9ca3af]",
+              ].join(" ")}
+            >
+              {item}
+            </span>
+          )
+        )}
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-[170px_1fr]">
+        <div className="hidden rounded-xl border border-[#1d2430] bg-[#080b11] p-3 lg:block">
           <div className="text-[11px] font-semibold text-white">View</div>
           <div className="mt-2 rounded-lg border border-[#2a3140] bg-[#0c1017] px-2 py-2 text-[11px] text-[#d1d5db]">
             Africa Focus <span className="float-right text-[#d5a936]">⌄</span>
@@ -188,20 +206,29 @@ function ExecutiveMapPanel() {
           </button>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl border border-[#1d2430] bg-[#05070b]">
+        <div className="relative h-[360px] overflow-hidden rounded-xl border border-[#1d2430] bg-[#05070b] sm:h-[420px] lg:h-[318px]">
           <MapGrid />
-          <MapNode className="left-[22%] top-[28%]" label="Dakar" tone="gold" />
-          <MapNode className="left-[31%] top-[42%]" label="Lagos" tone="green" />
-          <MapNode className="left-[48%] top-[57%]" label="Luanda" tone="orange" />
-          <MapNode className="left-[58%] top-[72%]" label="Johannesburg" tone="gold" />
-          <MapNode className="left-[70%] top-[62%]" label="Beira" tone="blue" />
+          <MapNode className="left-[18%] top-[27%]" label="Dakar" tone="gold" />
+          <MapNode className="left-[30%] top-[42%]" label="Lagos" tone="green" />
+          <MapNode className="left-[47%] top-[57%]" label="Luanda" tone="orange" />
+          <MapNode className="left-[56%] top-[73%]" label="Johannesburg" tone="gold" />
+          <MapNode className="left-[70%] top-[63%]" label="Beira" tone="blue" />
           <MapNode className="left-[77%] top-[41%]" label="Mombasa" tone="blue" />
-          <MapNode className="left-[67%] top-[26%]" label="Port Sudan" tone="orange" />
+          <MapNode className="left-[66%] top-[25%]" label="Port Sudan" tone="orange" />
 
-          <RouteLine className="left-[25%] top-[33%] w-[260px] rotate-[18deg]" />
-          <RouteLine className="left-[42%] top-[56%] w-[300px] -rotate-[28deg]" />
-          <RouteLine className="left-[54%] top-[69%] w-[220px] -rotate-[8deg]" />
-          <RouteLine className="left-[61%] top-[42%] w-[230px] rotate-[20deg]" />
+          <RouteLine className="left-[21%] top-[32%] w-[220px] rotate-[18deg]" />
+          <RouteLine className="left-[41%] top-[55%] w-[250px] -rotate-[28deg]" />
+          <RouteLine className="left-[54%] top-[69%] w-[190px] -rotate-[8deg]" />
+          <RouteLine className="left-[60%] top-[42%] w-[210px] rotate-[20deg]" />
+
+          <div className="absolute left-3 top-3 rounded-xl border border-[#1d2430] bg-[#080b11]/90 p-2 lg:hidden">
+            <div className="text-[10px] font-semibold text-white">
+              Live Map Layer
+            </div>
+            <div className="mt-1 text-[9px] text-[#8b949e]">
+              Supply • Demand • Route • Risk
+            </div>
+          </div>
 
           <div className="absolute bottom-3 left-3 rounded-xl border border-[#1d2430] bg-[#080b11]/90 p-3">
             <div className="text-[10px] font-semibold text-white">
@@ -215,8 +242,8 @@ function ExecutiveMapPanel() {
             </div>
           </div>
 
-          <div className="absolute bottom-3 right-3 text-[10px] text-[#6b7280]">
-            Last updated: 09:32 SAST
+          <div className="absolute bottom-3 right-3 rounded-lg bg-[#05070b]/70 px-2 py-1 text-[10px] text-[#6b7280]">
+            Updated: 09:32 SAST
           </div>
         </div>
       </div>
@@ -236,7 +263,10 @@ function NetworkSummaryPanel() {
           ["Supply Sites", "16"],
           ["High Concentration Areas", "6"],
         ].map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between border-b border-[#171d28] pb-2">
+          <div
+            key={label}
+            className="flex items-center justify-between border-b border-[#171d28] pb-2"
+          >
             <span className="text-[11px] text-[#9ca3af]">{label}</span>
             <span className="text-[15px] font-semibold text-white">{value}</span>
           </div>
@@ -380,8 +410,8 @@ function MapGrid() {
     <div className="absolute inset-0">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(213,169,54,0.14),transparent_35%),radial-gradient(circle_at_58%_64%,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_70%_36%,rgba(56,189,248,0.10),transparent_26%)]" />
       <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:28px_28px]" />
-      <div className="absolute left-[31%] top-[12%] h-[76%] w-[43%] rounded-[48%_42%_46%_44%] border border-[#2a3140] bg-[#0b1118]/70 shadow-[0_0_70px_rgba(213,169,54,0.08)]" />
-      <div className="absolute left-[45%] top-[33%] h-[34%] w-[18%] rotate-12 rounded-[60%_35%_55%_45%] border border-[#343b49] bg-[#101720]/70" />
+      <div className="absolute left-[29%] top-[10%] h-[78%] w-[45%] rounded-[48%_42%_46%_44%] border border-[#2a3140] bg-[#0b1118]/70 shadow-[0_0_70px_rgba(213,169,54,0.08)]" />
+      <div className="absolute left-[43%] top-[33%] h-[34%] w-[18%] rotate-12 rounded-[60%_35%_55%_45%] border border-[#343b49] bg-[#101720]/70" />
     </div>
   );
 }
@@ -404,7 +434,11 @@ function MapNode({
 
   return (
     <div className={["absolute", className].join(" ")}>
-      <div className={["h-3 w-3 rounded-full ring-4 ring-white/5", tones[tone]].join(" ")} />
+      <div
+        className={["h-3 w-3 rounded-full ring-4 ring-white/5", tones[tone]].join(
+          " "
+        )}
+      />
       <div className="mt-1 rounded bg-[#05070b]/70 px-1.5 py-0.5 text-[9px] font-medium text-[#d1d5db]">
         {label}
       </div>
@@ -421,4 +455,4 @@ function RouteLine({ className }: { className: string }) {
       ].join(" ")}
     />
   );
-              }
+}

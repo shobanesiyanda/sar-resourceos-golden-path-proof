@@ -1,584 +1,424 @@
-"use client";
+import {
+  ControlCard,
+  DensePanel,
+  DenseTable,
+  SARExecutiveShell,
+  StatusChip,
+} from "@/components/SARExecutiveShell";
 
-import { useEffect, useState } from "react";
-import ResourceShell from "../components/ResourceShell";
-import { createClient } from "../lib/supabase/client";
+const businessNav = [
+  "Dashboard",
+  "Master Data",
+  "Counterparties",
+  "Documents",
+  "Approvals",
+  "Compliance",
+  "HR",
+  "Procurement",
+  "Legal",
+  "Risk",
+  "Tasks",
+  "Reports",
+  "Admin",
+];
 
-const SEED_CODE = "PAR-CHR-2026-0001";
-
-type Row = Record<string, unknown>;
-
-type LoadState = {
-  loading: boolean;
-  error: string;
-  row: Row | null;
-};
-
-function num(value: unknown, fallback = 0) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-
-  if (typeof value === "string" && value.trim()) {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-
-  return fallback;
-}
-
-function txt(value: unknown, fallback = "Not captured") {
-  if (typeof value === "string" && value.trim()) return value;
-  return fallback;
-}
-
-function money(value: number) {
-  return `R ${Number(value || 0).toLocaleString("en-ZA", {
-    maximumFractionDigits: 0,
-  })}`;
-}
-
-function moneyUnit(value: number) {
-  return value > 0 ? `${money(value)}/unit` : "Not captured";
-}
-
-function stageLabel(stage: string) {
-  if (stage === "raw_feedstock") return "Raw Feedstock";
-
-  if (
-    stage === "intermediate_concentrate" ||
-    stage === "saleable_product"
-  ) {
-    return "Intermediate / Saleable Product";
-  }
-
-  if (stage === "finished_product") return "Finished Product";
-
-  return stage || "Not captured";
-}
-
-function decisionLabel(hasCost: boolean, margin: number) {
-  if (!hasCost) return "Costing Incomplete";
-  if (margin >= 25) return "Strong Route";
-  if (margin >= 18) return "Target Range";
-  if (margin >= 15) return "Improve Before Release";
-  if (margin > 0) return "Below Target";
-  return "Blocked / Incomplete";
-}
-
-function stateLabel(hasCost: boolean, surplus: number, margin: number) {
-  if (!hasCost) return "Blocked";
-  if (surplus <= 0) return "Blocked";
-  if (margin < 18) return "Pending";
-  return "Review Ready";
-}
-
-function getModel(row: Row) {
-  const parcelCode = txt(
-    row.working_parcel_code,
-    txt(row.parcel_code, SEED_CODE)
-  );
-
-  const commodityClass = txt(row.commodity_class);
-  const category = txt(row.resource_category);
-  const resource = txt(row.resource_type);
-  const material = txt(row.material_type);
-  const stage = txt(row.material_stage);
-
-  const productQty = num(
-    row.expected_concentrate_tons,
-    num(row.accepted_tons, 0)
-  );
-
-  const routeQty = num(row.feedstock_tons, productQty);
-
-  const marketPrice = num(row.market_reference_price_per_ton, 0);
-  const negotiatedPrice = num(row.negotiated_price_per_ton, 0);
-
-  const effectivePrice = num(
-    row.effective_price_per_ton,
-    negotiatedPrice > 0 ? negotiatedPrice : marketPrice
-  );
-
-  const acquisitionUnit = num(row.feedstock_cost_per_ton, 0);
-  const logisticsUnit = num(row.transport_to_plant_cost_per_ton, 0);
-  const processingUnit = num(row.tolling_cost_per_ton, 0);
-  const verificationCost = num(row.estimated_total_assay_cost, 0);
-
-  const acquisitionTotal = routeQty * acquisitionUnit;
-  const logisticsTotal = routeQty * logisticsUnit;
-  const processingTotal = routeQty * processingUnit;
-
-  const routeCost =
-    acquisitionTotal +
-    logisticsTotal +
-    processingTotal +
-    verificationCost;
-
-  const revenue = productQty * effectivePrice;
-
-  const hasCost = routeCost > 0;
-  const surplus = hasCost && revenue > 0 ? revenue - routeCost : 0;
-  const margin = hasCost && revenue > 0 ? (surplus / revenue) * 100 : 0;
-
-  const hasCommodity =
-    commodityClass !== "Not captured" &&
-    category !== "Not captured" &&
-    resource !== "Not captured" &&
-    material !== "Not captured";
-
-  const hasQuantity = productQty > 0;
-  const hasPrice = effectivePrice > 0;
-  const hasPositiveSurplus = hasCost && surplus > 0;
-  const hasTargetMargin = hasCost && margin >= 18;
-
-  return {
-    parcelCode,
-    commodityClass,
-    category,
-    resource,
-    material,
-    stage,
-    productQty,
-    routeQty,
-    marketPrice,
-    negotiatedPrice,
-    effectivePrice,
-    acquisitionUnit,
-    logisticsUnit,
-    processingUnit,
-    verificationCost,
-    acquisitionTotal,
-    logisticsTotal,
-    processingTotal,
-    routeCost,
-    revenue,
-    surplus,
-    margin,
-    hasCommodity,
-    hasQuantity,
-    hasPrice,
-    hasCost,
-    hasPositiveSurplus,
-    hasTargetMargin,
-  };
-}
-
-function Card({
-  label,
-  title,
-  children,
-}: {
-  label: string;
-  title: string;
-  children: React.ReactNode;
-}) {
+export default function Page() {
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
-      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#d7ad32]">
-        {label}
-      </p>
+    <SARExecutiveShell
+      systemName="SAR BusinessOS"
+      systemCode="BUSINESSOS"
+      activeNav="Dashboard"
+      navItems={businessNav}
+      pageTitle="Executive Dashboard"
+      pageSubtitle="Shobane African Resources — company control room across approvals, compliance, documents, HR, procurement, risk and reporting."
+      rightPanel={<AIRecommendationsPanel />}
+    >
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <ControlCard
+          label="Open Approvals"
+          value="28"
+          trend="↓ 12%"
+          footer="8 overdue"
+          status="Pending"
+        />
+        <ControlCard
+          label="Compliance Due"
+          value="14"
+          trend="↓ 7%"
+          footer="5 overdue"
+          status="Held"
+        />
+        <ControlCard
+          label="High-Risk Counterparties"
+          value="9"
+          trend="↑ 13%"
+          footer="2 new this month"
+          status="Exception"
+        />
+        <ControlCard
+          label="Open Tasks"
+          value="156"
+          trend="↓ 8%"
+          footer="37 overdue"
+          status="Pending"
+        />
+        <ControlCard
+          label="Contracts Expiring"
+          value="23"
+          trend="90 days"
+          footer="Renewal review"
+          status="Held"
+        />
+      </section>
 
-      <h2 className="mt-2 text-xl font-black leading-tight text-white">
-        {title}
-      </h2>
+      <section className="mt-4 grid gap-4 xl:grid-cols-[1fr_280px]">
+        <ExecutiveMapPanel />
+        <NetworkSummaryPanel />
+      </section>
 
-      <div className="mt-4">{children}</div>
+      <section className="mt-4 grid gap-4 xl:grid-cols-5">
+        <DensePanel title="Today’s Control Summary">
+          <DenseTable
+            rows={[
+              { label: "Approvals decided", value: "14", status: "Complete" },
+              { label: "Documents uploaded", value: "36", status: "Complete" },
+              { label: "Contracts executed", value: "6", status: "Approved" },
+              { label: "Payments approved", value: "R48.7m", status: "Approved" },
+              { label: "Incidents reported", value: "2", status: "Exception" },
+            ]}
+          />
+        </DensePanel>
+
+        <DensePanel title="Document Exceptions">
+          <DenseTable
+            rows={[
+              { label: "Expiring documents", value: "18", status: "Exception" },
+              { label: "Missing signatures", value: "7", status: "Exception" },
+              { label: "Version issues", value: "5", status: "Held" },
+              { label: "Expiry under 30 days", value: "12", status: "Pending" },
+              { label: "Evidence gaps", value: "9", status: "Exception" },
+            ]}
+          />
+        </DensePanel>
+
+        <DensePanel title="HR Alerts">
+          <DenseTable
+            rows={[
+              { label: "Policy acknowledgement", value: "37", status: "Pending" },
+              { label: "Probation reviews", value: "6", status: "Pending" },
+              { label: "Training overdue", value: "14", status: "Held" },
+              { label: "Certifications expiring", value: "9", status: "Held" },
+              { label: "Leave requests", value: "11", status: "Pending" },
+            ]}
+          />
+        </DensePanel>
+
+        <DensePanel title="Procurement Pending">
+          <DenseTable
+            rows={[
+              { label: "RFQs closing", value: "3", status: "Pending" },
+              { label: "Purchase orders", value: "21", status: "Pending" },
+              { label: "Goods receipts", value: "17", status: "Pending" },
+              { label: "Invoices awaiting", value: "29", status: "Held" },
+              { label: "Supplier onboarding", value: "4", status: "Pending" },
+            ]}
+          />
+        </DensePanel>
+
+        <DensePanel title="Risk Register Snapshot">
+          <DenseTable
+            rows={[
+              { label: "Strategic risk", value: "3 high", status: "Held" },
+              { label: "Operational risk", value: "6 high", status: "Exception" },
+              { label: "Financial risk", value: "4 high", status: "Held" },
+              { label: "Compliance risk", value: "5 high", status: "Exception" },
+              { label: "Reputational risk", value: "2 high", status: "Pending" },
+            ]}
+          />
+        </DensePanel>
+      </section>
+    </SARExecutiveShell>
+  );
+}
+
+function ExecutiveMapPanel() {
+  return (
+    <section className="min-h-[390px] rounded-2xl border border-[#202736] bg-[#0c1017] p-4">
+      <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h2 className="text-[14px] font-semibold text-white">
+            Operational Intelligence Map
+          </h2>
+          <p className="mt-1 text-[11px] text-[#7d8593]">
+            Routes, demand, supply, operational concentration and control points.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2 text-[10px] text-[#9ca3af]">
+          <LegendDot label="Routes" tone="gold" />
+          <LegendDot label="Demand" tone="blue" />
+          <LegendDot label="Supply" tone="green" />
+          <LegendDot label="Concentration" tone="orange" />
+        </div>
+      </div>
+
+      <div className="grid min-h-[318px] gap-3 lg:grid-cols-[170px_1fr]">
+        <div className="rounded-xl border border-[#1d2430] bg-[#080b11] p-3">
+          <div className="text-[11px] font-semibold text-white">View</div>
+          <div className="mt-2 rounded-lg border border-[#2a3140] bg-[#0c1017] px-2 py-2 text-[11px] text-[#d1d5db]">
+            Africa Focus <span className="float-right text-[#d5a936]">⌄</span>
+          </div>
+
+          <div className="mt-4 text-[11px] font-semibold text-white">Layers</div>
+          <div className="mt-2 space-y-2 text-[10px] text-[#9ca3af]">
+            {["Routes", "Demand", "Supply", "Operational Concentration"].map(
+              (item) => (
+                <label key={item} className="flex items-center gap-2">
+                  <span className="grid h-3.5 w-3.5 place-items-center rounded border border-[#d5a936] bg-[#1f1a0b] text-[8px] text-[#d5a936]">
+                    ✓
+                  </span>
+                  {item}
+                </label>
+              )
+            )}
+          </div>
+
+          <button className="mt-4 w-full rounded-lg border border-[#3a2f12] px-2 py-2 text-[10px] font-semibold text-[#d5a936]">
+            Reset View
+          </button>
+        </div>
+
+        <div className="relative overflow-hidden rounded-xl border border-[#1d2430] bg-[#05070b]">
+          <MapGrid />
+          <MapNode className="left-[22%] top-[28%]" label="Dakar" tone="gold" />
+          <MapNode className="left-[31%] top-[42%]" label="Lagos" tone="green" />
+          <MapNode className="left-[48%] top-[57%]" label="Luanda" tone="orange" />
+          <MapNode className="left-[58%] top-[72%]" label="Johannesburg" tone="gold" />
+          <MapNode className="left-[70%] top-[62%]" label="Beira" tone="blue" />
+          <MapNode className="left-[77%] top-[41%]" label="Mombasa" tone="blue" />
+          <MapNode className="left-[67%] top-[26%]" label="Port Sudan" tone="orange" />
+
+          <RouteLine className="left-[25%] top-[33%] w-[260px] rotate-[18deg]" />
+          <RouteLine className="left-[42%] top-[56%] w-[300px] -rotate-[28deg]" />
+          <RouteLine className="left-[54%] top-[69%] w-[220px] -rotate-[8deg]" />
+          <RouteLine className="left-[61%] top-[42%] w-[230px] rotate-[20deg]" />
+
+          <div className="absolute bottom-3 left-3 rounded-xl border border-[#1d2430] bg-[#080b11]/90 p-3">
+            <div className="text-[10px] font-semibold text-white">
+              Concentration Index
+            </div>
+            <div className="mt-2 h-2 w-44 rounded-full bg-gradient-to-r from-[#1f6f4a] via-[#d5a936] to-[#d97706]" />
+            <div className="mt-1 flex justify-between text-[9px] text-[#6b7280]">
+              <span>Low</span>
+              <span>Medium</span>
+              <span>High</span>
+            </div>
+          </div>
+
+          <div className="absolute bottom-3 right-3 text-[10px] text-[#6b7280]">
+            Last updated: 09:32 SAST
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
-function Stat({
+function NetworkSummaryPanel() {
+  return (
+    <section className="rounded-2xl border border-[#202736] bg-[#0c1017] p-4">
+      <h2 className="text-[14px] font-semibold text-white">Network Summary</h2>
+      <div className="mt-4 space-y-3">
+        {[
+          ["Active Routes", "32"],
+          ["Ports & Terminals", "18"],
+          ["Demand Points", "27"],
+          ["Supply Sites", "16"],
+          ["High Concentration Areas", "6"],
+        ].map(([label, value]) => (
+          <div key={label} className="flex items-center justify-between border-b border-[#171d28] pb-2">
+            <span className="text-[11px] text-[#9ca3af]">{label}</span>
+            <span className="text-[15px] font-semibold text-white">{value}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 rounded-xl border border-[#1d2430] bg-[#080b11] p-3">
+        <div className="text-[11px] font-semibold text-white">Control Status</div>
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-[#9ca3af]">Approvals</span>
+            <StatusChip status="Pending" />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-[#9ca3af]">Compliance</span>
+            <StatusChip status="Held" />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-[#9ca3af]">Risk</span>
+            <StatusChip status="Exception" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AIRecommendationsPanel() {
+  const alerts = [
+    {
+      title: "High-Risk Counterparty",
+      text: "Zambezi Logistics risk score increased to 82. Review exposure.",
+      status: "Exception" as const,
+      time: "18m ago",
+    },
+    {
+      title: "Contract Expiring Soon",
+      text: "23 contracts expire within 90 days. Renewal review required.",
+      status: "Held" as const,
+      time: "32m ago",
+    },
+    {
+      title: "Compliance Overdue",
+      text: "5 company compliance items are overdue. Evidence required.",
+      status: "Blocked" as const,
+      time: "45m ago",
+    },
+    {
+      title: "HR Policy Acknowledgement",
+      text: "37 employees have not acknowledged the updated code.",
+      status: "Pending" as const,
+      time: "1h ago",
+    },
+    {
+      title: "Procurement Opportunity",
+      text: "3 RFQs closing this week with potential cost savings.",
+      status: "Approved" as const,
+      time: "2h ago",
+    },
+  ];
+
+  return (
+    <section className="rounded-2xl border border-[#202736] bg-[#0c1017] p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="text-[14px] font-semibold text-white">
+            AI Recommendations
+          </h2>
+          <p className="mt-1 text-[10px] text-[#7d8593]">
+            Alerts, next actions and executive control notes.
+          </p>
+        </div>
+        <span className="text-[#d5a936]">✦</span>
+      </div>
+
+      <div className="mb-3 flex gap-2 border-b border-[#1d2430] pb-3 text-[10px]">
+        <span className="rounded-full bg-[#1f1a0b] px-2 py-1 font-semibold text-[#f2ca63]">
+          Alerts (6)
+        </span>
+        <span className="rounded-full border border-[#1d2430] px-2 py-1 text-[#8b949e]">
+          Next Actions
+        </span>
+        <span className="rounded-full border border-[#1d2430] px-2 py-1 text-[#8b949e]">
+          Insights
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {alerts.map((alert) => (
+          <div
+            key={alert.title}
+            className="rounded-xl border border-[#1d2430] bg-[#080b11] p-3"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[12px] font-semibold text-white">
+                  {alert.title}
+                </div>
+                <p className="mt-1 text-[10px] leading-4 text-[#9ca3af]">
+                  {alert.text}
+                </p>
+              </div>
+              <StatusChip status={alert.status} />
+            </div>
+            <div className="mt-2 text-[9px] text-[#6b7280]">{alert.time}</div>
+          </div>
+        ))}
+      </div>
+
+      <button className="mt-4 w-full rounded-xl border border-[#3a2f12] bg-[#11151c] px-3 py-2 text-[11px] font-semibold text-[#d5a936]">
+        View All Recommendations →
+      </button>
+    </section>
+  );
+}
+
+function LegendDot({
   label,
-  value,
-  note,
-  gold,
-  danger,
+  tone,
 }: {
   label: string;
-  value: string;
-  note?: string;
-  gold?: boolean;
-  danger?: boolean;
+  tone: "gold" | "blue" | "green" | "orange";
 }) {
-  return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
-        {label}
-      </p>
-
-      <p
-        className={
-          danger
-            ? "mt-2 text-xl font-black text-red-200"
-            : gold
-            ? "mt-2 text-xl font-black text-[#f5d778]"
-            : "mt-2 text-xl font-black text-white"
-        }
-      >
-        {value}
-      </p>
-
-      {note ? (
-        <p className="mt-2 text-sm leading-6 text-slate-400">
-          {note}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function Gate({
-  title,
-  ready,
-  note,
-}: {
-  title: string;
-  ready: boolean;
-  note: string;
-}) {
-  return (
-    <div
-      className={
-        ready
-          ? "rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4"
-          : "rounded-2xl border border-red-400/30 bg-red-500/10 p-4"
-      }
-    >
-      <p
-        className={
-          ready
-            ? "text-sm font-black text-emerald-200"
-            : "text-sm font-black text-red-200"
-        }
-      >
-        {ready ? "Ready" : "Blocked"} — {title}
-      </p>
-
-      <p className="mt-2 text-xs leading-5 text-slate-300">
-        {note}
-      </p>
-    </div>
-  );
-}
-
-function StatusPill({ value }: { value: string }) {
-  const isBlocked = value === "Blocked";
-  const isReady = value === "Review Ready";
+  const tones = {
+    gold: "bg-[#d5a936]",
+    blue: "bg-sky-400",
+    green: "bg-emerald-400",
+    orange: "bg-orange-400",
+  };
 
   return (
-    <span
-      className={
-        isReady
-          ? "inline-flex rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-sm font-black text-emerald-200"
-          : isBlocked
-          ? "inline-flex rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-sm font-black text-red-200"
-          : "inline-flex rounded-full border border-[#d7ad32]/40 bg-[#d7ad32]/10 px-4 py-2 text-sm font-black text-[#f5d778]"
-      }
-    >
-      {value}
+    <span className="flex items-center gap-1.5">
+      <span className={["h-2 w-2 rounded-full", tones[tone]].join(" ")} />
+      {label}
     </span>
   );
 }
 
-function useParcel() {
-  const supabase = createClient();
-
-  const [state, setState] = useState<LoadState>({
-    loading: true,
-    error: "",
-    row: null,
-  });
-
-  useEffect(() => {
-    async function loadParcel() {
-      setState({
-        loading: true,
-        error: "",
-        row: null,
-      });
-
-      const { data, error } = await supabase
-        .from("parcels")
-        .select("*")
-        .eq("parcel_code", SEED_CODE)
-        .single();
-
-      if (error) {
-        setState({
-          loading: false,
-          error: error.message,
-          row: null,
-        });
-        return;
-      }
-
-      setState({
-        loading: false,
-        error: "",
-        row: (data || null) as Row | null,
-      });
-    }
-
-    loadParcel();
-  }, [supabase]);
-
-  return state;
+function MapGrid() {
+  return (
+    <div className="absolute inset-0">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(213,169,54,0.14),transparent_35%),radial-gradient(circle_at_58%_64%,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_70%_36%,rgba(56,189,248,0.10),transparent_26%)]" />
+      <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:28px_28px]" />
+      <div className="absolute left-[31%] top-[12%] h-[76%] w-[43%] rounded-[48%_42%_46%_44%] border border-[#2a3140] bg-[#0b1118]/70 shadow-[0_0_70px_rgba(213,169,54,0.08)]" />
+      <div className="absolute left-[45%] top-[33%] h-[34%] w-[18%] rotate-12 rounded-[60%_35%_55%_45%] border border-[#343b49] bg-[#101720]/70" />
+    </div>
+  );
 }
 
-export default function DashboardPage() {
-  const state = useParcel();
-
-  if (state.loading) {
-    return (
-      <ResourceShell title="Dashboard" subtitle="Reading saved parcel data.">
-        <Card label="Loading" title="Reading saved parcel...">
-          <p className="text-sm leading-6 text-slate-400">
-            Loading current parcel control summary.
-          </p>
-        </Card>
-      </ResourceShell>
-    );
-  }
-
-  if (state.error || !state.row) {
-    return (
-      <ResourceShell title="Dashboard" subtitle="Data could not load.">
-        <Card label="Exception" title="Saved parcel unavailable">
-          <p className="text-sm leading-6 text-red-200">
-            {state.error || "No active parcel record found."}
-          </p>
-        </Card>
-      </ResourceShell>
-    );
-  }
-
-  const model = getModel(state.row);
-  const currentState = stateLabel(
-    model.hasCost,
-    model.surplus,
-    model.margin
-  );
-
-  const hardBlockers = [
-    !model.hasCommodity,
-    !model.hasQuantity,
-    !model.hasPrice,
-    !model.hasCost,
-    !model.hasPositiveSurplus,
-  ].filter(Boolean).length;
-
-  const pendingBlockers = [
-    !model.hasTargetMargin,
-    model.stage === "Not captured",
-    model.routeQty <= 0,
-  ].filter(Boolean).length;
+function MapNode({
+  label,
+  tone,
+  className,
+}: {
+  label: string;
+  tone: "gold" | "blue" | "green" | "orange";
+  className: string;
+}) {
+  const tones = {
+    gold: "bg-[#d5a936] shadow-[0_0_24px_rgba(213,169,54,0.75)]",
+    blue: "bg-sky-400 shadow-[0_0_24px_rgba(56,189,248,0.75)]",
+    green: "bg-emerald-400 shadow-[0_0_24px_rgba(52,211,153,0.75)]",
+    orange: "bg-orange-400 shadow-[0_0_24px_rgba(251,146,60,0.75)]",
+  };
 
   return (
-    <ResourceShell
-      title="Dashboard"
-      subtitle="Saved parcel control summary and release readiness."
-    >
-      <Card label="Lead / Opportunity" title="Current lead summary">
-        <div className="grid gap-3">
-          <Stat label="Parcel" value={model.parcelCode} gold />
-          <Stat label="Class" value={model.commodityClass} />
-          <Stat label="Resource" value={model.resource} gold />
-          <Stat label="Category" value={model.category} />
-          <Stat label="Material" value={model.material} />
-          <Stat label="Stage" value={stageLabel(model.stage)} />
-        </div>
-      </Card>
-
-      <Card label="Lead Economics Screening" title="Commercial starting point">
-        <div className="grid gap-3">
-          <Stat
-            label="Product Tons"
-            value={
-              model.productQty > 0
-                ? model.productQty.toFixed(3)
-                : "Not captured"
-            }
-            danger={model.productQty <= 0}
-          />
-
-          <Stat
-            label="Effective Price"
-            value={moneyUnit(model.effectivePrice)}
-            gold={model.effectivePrice > 0}
-            danger={model.effectivePrice <= 0}
-          />
-
-          <Stat
-            label="Route Cost"
-            value={model.hasCost ? money(model.routeCost) : "Not captured"}
-            gold={model.hasCost}
-            danger={!model.hasCost}
-            note={
-              model.hasCost
-                ? "Read from saved route-detail costs."
-                : "Capture route detail costs before screening margin."
-            }
-          />
-
-          <Stat
-            label="Surplus"
-            value={
-              model.hasCost && model.revenue > 0
-                ? money(model.surplus)
-                : "Not captured"
-            }
-            gold={model.hasPositiveSurplus}
-            danger={!model.hasPositiveSurplus}
-          />
-
-          <Stat
-            label="Margin"
-            value={
-              model.hasCost && model.revenue > 0
-                ? `${model.margin.toFixed(1)}%`
-                : "Not captured"
-            }
-            gold={model.hasTargetMargin}
-            danger={!model.hasTargetMargin}
-          />
-        </div>
-      </Card>
-
-      <Card label="Finance Readiness" title={decisionLabel(model.hasCost, model.margin)}>
-        <div className="grid gap-3">
-          <Stat
-            label="Revenue"
-            value={model.revenue > 0 ? money(model.revenue) : "Not captured"}
-            gold={model.revenue > 0}
-            danger={model.revenue <= 0}
-          />
-
-          <Stat
-            label="Route Cost"
-            value={model.hasCost ? money(model.routeCost) : "Not captured"}
-            gold={model.hasCost}
-            danger={!model.hasCost}
-          />
-
-          <Stat
-            label="Commercial Surplus"
-            value={
-              model.hasCost && model.revenue > 0
-                ? money(model.surplus)
-                : "Not captured"
-            }
-            gold={model.hasPositiveSurplus}
-            danger={!model.hasPositiveSurplus}
-          />
-
-          <Stat
-            label="Current State"
-            value={currentState}
-            gold={currentState === "Review Ready"}
-            danger={currentState === "Blocked"}
-          />
-        </div>
-      </Card>
-
-      <Card label="Route Cost Build-Up" title="Saved route-detail costs">
-        <div className="grid gap-3">
-          <Stat
-            label="Acquisition / Source Total"
-            value={
-              model.acquisitionTotal > 0
-                ? money(model.acquisitionTotal)
-                : "Not captured"
-            }
-            note={`${moneyUnit(model.acquisitionUnit)} × ${model.routeQty.toFixed(3)} units`}
-          />
-
-          <Stat
-            label="Transport / Logistics Total"
-            value={
-              model.logisticsTotal > 0
-                ? money(model.logisticsTotal)
-                : "Not captured"
-            }
-            note={`${moneyUnit(model.logisticsUnit)} × ${model.routeQty.toFixed(3)} units`}
-          />
-
-          <Stat
-            label="Processing / Handling Total"
-            value={
-              model.processingTotal > 0
-                ? money(model.processingTotal)
-                : "Not captured"
-            }
-            note={`${moneyUnit(model.processingUnit)} × ${model.routeQty.toFixed(3)} units`}
-          />
-
-          <Stat
-            label="Verification / Quality Cost"
-            value={
-              model.verificationCost > 0
-                ? money(model.verificationCost)
-                : "Not captured"
-            }
-          />
-
-          <Stat
-            label="Total Route Cost"
-            value={model.hasCost ? money(model.routeCost) : "Not captured"}
-            gold={model.hasCost}
-            danger={!model.hasCost}
-          />
-        </div>
-      </Card>
-
-      <Card label="Release Gate Engine" title="Central blocker summary">
-        <div className="grid gap-3">
-          <Stat label="Hard Blockers" value={String(hardBlockers)} danger={hardBlockers > 0} gold={hardBlockers === 0} />
-          <Stat label="Pending Blockers" value={String(pendingBlockers)} danger={pendingBlockers > 0} gold={pendingBlockers === 0} />
-          <Stat label="Total Open" value={String(hardBlockers + pendingBlockers)} danger={hardBlockers + pendingBlockers > 0} gold={hardBlockers + pendingBlockers === 0} />
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
-              Current State
-            </p>
-            <div className="mt-3">
-              <StatusPill value={currentState} />
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <Card label="Release Gates" title="Operational readiness checks">
-        <div className="grid gap-3">
-          <Gate
-            title="Commodity and material captured"
-            ready={model.hasCommodity}
-            note="Class, category, resource and material must be captured."
-          />
-          <Gate
-            title="Quantity captured"
-            ready={model.hasQuantity}
-            note="Product quantity must be available."
-          />
-          <Gate
-            title="Effective buyer / offtake price captured"
-            ready={model.hasPrice}
-            note="Market/reference or negotiated buyer price must be captured."
-          />
-          <Gate
-            title="Route costs captured"
-            ready={model.hasCost}
-            note="Route detail costs must be saved before margin screening."
-          />
-          <Gate
-            title="Positive surplus"
-            ready={model.hasPositiveSurplus}
-            note="Route must show a positive commercial surplus before release."
-          />
-          <Gate
-            title="Target margin"
-            ready={model.hasTargetMargin}
-            note="Target release margin is 18% or higher."
-          />
-        </div>
-      </Card>
-    </ResourceShell>
+    <div className={["absolute", className].join(" ")}>
+      <div className={["h-3 w-3 rounded-full ring-4 ring-white/5", tones[tone]].join(" ")} />
+      <div className="mt-1 rounded bg-[#05070b]/70 px-1.5 py-0.5 text-[9px] font-medium text-[#d1d5db]">
+        {label}
+      </div>
+    </div>
   );
 }
+
+function RouteLine({ className }: { className: string }) {
+  return (
+    <div
+      className={[
+        "absolute h-px origin-left bg-gradient-to-r from-[#d5a936] via-emerald-400 to-sky-400 opacity-80",
+        className,
+      ].join(" ")}
+    />
+  );
+              }

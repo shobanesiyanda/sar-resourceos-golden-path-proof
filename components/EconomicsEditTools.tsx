@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { createClient } from "../lib/supabase/client";
+import {
+  fetchProductCatalogue,
+  type ProductCatalogueOption,
+} from "../lib/productCatalogue";
 
 const ACTIVE_PARCEL_CODE = "PAR-MAI-2026-0001";
 
@@ -12,6 +17,7 @@ type CommodityStage =
   | "finished_product";
 
 type CatalogueItem = {
+  productCode: string;
   commodityClass: string;
   category: string;
   resource: string;
@@ -38,83 +44,611 @@ type FormState = {
   priceNote: string;
 };
 
-const CATALOGUE: CatalogueItem[] = [
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "ROM / Tailings / Feedstock", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome Tailings 24-26%", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome Tailings 26-28%", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome ROM / Tailings 28-30%", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome ROM / Tailings 30-32%", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome ROM / Tailings 32-34%", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome Dumps / Sweepings", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome Concentrate 38-40%", stage: "intermediate_concentrate" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome Concentrate 40-42%", stage: "intermediate_concentrate" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome Concentrate 42-44%", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Chrome", resource: "Chrome", material: "Chrome Concentrate 44-46%", stage: "saleable_product" },
+type LabelSet = {
+  quantity: string;
+  routeQuantity: string;
+  marketPrice: string;
+  negotiatedPrice: string;
+  acquisition: string;
+  logistics: string;
+  processing: string;
+  verification: string;
+  note: string;
+  processingHelp: string;
+};
 
-  { commodityClass: "Hard Commodities", category: "Coal", resource: "Coal", material: "Thermal Coal ROM", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Coal", resource: "Coal", material: "Thermal Coal Peas", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Coal", resource: "Coal", material: "Thermal Coal Duff", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Coal", resource: "Coal", material: "Export Thermal Coal", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Coal", resource: "Coal", material: "Metallurgical Coal", stage: "saleable_product" },
+const LOCAL_CATALOGUE: CatalogueItem[] = [
+  {
+    productCode: "PRD-CHR-ROM-GEN",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "ROM / Tailings / Feedstock",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-CHR-TAIL-2426",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome Tailings 24-26%",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-CHR-TAIL-2628",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome Tailings 26-28%",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-CHR-ROM-2830",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome ROM / Tailings 28-30%",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-CHR-ROM-3032",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome ROM / Tailings 30-32%",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-CHR-ROM-3234",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome ROM / Tailings 32-34%",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-CHR-DUMPS-SWEEP",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome Dumps / Sweepings",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-CHR-CON-3840",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome Concentrate 38-40%",
+    stage: "intermediate_concentrate",
+  },
+  {
+    productCode: "PRD-CHR-CON-4042",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome Concentrate 40-42%",
+    stage: "intermediate_concentrate",
+  },
+  {
+    productCode: "PRD-CHR-CON-4244",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome Concentrate 42-44%",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-CHR-CON-4446",
+    commodityClass: "Hard Commodities",
+    category: "Chrome",
+    resource: "Chrome",
+    material: "Chrome Concentrate 44-46%",
+    stage: "saleable_product",
+  },
 
-  { commodityClass: "Hard Commodities", category: "Manganese", resource: "Manganese", material: "Manganese ROM", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Manganese", resource: "Manganese", material: "Manganese Ore 28-30%", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Manganese", resource: "Manganese", material: "Manganese Ore 30-32%", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Manganese", resource: "Manganese", material: "Manganese Ore 32-34%", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Manganese", resource: "Manganese", material: "Manganese Ore 34-36%", stage: "saleable_product" },
+  {
+    productCode: "PRD-COAL-ROM",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "Thermal Coal ROM",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-COAL-PEAS",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "Thermal Coal Peas",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-COAL-DUFF",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "Thermal Coal Duff",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-COAL-RB1",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "RB1 Export Coal",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-COAL-RB2",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "RB2 Export Coal",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-COAL-RB3",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "RB3 Export Coal",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-COAL-RB4",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "RB4 Export Coal",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-COAL-RB5",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "RB5 Export Coal",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-COAL-MET",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "Metallurgical Coal",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-COAL-ANTH",
+    commodityClass: "Hard Commodities",
+    category: "Coal",
+    resource: "Coal",
+    material: "Anthracite",
+    stage: "saleable_product",
+  },
 
-  { commodityClass: "Hard Commodities", category: "Iron Ore", resource: "Iron Ore", material: "Iron Ore ROM", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Iron Ore", resource: "Iron Ore", material: "Iron Ore Lump", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Iron Ore", resource: "Iron Ore", material: "Iron Ore Fines", stage: "saleable_product" },
+  {
+    productCode: "PRD-MANG-ROM",
+    commodityClass: "Hard Commodities",
+    category: "Manganese",
+    resource: "Manganese",
+    material: "Manganese ROM",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-MANG-2830",
+    commodityClass: "Hard Commodities",
+    category: "Manganese",
+    resource: "Manganese",
+    material: "Manganese Ore 28-30%",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-MANG-3032",
+    commodityClass: "Hard Commodities",
+    category: "Manganese",
+    resource: "Manganese",
+    material: "Manganese Ore 30-32%",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-MANG-3234",
+    commodityClass: "Hard Commodities",
+    category: "Manganese",
+    resource: "Manganese",
+    material: "Manganese Ore 32-34%",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-MANG-3436",
+    commodityClass: "Hard Commodities",
+    category: "Manganese",
+    resource: "Manganese",
+    material: "Manganese Ore 34-36%",
+    stage: "saleable_product",
+  },
 
-  { commodityClass: "Hard Commodities", category: "Base Metals", resource: "Copper", material: "Copper Ore", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Base Metals", resource: "Copper", material: "Copper Concentrate", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Base Metals", resource: "Nickel", material: "Nickel Ore", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Base Metals", resource: "Nickel", material: "Nickel Concentrate", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Base Metals", resource: "Zinc", material: "Zinc Ore", stage: "raw_feedstock" },
-  { commodityClass: "Hard Commodities", category: "Base Metals", resource: "Zinc", material: "Zinc Concentrate", stage: "saleable_product" },
+  {
+    productCode: "PRD-IRON-ROM",
+    commodityClass: "Hard Commodities",
+    category: "Iron Ore",
+    resource: "Iron Ore",
+    material: "Iron Ore ROM",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-IRON-LUMP",
+    commodityClass: "Hard Commodities",
+    category: "Iron Ore",
+    resource: "Iron Ore",
+    material: "Iron Ore Lump",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-IRON-FINES",
+    commodityClass: "Hard Commodities",
+    category: "Iron Ore",
+    resource: "Iron Ore",
+    material: "Iron Ore Fines",
+    stage: "saleable_product",
+  },
 
-  { commodityClass: "Hard Commodities", category: "Industrial Minerals", resource: "Silica", material: "Silica Sand", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Industrial Minerals", resource: "Limestone", material: "Limestone Aggregate", stage: "saleable_product" },
-  { commodityClass: "Hard Commodities", category: "Industrial Minerals", resource: "Aggregate", material: "Crushed Stone", stage: "finished_product" },
+  {
+    productCode: "PRD-PGM-ORE",
+    commodityClass: "Hard Commodities",
+    category: "Precious Metals",
+    resource: "PGMs",
+    material: "PGM Ore",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-PLAT-CON",
+    commodityClass: "Hard Commodities",
+    category: "Precious Metals",
+    resource: "Platinum",
+    material: "Platinum Concentrate",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-GOLD-ORE",
+    commodityClass: "Hard Commodities",
+    category: "Precious Metals",
+    resource: "Gold",
+    material: "Gold Ore",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-GOLD-DOR",
+    commodityClass: "Hard Commodities",
+    category: "Precious Metals",
+    resource: "Gold",
+    material: "Gold Doré",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-SILVER-ORE",
+    commodityClass: "Hard Commodities",
+    category: "Precious Metals",
+    resource: "Silver",
+    material: "Silver Ore",
+    stage: "raw_feedstock",
+  },
 
-  { commodityClass: "Soft Commodities", category: "Grains", resource: "Maize", material: "White Maize", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Grains", resource: "Maize", material: "Yellow Maize", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Grains", resource: "Maize", material: "White Maize Grade 1", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Grains", resource: "Maize", material: "Yellow Maize Grade 1", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Grains", resource: "Wheat", material: "Milling Wheat", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Grains", resource: "Wheat", material: "Feed Wheat", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Grains", resource: "Sorghum", material: "Red Sorghum", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Grains", resource: "Sorghum", material: "White Sorghum", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Grains", resource: "Barley", material: "Feed Barley", stage: "saleable_product" },
+  {
+    productCode: "PRD-COPPER-ORE",
+    commodityClass: "Hard Commodities",
+    category: "Base Metals",
+    resource: "Copper",
+    material: "Copper Ore",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-COPPER-CON",
+    commodityClass: "Hard Commodities",
+    category: "Base Metals",
+    resource: "Copper",
+    material: "Copper Concentrate",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-NICKEL-ORE",
+    commodityClass: "Hard Commodities",
+    category: "Base Metals",
+    resource: "Nickel",
+    material: "Nickel Ore",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-NICKEL-CON",
+    commodityClass: "Hard Commodities",
+    category: "Base Metals",
+    resource: "Nickel",
+    material: "Nickel Concentrate",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-ZINC-ORE",
+    commodityClass: "Hard Commodities",
+    category: "Base Metals",
+    resource: "Zinc",
+    material: "Zinc Ore",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-ZINC-CON",
+    commodityClass: "Hard Commodities",
+    category: "Base Metals",
+    resource: "Zinc",
+    material: "Zinc Concentrate",
+    stage: "saleable_product",
+  },
 
-  { commodityClass: "Soft Commodities", category: "Oilseeds", resource: "Soybeans", material: "Soybeans", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Oilseeds", resource: "Sunflower", material: "Sunflower Seed", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Oilseeds", resource: "Canola", material: "Canola Seed", stage: "saleable_product" },
+  {
+    productCode: "PRD-LITH-ORE",
+    commodityClass: "Hard Commodities",
+    category: "Battery Minerals",
+    resource: "Lithium",
+    material: "Lithium Ore",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-LITH-SPOD-CON",
+    commodityClass: "Hard Commodities",
+    category: "Battery Minerals",
+    resource: "Lithium",
+    material: "Lithium Spodumene Concentrate",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-COBALT-ORE",
+    commodityClass: "Hard Commodities",
+    category: "Battery Minerals",
+    resource: "Cobalt",
+    material: "Cobalt Ore",
+    stage: "raw_feedstock",
+  },
+  {
+    productCode: "PRD-GRAPHITE",
+    commodityClass: "Hard Commodities",
+    category: "Battery Minerals",
+    resource: "Graphite",
+    material: "Graphite Concentrate",
+    stage: "saleable_product",
+  },
 
-  { commodityClass: "Soft Commodities", category: "Legumes", resource: "Beans", material: "Dry Beans", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Legumes", resource: "Peas", material: "Field Peas", stage: "saleable_product" },
+  {
+    productCode: "PRD-SILICA-SAND",
+    commodityClass: "Hard Commodities",
+    category: "Industrial Minerals",
+    resource: "Silica",
+    material: "Silica Sand",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-LIMESTONE-AGG",
+    commodityClass: "Hard Commodities",
+    category: "Industrial Minerals",
+    resource: "Limestone",
+    material: "Limestone Aggregate",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-CRUSHED-STONE",
+    commodityClass: "Hard Commodities",
+    category: "Industrial Minerals",
+    resource: "Aggregate",
+    material: "Crushed Stone",
+    stage: "finished_product",
+  },
 
-  { commodityClass: "Soft Commodities", category: "Animal Feed", resource: "Feed Inputs", material: "Maize Feed Grade", stage: "saleable_product" },
-  { commodityClass: "Soft Commodities", category: "Animal Feed", resource: "Feed Inputs", material: "Soybean Meal", stage: "finished_product" },
-  { commodityClass: "Soft Commodities", category: "Animal Feed", resource: "Feed Inputs", material: "Sunflower Cake", stage: "finished_product" },
+  {
+    productCode: "PRD-MAI-WHITE",
+    commodityClass: "Soft Commodities",
+    category: "Grains",
+    resource: "Maize",
+    material: "White Maize",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-MAI-YELLOW",
+    commodityClass: "Soft Commodities",
+    category: "Grains",
+    resource: "Maize",
+    material: "Yellow Maize",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-MAI-WHITE-G1",
+    commodityClass: "Soft Commodities",
+    category: "Grains",
+    resource: "Maize",
+    material: "White Maize Grade 1",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-MAI-YELLOW-G1",
+    commodityClass: "Soft Commodities",
+    category: "Grains",
+    resource: "Maize",
+    material: "Yellow Maize Grade 1",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-WHEAT-MILL",
+    commodityClass: "Soft Commodities",
+    category: "Grains",
+    resource: "Wheat",
+    material: "Milling Wheat",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-WHEAT-FEED",
+    commodityClass: "Soft Commodities",
+    category: "Grains",
+    resource: "Wheat",
+    material: "Feed Wheat",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-SORGHUM-RED",
+    commodityClass: "Soft Commodities",
+    category: "Grains",
+    resource: "Sorghum",
+    material: "Red Sorghum",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-SORGHUM-WHITE",
+    commodityClass: "Soft Commodities",
+    category: "Grains",
+    resource: "Sorghum",
+    material: "White Sorghum",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-BARLEY-FEED",
+    commodityClass: "Soft Commodities",
+    category: "Grains",
+    resource: "Barley",
+    material: "Feed Barley",
+    stage: "saleable_product",
+  },
 
-  { commodityClass: "Agricultural Inputs", category: "Fertiliser", resource: "Urea", material: "Urea 46%", stage: "finished_product" },
-  { commodityClass: "Agricultural Inputs", category: "Fertiliser", resource: "MAP", material: "Monoammonium Phosphate", stage: "finished_product" },
-  { commodityClass: "Agricultural Inputs", category: "Fertiliser", resource: "LAN", material: "LAN Fertiliser", stage: "finished_product" },
-  { commodityClass: "Agricultural Inputs", category: "Fertiliser", resource: "NPK", material: "NPK Blend", stage: "finished_product" },
+  {
+    productCode: "PRD-SOYBEANS",
+    commodityClass: "Soft Commodities",
+    category: "Oilseeds",
+    resource: "Soybeans",
+    material: "Soybeans",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-SUNFLOWER-SEED",
+    commodityClass: "Soft Commodities",
+    category: "Oilseeds",
+    resource: "Sunflower",
+    material: "Sunflower Seed",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-CANOLA-SEED",
+    commodityClass: "Soft Commodities",
+    category: "Oilseeds",
+    resource: "Canola",
+    material: "Canola Seed",
+    stage: "saleable_product",
+  },
 
-  { commodityClass: "Finished Products", category: "Packaged Goods", resource: "General Product", material: "Finished Product", stage: "finished_product" },
-  { commodityClass: "Finished Products", category: "Building Materials", resource: "Cement", material: "Bagged Cement", stage: "finished_product" },
-  { commodityClass: "Finished Products", category: "Building Materials", resource: "Aggregate", material: "Bagged Aggregate", stage: "finished_product" },
+  {
+    productCode: "PRD-DRY-BEANS",
+    commodityClass: "Soft Commodities",
+    category: "Legumes",
+    resource: "Beans",
+    material: "Dry Beans",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-FIELD-PEAS",
+    commodityClass: "Soft Commodities",
+    category: "Legumes",
+    resource: "Peas",
+    material: "Field Peas",
+    stage: "saleable_product",
+  },
+
+  {
+    productCode: "PRD-MAI-FEED",
+    commodityClass: "Soft Commodities",
+    category: "Animal Feed",
+    resource: "Feed Inputs",
+    material: "Maize Feed Grade",
+    stage: "saleable_product",
+  },
+  {
+    productCode: "PRD-SOY-MEAL",
+    commodityClass: "Soft Commodities",
+    category: "Animal Feed",
+    resource: "Feed Inputs",
+    material: "Soybean Meal",
+    stage: "finished_product",
+  },
+  {
+    productCode: "PRD-SUNFLOWER-CAKE",
+    commodityClass: "Soft Commodities",
+    category: "Animal Feed",
+    resource: "Feed Inputs",
+    material: "Sunflower Cake",
+    stage: "finished_product",
+  },
+
+  {
+    productCode: "PRD-FERT-UREA",
+    commodityClass: "Agricultural Inputs",
+    category: "Fertiliser",
+    resource: "Urea",
+    material: "Urea 46%",
+    stage: "finished_product",
+  },
+  {
+    productCode: "PRD-FERT-MAP",
+    commodityClass: "Agricultural Inputs",
+    category: "Fertiliser",
+    resource: "MAP",
+    material: "Monoammonium Phosphate",
+    stage: "finished_product",
+  },
+  {
+    productCode: "PRD-FERT-LAN",
+    commodityClass: "Agricultural Inputs",
+    category: "Fertiliser",
+    resource: "LAN",
+    material: "LAN Fertiliser",
+    stage: "finished_product",
+  },
+  {
+    productCode: "PRD-FERT-NPK",
+    commodityClass: "Agricultural Inputs",
+    category: "Fertiliser",
+    resource: "NPK",
+    material: "NPK Blend",
+    stage: "finished_product",
+  },
+
+  {
+    productCode: "PRD-FIN-GENERAL",
+    commodityClass: "Finished Products",
+    category: "Packaged Goods",
+    resource: "General Product",
+    material: "Finished Product",
+    stage: "finished_product",
+  },
+  {
+    productCode: "PRD-CEMENT-BAGGED",
+    commodityClass: "Finished Products",
+    category: "Building Materials",
+    resource: "Cement",
+    material: "Bagged Cement",
+    stage: "finished_product",
+  },
+  {
+    productCode: "PRD-AGG-BAGGED",
+    commodityClass: "Finished Products",
+    category: "Building Materials",
+    resource: "Aggregate",
+    material: "Bagged Aggregate",
+    stage: "finished_product",
+  },
 ];
 
 function num(value: unknown, fallback = 0) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
+
   if (typeof value === "string" && value.trim()) {
     const parsed = Number(value);
     if (Number.isFinite(parsed)) return parsed;
   }
+
   return fallback;
 }
 
@@ -141,12 +675,52 @@ function stageLabel(stage: CommodityStage | string) {
   return "Not captured";
 }
 
+function normaliseStage(value: string): CommodityStage {
+  if (value === "raw_feedstock") return "raw_feedstock";
+  if (value === "intermediate_concentrate") return "intermediate_concentrate";
+  if (value === "finished_product") return "finished_product";
+  return "saleable_product";
+}
+
 function firstOrEmpty(options: string[]) {
   return options[0] || "";
 }
 
-function firstItemFor(commodityClass: string, category?: string, resource?: string) {
-  return CATALOGUE.find((item) => {
+function mergeCatalogueItems(databaseCatalogue: ProductCatalogueOption[]) {
+  const merged = [...LOCAL_CATALOGUE];
+
+  for (const product of databaseCatalogue) {
+    const exists = merged.some(
+      (item) =>
+        item.productCode === product.productCode ||
+        (item.commodityClass === product.commodityClass &&
+          item.category === product.category &&
+          item.resource === product.resource &&
+          item.material === product.materialType)
+    );
+
+    if (!exists) {
+      merged.push({
+        productCode: product.productCode,
+        commodityClass: product.commodityClass,
+        category: product.category,
+        resource: product.resource,
+        material: product.materialType,
+        stage: normaliseStage(product.materialStage),
+      });
+    }
+  }
+
+  return merged;
+}
+
+function firstItemFor(
+  catalogue: CatalogueItem[],
+  commodityClass: string,
+  category?: string,
+  resource?: string
+) {
+  return catalogue.find((item) => {
     if (item.commodityClass !== commodityClass) return false;
     if (category && item.category !== category) return false;
     if (resource && item.resource !== resource) return false;
@@ -154,14 +728,130 @@ function firstItemFor(commodityClass: string, category?: string, resource?: stri
   });
 }
 
-function getLabels(form: Pick<FormState, "commodityClass" | "category" | "resource" | "material" | "stage">) {
+function selectedCatalogueItem(
+  catalogue: CatalogueItem[],
+  form: Pick<FormState, "commodityClass" | "category" | "resource" | "material">
+) {
+  return catalogue.find(
+    (item) =>
+      item.commodityClass === form.commodityClass &&
+      item.category === form.category &&
+      item.resource === form.resource &&
+      item.material === form.material
+  );
+}
+
+function databaseProductForForm(
+  databaseCatalogue: ProductCatalogueOption[],
+  catalogue: CatalogueItem[],
+  form: Pick<FormState, "commodityClass" | "category" | "resource" | "material">
+) {
+  const selected = selectedCatalogueItem(catalogue, form);
+
+  return (
+    databaseCatalogue.find((item) => item.productCode === selected?.productCode) ||
+    databaseCatalogue.find(
+      (item) =>
+        item.commodityClass === form.commodityClass &&
+        item.category === form.category &&
+        item.resource === form.resource &&
+        item.materialType === form.material
+    ) ||
+    null
+  );
+}
+
+function labelsFromDatabaseProduct(product: ProductCatalogueOption): LabelSet {
+  const family = product.terminologyFamily.toLowerCase();
+
+  let note =
+    "Product-specific edit labels are loaded from the controlled product catalogue.";
+  let processingHelp =
+    "This label is loaded from the controlled product catalogue.";
+
+  if (family.includes("chrome_raw")) {
+    note =
+      "Chrome raw feedstock uses ROM, tailings, wash plant, tolling, beneficiation, recovery, yield and assay wording.";
+    processingHelp =
+      "Use this only where the route includes wash plant, tolling or processing.";
+  } else if (family.includes("chrome_concentrate")) {
+    note =
+      "Chrome concentrate uses concentrate, buyer/offtake, grade, assay, transport and delivery basis wording.";
+    processingHelp =
+      "Do not show raw-feedstock wash/tolling requirements unless this route includes processing.";
+  } else if (family.includes("grain")) {
+    note =
+      "Grain saleable product uses supplier/source, grade, quantity, storage, handling, packaging, transport, buyer/offtake and quality evidence wording.";
+    processingHelp =
+      "Grain must not show wash plant, tolling, beneficiation, ROM, feedstock yield or concentrate wording.";
+  } else if (family.includes("coal")) {
+    note =
+      "Coal product wording uses supplier, stockpile, RB grade, CV, ash, sulphur, lab analysis, logistics and buyer/offtake controls.";
+    processingHelp =
+      "Use handling, screening or storage cost only where it applies to the coal route.";
+  } else if (family.includes("precious")) {
+    note =
+      "Precious metals require strict source, assay, secure logistics, chain-of-custody and buyer/processor controls.";
+    processingHelp =
+      "Use processing, handling or secure route preparation cost where applicable.";
+  } else if (family.includes("battery")) {
+    note =
+      "Battery minerals use product grade, assay, source, logistics, storage and buyer/offtake controls.";
+    processingHelp =
+      "Use handling, storage or processing cost where applicable.";
+  }
+
+  return {
+    quantity: product.quantityLabel,
+    routeQuantity: product.routeQuantityLabel,
+    marketPrice: product.marketPriceLabel,
+    negotiatedPrice: product.negotiatedPriceLabel,
+    acquisition: product.acquisitionCostLabel,
+    logistics: product.logisticsCostLabel,
+    processing: product.processingCostLabel,
+    verification: product.verificationCostLabel,
+    note,
+    processingHelp,
+  };
+}
+
+function fallbackLabels(
+  form: Pick<FormState, "commodityClass" | "category" | "resource" | "material" | "stage">
+): LabelSet {
   const commodityClass = form.commodityClass.toLowerCase();
   const resource = form.resource.toLowerCase();
   const category = form.category.toLowerCase();
   const material = form.material.toLowerCase();
   const stage = form.stage;
 
-  const isChrome = resource.includes("chrome") || category.includes("chrome") || material.includes("chrome");
+  const isChrome =
+    resource.includes("chrome") ||
+    category.includes("chrome") ||
+    material.includes("chrome");
+
+  const isCoal =
+    resource.includes("coal") ||
+    category.includes("coal") ||
+    material.includes("coal") ||
+    material.includes("rb1") ||
+    material.includes("rb2") ||
+    material.includes("rb3") ||
+    material.includes("rb4") ||
+    material.includes("rb5");
+
+  const isPrecious =
+    category.includes("precious") ||
+    resource.includes("gold") ||
+    resource.includes("platinum") ||
+    resource.includes("silver") ||
+    resource.includes("pgm");
+
+  const isBattery =
+    category.includes("battery") ||
+    resource.includes("lithium") ||
+    resource.includes("cobalt") ||
+    resource.includes("graphite");
+
   const isGrain =
     category.includes("grain") ||
     resource.includes("maize") ||
@@ -172,6 +862,7 @@ function getLabels(form: Pick<FormState, "commodityClass" | "category" | "resour
     material.includes("wheat") ||
     material.includes("sorghum") ||
     material.includes("barley");
+
   const isOilseed =
     category.includes("oilseed") ||
     resource.includes("soy") ||
@@ -180,8 +871,13 @@ function getLabels(form: Pick<FormState, "commodityClass" | "category" | "resour
     material.includes("soy") ||
     material.includes("sunflower") ||
     material.includes("canola");
+
   const isSoftCommodity = commodityClass.includes("soft");
-  const isFinished = stage === "finished_product" || commodityClass.includes("finished") || commodityClass.includes("agricultural inputs");
+
+  const isFinished =
+    stage === "finished_product" ||
+    commodityClass.includes("finished") ||
+    commodityClass.includes("agricultural inputs");
 
   if (isChrome && stage === "raw_feedstock") {
     return {
@@ -193,12 +889,17 @@ function getLabels(form: Pick<FormState, "commodityClass" | "category" | "resour
       logistics: "Transport to Plant Cost / Ton",
       processing: "Tolling / Processing Cost / Ton",
       verification: "Assay / Verification Cost",
-      note: "Chrome raw feedstock uses ROM, tailings, wash plant, tolling, beneficiation, recovery, yield and assay wording.",
-      processingHelp: "Use this only where the route includes wash plant, tolling or processing.",
+      note:
+        "Chrome raw feedstock uses ROM, tailings, wash plant, tolling, beneficiation, recovery, yield and assay wording.",
+      processingHelp:
+        "Use this only where the route includes wash plant, tolling or processing.",
     };
   }
 
-  if (isChrome && (stage === "intermediate_concentrate" || stage === "saleable_product")) {
+  if (
+    isChrome &&
+    (stage === "intermediate_concentrate" || stage === "saleable_product")
+  ) {
     return {
       quantity: "Concentrate Tons",
       routeQuantity: "Delivery Route Tons",
@@ -208,8 +909,61 @@ function getLabels(form: Pick<FormState, "commodityClass" | "category" | "resour
       logistics: "Transport / Delivery Cost / Ton",
       processing: "Handling / Storage Cost / Ton",
       verification: "Concentrate Assay Cost",
-      note: "Chrome concentrate uses concentrate, buyer/offtake, grade, assay, transport and delivery basis wording.",
-      processingHelp: "Do not show raw-feedstock wash/tolling requirements unless this route includes processing.",
+      note:
+        "Chrome concentrate uses concentrate, buyer/offtake, grade, assay, transport and delivery basis wording.",
+      processingHelp:
+        "Do not show raw-feedstock wash/tolling requirements unless this route includes processing.",
+    };
+  }
+
+  if (isCoal) {
+    return {
+      quantity: "Coal Product Tons",
+      routeQuantity: "Delivery Route Tons",
+      marketPrice: "Market / Reference Price",
+      negotiatedPrice: "Negotiated Buyer Price",
+      acquisition: "Coal Product Cost / Ton",
+      logistics: "Transport Cost / Ton",
+      processing: "Handling / Screening / Storage Cost / Ton",
+      verification: "Coal Quality / Lab Analysis Cost",
+      note:
+        "Coal uses supplier, stockpile, RB grade, CV, ash, sulphur, lab analysis, logistics and buyer/offtake wording.",
+      processingHelp:
+        "Use handling, screening or storage cost only where it applies to the coal route.",
+    };
+  }
+
+  if (isPrecious) {
+    return {
+      quantity: "Ore / Product Quantity",
+      routeQuantity: "Secure Route Quantity",
+      marketPrice: "Market / Reference Price",
+      negotiatedPrice: "Negotiated Buyer Price",
+      acquisition: "Ore / Product Cost / Unit",
+      logistics: "Secure Transport Cost / Unit",
+      processing: "Processing / Handling Cost / Unit",
+      verification: "Assay / Grade Verification Cost",
+      note:
+        "Precious metals require strict source, assay, secure logistics, chain-of-custody and buyer/processor controls.",
+      processingHelp:
+        "Use processing, handling or secure route preparation cost where applicable.",
+    };
+  }
+
+  if (isBattery) {
+    return {
+      quantity: "Saleable Product Quantity",
+      routeQuantity: "Delivery Route Quantity",
+      marketPrice: "Market / Reference Price",
+      negotiatedPrice: "Negotiated Buyer Price",
+      acquisition: "Product Acquisition Cost / Unit",
+      logistics: "Transport / Delivery Cost / Unit",
+      processing: "Handling / Storage Cost / Unit",
+      verification: "Assay / Grade Verification Cost",
+      note:
+        "Battery minerals use product grade, assay, source, logistics, storage and buyer/offtake controls.",
+      processingHelp:
+        "Use handling, storage or processing cost where applicable.",
     };
   }
 
@@ -223,8 +977,10 @@ function getLabels(form: Pick<FormState, "commodityClass" | "category" | "resour
       logistics: "Logistics / Handling Cost / Unit",
       processing: "Packaging / Handling Cost / Unit",
       verification: "Quality / Moisture / Grade Evidence Cost",
-      note: "Grain saleable product uses supplier/source, grade, quantity, storage, handling, packaging, transport, buyer/offtake and quality evidence wording.",
-      processingHelp: "Grain must not show wash plant, tolling, beneficiation, ROM, feedstock yield or concentrate wording.",
+      note:
+        "Grain saleable product uses supplier/source, grade, quantity, storage, handling, packaging, transport, buyer/offtake and quality evidence wording.",
+      processingHelp:
+        "Grain must not show wash plant, tolling, beneficiation, ROM, feedstock yield or concentrate wording.",
     };
   }
 
@@ -238,7 +994,8 @@ function getLabels(form: Pick<FormState, "commodityClass" | "category" | "resour
       logistics: "Logistics / Handling Cost / Unit",
       processing: "Storage / Packaging / Handling Cost / Unit",
       verification: "Quality / Grade Evidence Cost",
-      note: "Soft commodities use source, grade, quantity, storage, handling, packaging, transport, buyer/offtake and quality evidence wording.",
+      note:
+        "Soft commodities use source, grade, quantity, storage, handling, packaging, transport, buyer/offtake and quality evidence wording.",
       processingHelp: "Use storage, handling or packaging cost where applicable.",
     };
   }
@@ -253,8 +1010,10 @@ function getLabels(form: Pick<FormState, "commodityClass" | "category" | "resour
       logistics: "Logistics / Delivery Cost / Unit",
       processing: "Packaging / Handling Cost / Unit",
       verification: "Quality / Verification Cost",
-      note: "Finished products use product-specific supply, quality, storage, packaging, transport, buyer/offtake and delivery controls.",
-      processingHelp: "Use packaging, handling or route-preparation cost where applicable.",
+      note:
+        "Finished products use product-specific supply, quality, storage, packaging, transport, buyer/offtake and delivery controls.",
+      processingHelp:
+        "Use packaging, handling or route-preparation cost where applicable.",
     };
   }
 
@@ -272,25 +1031,40 @@ function getLabels(form: Pick<FormState, "commodityClass" | "category" | "resour
   };
 }
 
-function getInitialForm(row: ParcelRow | null): FormState {
+function getActiveLabels(
+  databaseCatalogue: ProductCatalogueOption[],
+  catalogue: CatalogueItem[],
+  form: Pick<FormState, "commodityClass" | "category" | "resource" | "material" | "stage">
+) {
+  const databaseProduct = databaseProductForForm(databaseCatalogue, catalogue, form);
+  if (databaseProduct) return labelsFromDatabaseProduct(databaseProduct);
+  return fallbackLabels(form);
+}
+
+function getInitialForm(row: ParcelRow | null, catalogue: CatalogueItem[]): FormState {
   const rowClass = text(row?.commodity_class, "Soft Commodities");
   const rowCategory = text(row?.resource_category, "Grains");
   const rowResource = text(row?.resource_type, "Maize");
   const rowMaterial = text(row?.material_type, "White Maize");
+
   const matchingItem =
-    CATALOGUE.find(
+    catalogue.find(
       (item) =>
         item.commodityClass === rowClass &&
         item.category === rowCategory &&
         item.resource === rowResource &&
         item.material === rowMaterial
-    ) || firstItemFor(rowClass, rowCategory, rowResource) || firstItemFor("Soft Commodities", "Grains", "Maize") || CATALOGUE[0];
+    ) ||
+    firstItemFor(catalogue, rowClass, rowCategory, rowResource) ||
+    firstItemFor(catalogue, "Soft Commodities", "Grains", "Maize") ||
+    catalogue[0];
 
   const commodityClass = matchingItem?.commodityClass || rowClass;
   const category = matchingItem?.category || rowCategory;
   const resource = matchingItem?.resource || rowResource;
   const material = matchingItem?.material || rowMaterial;
-  const stage = (matchingItem?.stage || text(row?.material_stage, "saleable_product")) as CommodityStage;
+  const stage = (matchingItem?.stage ||
+    text(row?.material_stage, "saleable_product")) as CommodityStage;
 
   const productQuantity = num(row?.expected_concentrate_tons, num(row?.accepted_tons, 250));
   const routeQuantity = num(row?.feedstock_tons, productQuantity);
@@ -322,7 +1096,7 @@ function Section({
 }: {
   label: string;
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 shadow-xl">
@@ -450,19 +1224,42 @@ function TextAreaField({
 }
 
 export function EconomicsEditTools() {
-  const supabase = createClient() as any;
+  const supabase = useMemo(() => createClient() as any, []);
+
+  const [databaseCatalogue, setDatabaseCatalogue] = useState<ProductCatalogueOption[]>([]);
+  const [catalogueSource, setCatalogueSource] = useState<"database" | "fallback" | "local">(
+    "local"
+  );
+  const [catalogueError, setCatalogueError] = useState<string | null>(null);
+
+  const catalogueItems = useMemo(
+    () => mergeCatalogueItems(databaseCatalogue),
+    [databaseCatalogue]
+  );
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [form, setForm] = useState<FormState>(() => getInitialForm(null));
+  const [form, setForm] = useState<FormState>(() => getInitialForm(null, LOCAL_CATALOGUE));
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadParcel() {
       setLoading(true);
       setError("");
       setMessage("");
+
+      const catalogueResult = await fetchProductCatalogue(supabase);
+      const activeDatabaseCatalogue = catalogueResult.catalogue;
+      const mergedCatalogue = mergeCatalogueItems(activeDatabaseCatalogue);
+
+      if (!cancelled) {
+        setDatabaseCatalogue(activeDatabaseCatalogue);
+        setCatalogueSource(catalogueResult.source);
+        setCatalogueError(catalogueResult.errorMessage);
+      }
 
       const { data, error: loadError } = await supabase
         .from("parcels")
@@ -472,71 +1269,108 @@ export function EconomicsEditTools() {
         .limit(1)
         .maybeSingle();
 
+      if (cancelled) return;
+
       if (loadError) {
         setError(loadError.message);
+        setForm(getInitialForm(null, mergedCatalogue));
         setLoading(false);
         return;
       }
 
-      setForm(getInitialForm((data || null) as ParcelRow | null));
+      setForm(getInitialForm((data || null) as ParcelRow | null, mergedCatalogue));
       setLoading(false);
     }
 
     loadParcel();
+
+    return () => {
+      cancelled = true;
+    };
   }, [supabase]);
 
-  const classOptions = useMemo(() => unique(CATALOGUE.map((item) => item.commodityClass)), []);
+  const classOptions = useMemo(
+    () => unique(catalogueItems.map((item) => item.commodityClass)),
+    [catalogueItems]
+  );
 
   const categoryOptions = useMemo(
     () =>
       unique(
-        CATALOGUE.filter((item) => item.commodityClass === form.commodityClass).map((item) => item.category)
+        catalogueItems
+          .filter((item) => item.commodityClass === form.commodityClass)
+          .map((item) => item.category)
       ),
-    [form.commodityClass]
+    [catalogueItems, form.commodityClass]
   );
 
   const resourceOptions = useMemo(
     () =>
       unique(
-        CATALOGUE.filter(
-          (item) => item.commodityClass === form.commodityClass && item.category === form.category
-        ).map((item) => item.resource)
+        catalogueItems
+          .filter(
+            (item) =>
+              item.commodityClass === form.commodityClass &&
+              item.category === form.category
+          )
+          .map((item) => item.resource)
       ),
-    [form.commodityClass, form.category]
+    [catalogueItems, form.commodityClass, form.category]
   );
 
   const materialOptions = useMemo(
     () =>
       unique(
-        CATALOGUE.filter(
-          (item) =>
-            item.commodityClass === form.commodityClass &&
-            item.category === form.category &&
-            item.resource === form.resource
-        ).map((item) => item.material)
+        catalogueItems
+          .filter(
+            (item) =>
+              item.commodityClass === form.commodityClass &&
+              item.category === form.category &&
+              item.resource === form.resource
+          )
+          .map((item) => item.material)
       ),
-    [form.commodityClass, form.category, form.resource]
+    [catalogueItems, form.commodityClass, form.category, form.resource]
   );
 
-  const labels = useMemo(() => getLabels(form), [form]);
+  const labels = useMemo(
+    () => getActiveLabels(databaseCatalogue, catalogueItems, form),
+    [databaseCatalogue, catalogueItems, form]
+  );
 
-  const effectivePrice = form.negotiatedBuyerPrice > 0 ? form.negotiatedBuyerPrice : form.marketReferencePrice;
+  const effectivePrice =
+    form.negotiatedBuyerPrice > 0
+      ? form.negotiatedBuyerPrice
+      : form.marketReferencePrice;
+
   const acquisitionTotal = form.routeQuantity * form.acquisitionCost;
   const logisticsTotal = form.routeQuantity * form.logisticsCost;
   const processingTotal = form.routeQuantity * form.processingHandlingCost;
-  const routeCost = acquisitionTotal + logisticsTotal + processingTotal + form.verificationQualityCost;
+  const routeCost =
+    acquisitionTotal +
+    logisticsTotal +
+    processingTotal +
+    form.verificationQualityCost;
+
   const revenue = form.productQuantity * effectivePrice;
   const surplus = revenue - routeCost;
   const margin = revenue > 0 ? (surplus / revenue) * 100 : 0;
 
   function setCommodityClass(value: string) {
-    const categories = unique(CATALOGUE.filter((item) => item.commodityClass === value).map((item) => item.category));
+    const categories = unique(
+      catalogueItems
+        .filter((item) => item.commodityClass === value)
+        .map((item) => item.category)
+    );
     const category = firstOrEmpty(categories);
+
     const resources = unique(
-      CATALOGUE.filter((item) => item.commodityClass === value && item.category === category).map((item) => item.resource)
+      catalogueItems
+        .filter((item) => item.commodityClass === value && item.category === category)
+        .map((item) => item.resource)
     );
     const resource = firstOrEmpty(resources);
-    const item = firstItemFor(value, category, resource);
+    const item = firstItemFor(catalogueItems, value, category, resource);
 
     if (!item) return;
 
@@ -552,12 +1386,15 @@ export function EconomicsEditTools() {
 
   function setCategory(value: string) {
     const resources = unique(
-      CATALOGUE.filter((item) => item.commodityClass === form.commodityClass && item.category === value).map(
-        (item) => item.resource
-      )
+      catalogueItems
+        .filter(
+          (item) =>
+            item.commodityClass === form.commodityClass && item.category === value
+        )
+        .map((item) => item.resource)
     );
     const resource = firstOrEmpty(resources);
-    const item = firstItemFor(form.commodityClass, value, resource);
+    const item = firstItemFor(catalogueItems, form.commodityClass, value, resource);
 
     if (!item) return;
 
@@ -571,7 +1408,7 @@ export function EconomicsEditTools() {
   }
 
   function setResource(value: string) {
-    const item = firstItemFor(form.commodityClass, form.category, value);
+    const item = firstItemFor(catalogueItems, form.commodityClass, form.category, value);
 
     if (!item) return;
 
@@ -584,7 +1421,7 @@ export function EconomicsEditTools() {
   }
 
   function setMaterial(value: string) {
-    const item = CATALOGUE.find(
+    const item = catalogueItems.find(
       (entry) =>
         entry.commodityClass === form.commodityClass &&
         entry.category === form.category &&
@@ -661,6 +1498,12 @@ export function EconomicsEditTools() {
         </div>
       ) : null}
 
+      {catalogueError ? (
+        <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm font-bold text-amber-100">
+          Catalogue fallback active: {catalogueError}
+        </div>
+      ) : null}
+
       <Section label="Commodity Selection" title="Live product pack selector">
         <SelectField
           label="Commodity Class"
@@ -691,6 +1534,14 @@ export function EconomicsEditTools() {
         />
 
         <Stat label="Material Stage" value={stageLabel(form.stage)} gold />
+
+        <Stat
+          label="Catalogue Source"
+          value={catalogueSource === "database" ? "Database + Full Local Catalogue" : "Full Local Catalogue"}
+          gold
+          note="The selector keeps the full SAR ResourceOS catalogue. Database catalogue rows override labels where available."
+        />
+
         <Stat label="Terminology Control" value="Live" gold note={labels.note} />
       </Section>
 

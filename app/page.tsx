@@ -33,7 +33,7 @@ export default function Page() {
       pageSubtitle="Shobane African Resources — company control room across approvals, compliance, documents, HR, procurement, risk and reporting."
       rightPanel={<AIRecommendationsPanel />}
     >
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-5">
         <ControlCard
           label="Open Approvals"
           value="28"

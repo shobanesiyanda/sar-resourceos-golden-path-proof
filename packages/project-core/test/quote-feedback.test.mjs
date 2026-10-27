@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {prepareQuoteScenario} from '../src/quote-feedback.mjs';
 const first={id:'EQ',quantity:2,unit:'machine',unitCost:null,predecessors:[]};
 const second={id:'HAUL',quantity:10,unit:'trip',unitCost:50,predecessors:['EQ']};
-const scenario={id:'SIM-1',currency:'ZAR',requirements:[first,second]};
+const scenario={projectId:'P1',id:'SIM-1',currency:'ZAR',requirements:[first,second]};
 const rfq={id:'RFQ-1',projectId:'P1',version:1,status:'approved_for_dispatch',
  approverId:'A1',approvalEventId:'EV-1',currency:'ZAR',recipients:['V1'],
  lines:[{requirementId:'EQ',quantity:2,unit:'machine'},{requirementId:'HAUL',quantity:10,unit:'trip'}]};
@@ -11,7 +11,7 @@ const quote={rfqId:'RFQ-1',vendorId:'V1',messageId:'MSG-1',status:'under_review'
  items:[{requirementId:'EQ',quantity:2,unit:'machine',price:100},
         {requirementId:'HAUL',quantity:10,unit:'trip',price:10}],
  vat:45,delivery:30};
-const evidence={ingestionEventId:'ING-1',sourceSha256:'a'.repeat(64),quotedCurrency:'ZAR'};
+const evidence={validUntil:'2099-12-31',ingestionEventId:'ING-1',sourceSha256:'a'.repeat(64),quotedCurrency:'ZAR'};
 const run=(change={})=>prepareQuoteScenario({projectId:'P1',scenario,rfq,quote,evidence,...change});
 test('maps received quote to a separately versioned provisional scenario',()=>{
  const r=run();assert.equal(r.status,'provisional_quote');
@@ -66,4 +66,12 @@ test('zero-value quote lines still allocate known delivery',()=>{
 test('missing freight or VAT values block cash exposure claims',()=>{
  assert.equal(run({quote:{...quote,delivery:null}}).status,'blocked');
  assert.equal(run({quote:{...quote,vat:null}}).status,'blocked');
+});
+
+test('cross-project scenario cannot be quoted even with a matching RFQ',()=>{
+ assert.equal(run({scenario:{...scenario,projectId:'OTHER'}}).status,'blocked');
+});
+test('expired or impossible quote validity dates block scenario feedback',()=>{
+ for(const validUntil of ['2020-01-01','2026-02-30',''])
+   assert.equal(run({evidence:{...evidence,validUntil}}).status,'blocked');
 });

@@ -8,12 +8,13 @@ export type Requirement = {
 export type Scenario={id:string; currency:"ZAR"|"USD"; requirements:Requirement[]; costFactor?:number; durationFactor?:number; contingencyPct?:number};
 export type SimulationResult={status:"provisional"|"incomplete"; issues:string[]; scenarioId:string; completionDays:number;
  knownCosts:number; contingency:number; totalBudget:number; criticalPath:string[];
- tasks:{id:string;startDay:number;endDay:number;cost:number}[]};
+ tasks:{id:string;startDay:number;endDay:number;cost:number}[];
+ indicativeCostByStartDay:{day:number;amount:number}[]};
 const pos=(n:unknown):n is number=>typeof n==="number"&&Number.isFinite(n)&&n>0;
 const nonneg=(n:unknown):n is number=>typeof n==="number"&&Number.isFinite(n)&&n>=0;
 export function simulateProject(s:Scenario):SimulationResult{
  const issues:string[]=[]; const empty=():SimulationResult=>({status:"incomplete",issues:[...new Set(issues)],scenarioId:s.id,
- completionDays:0,knownCosts:0,contingency:0,totalBudget:0,criticalPath:[],tasks:[]});
+ completionDays:0,knownCosts:0,contingency:0,totalBudget:0,criticalPath:[],tasks:[],indicativeCostByStartDay:[]});
  if(!s.id?.trim())issues.push("Scenario ID required");
  if(!["ZAR","USD"].includes(s.currency))issues.push("Unsupported currency");
  if(!Array.isArray(s.requirements)||!s.requirements.length)issues.push("Work packages required");
@@ -57,8 +58,11 @@ export function simulateProject(s:Scenario):SimulationResult{
  const longest=tasks.reduce((a,b)=>b.endDay>a.endDay?b:a);
  const knownCosts=tasks.reduce((sum,r)=>sum+r.cost,0);
  const contingency=knownCosts*contingencyPct/100,totalBudget=knownCosts+contingency;
- if(![knownCosts,contingency,totalBudget].every(Number.isFinite)){issues.push("Budget overflow");return empty();}
+ const daily=new Map<number,number>();
+ for(const task of tasks) daily.set(task.startDay,(daily.get(task.startDay)??0)+task.cost);
+ const indicativeCostByStartDay=[...daily].sort((a,b)=>a[0]-b[0]).map(([day,amount])=>({day,amount}));
+ if(![knownCosts,contingency,totalBudget,...indicativeCostByStartDay.map(x=>x.amount)].every(Number.isFinite)){issues.push("Budget overflow");return empty();}
  return {status:"provisional",issues:["Simulation only: costs, schedule, supplier quotes and execution require independent approvals"],
  scenarioId:s.id,completionDays:longest.endDay,knownCosts,contingency,totalBudget,
- criticalPath:paths.get(longest.id)??[],tasks};
+ criticalPath:paths.get(longest.id)??[],tasks,indicativeCostByStartDay};
 }

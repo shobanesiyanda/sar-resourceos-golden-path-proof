@@ -34,3 +34,9 @@ The original root Vercel project must retain its root build settings and root `a
 - `apps/dealscope/database/initial-schema.REVIEW-ONLY.sql` is a greenfield *design*, not an applied migration. Schema, tenant roles, RLS and storage must be created and tested inside **SAR-controlled** Supabase after verified organisation provisioning.
 
 Do not interpret any published preview, source module or successful local tests as active customer registration, payment acceptance, market verification or a functioning Commercial Exchange. Independent DealScope build, security, tenant, provider and operational acceptance remain OPEN.
+
+
+## Public acquisition website and full 30-day trial — 27 October
+The canonical child Next app now has separate signed-out / (trust/value-first marketing), /integrity (local guided unverified screening), /runs (the ORIGINAL self-entered calculator), /exchange (locked buyer/seller Exchange) and /start (full trial onboarding preview, NO personal-information capture). Public marketing styles are in app/landing.css; root app/layout.tsx retains noindex until release. Customer target domain: dealscope.co.za — domain/DNS/production not verified. No actual trial or signup has been activated.
+
+Founder-directed 30-day complete-platform trial is detailed in docs/architecture/13-DEALSCOPE-FULL-TRIAL-ONBOARDING-AND-ENTITLEMENTS.md; pricing, commercial funnel and signed-out value in docs/architecture/12-DEALSCOPE-CUSTOMER-ACQUISITION-AND-BUSINESS-MODEL.md. Source-only identity/one-time entitlement functions are in apps/dealscope/lib/full-trial.mjs, tests in apps/dealscope/test/full-trial.test.mjs and review-only database design in apps/dealscope/database/trial-entitlements.REVIEW-ONLY.sql. Never auto-charge, imply signup works, or reduce DealScope to PAYG. Deploy the child app only after its own isolated Auth/RLS/merchant/issuer and independent full-suite E2E evidence.

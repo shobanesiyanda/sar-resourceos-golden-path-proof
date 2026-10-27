@@ -41,3 +41,7 @@ The public domain was named by Founder; ownership, DNS, mail, TLS, legal policie
 - Preserve SAR internal ResourceOS physical trading, BusinessOS, CommercialOS, AccountingOS, PayrollOS and website as independent workstreams; do not promote partial products to main to imply completion.
 
 **Release disposition:** HOLD. Public trial CTAs currently lead to an honestly labelled onboarding preview, never a fake signup; no customer is onboarded or billed. PR #1 remains draft on SAR's existing source branch and production main is untouched.
+
+
+## 28 October 2026 — SUPERSEDING FOUNDER DECISION
+The 30-day free access in the preceding historical 27 October checkpoint is **obsolete**. The current offer is ONE FREE COMPLETE Deal Assistance & Assessment cycle, for one customer-owned deal dossier. A second free cycle requires a separately approved promotion. The UI source is corrected at apps/dealscope/app/page.tsx and app/start/page.tsx; the old full-trial module/test were removed from the active branch, replaced by deal-cycle-trial.mjs and its tests. The original suite remains wholly in scope. The authoritative active entitlement is SAR-DSC-TRIAL-20261028-002 (architecture 13). Do not restore the old offer from this dated checkpoint. No live registration/billing/issuer verification is claimed.

@@ -5,7 +5,7 @@ export type Requirement = {
  predecessors:string[]; documentId:string; sourceLocator:string; verified:boolean;
  capacityRequired?:number; capacityAvailable?:number;
 };
-export type Scenario={id:string; currency:"ZAR"|"USD"; requirements:Requirement[]; costFactor?:number; durationFactor?:number; contingencyPct?:number};
+export type Scenario={id:string; projectId?:string; currency:"ZAR"|"USD"; requirements:Requirement[]; costFactor?:number; durationFactor?:number; contingencyPct?:number};
 export type SimulationResult={status:"provisional"|"incomplete"; issues:string[]; scenarioId:string; completionDays:number;
  knownCosts:number; contingency:number; totalBudget:number; criticalPath:string[];
  tasks:{id:string;startDay:number;endDay:number;cost:number}[];

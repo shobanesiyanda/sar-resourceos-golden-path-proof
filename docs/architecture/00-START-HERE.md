@@ -26,6 +26,9 @@ Every engineer, software agent, business analyst and change reviewer **must** re
 | 3 — Deployment | [Portable infrastructure](../PORTABLE_INFRASTRUCTURE_AND_PRODUCT_BOUNDARIES.md) | Container portability and system deployment boundaries | Draft / staging, unverified |
 | 4 — Historical | Prior migration snapshots, earlier redesign notes, superseded PRs, detached ZIPs, archived handovers | Provenance only | May not override an approved newer decision |
 
+### Independent completeness audit
+- [27 October source-of-truth repository audit](2026-10-27-BLUEPRINT-AUDIT.md) — exactly what documents were inspected, what had been fragmented or absent, the new canonical structure, and why **the complete corporate/technical blueprint cannot yet be certified as recovered or approved**.
+
 ## Architecture domain coverage and unresolved gaps
 
 | Domain | Where it is documented | Remaining gap |

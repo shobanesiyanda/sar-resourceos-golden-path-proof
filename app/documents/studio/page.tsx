@@ -1,6 +1,6 @@
 "use client";
 
-import { SAR_OFFICIAL_LOGO_DATA_URI } from "../../../lib/sar-brand-assets";
+import { SAR_OFFICIAL_LOGO_DATA_URI } from "../../../lib/sar-brand-assets.mjs";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";

@@ -1,6 +1,6 @@
 -- DealScope initial standalone database design, DRAFT ONLY.
 -- NOT an applied Supabase migration. NOT tested against a DealScope database.
--- Authoritative owner organization must be chosen before provisioning.
+-- Legal owner is Shobane African Resources (Pty) Ltd (SAR); only the SAR-controlled Supabase technical organisation/ref remains unconnected.
 -- Intended to run exclusively in a NEW, dedicated DealScope project after review,
 -- local CLI migration generation, validation, and independent RLS acceptance.
 -- NEVER run against BidOS, SAR ResourceOS, or the corporate website database.

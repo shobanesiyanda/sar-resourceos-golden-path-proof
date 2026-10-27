@@ -1,7 +1,7 @@
 # SAR ResourceOS — Intelligent Project, Commodity and Execution Architecture
 
 **ID:** SAR-ROS-ARCH-001 • **Owner:** SAR • **Revision:** 2026-10-27 / v0.1  
-**Status:** Requirements consolidated into one **architecture candidate**; only specifically tested source modules are implemented. This is not a claim of an operational AI project digital twin or a fully integrated enterprise system.
+**Status:** Founder-ratified **intended systems requirements**; only specifically tested source modules are implemented. This is not a claim of an operational AI project digital twin or a fully integrated enterprise system.
 
 ## 1. System mission — non-negotiable
 

@@ -1,7 +1,7 @@
 # DealScope — SAR-Owned External Commercial Intelligence and Exchange Architecture
 
 **ID:** SAR-DSC-ARCH-001 • **Legal owner:** Shobane African Resources (Pty) Ltd • **Revision:** 2026-10-27 / v0.1  
-**Status:** Product architecture consolidation **draft for Founder review**. The DealScope web preview exists; **no DealScope Supabase project, customer database, live paid subscriptions or transactional Exchange exist yet**.
+**Status:** Founder-ratified intended product architecture; detailed legal/customer/technical release sign-off remains OPEN. The DealScope web preview exists; **no DealScope Supabase project, customer database, live paid subscriptions or transactional Exchange exist yet**.
 
 ## 1. Product identity, mandate and legal boundary
 

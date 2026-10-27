@@ -1,6 +1,6 @@
 # SAR Architecture Governance, Traceability and Completeness Gates
 
-**ID:** SAR-ARCH-GOV-001 • **Prepared:** 27 October 2026 • **State:** Process proposal; Founder ratification OPEN.
+**ID:** SAR-ARCH-GOV-001 • **Prepared:** 27 October 2026 • **State:** Founder-ratified governance principles; named role/delegation appointments and technical evidence remain OPEN.
 
 ## 1. Documentation objects and exact states
 

@@ -31,4 +31,4 @@ DealScope is a SAR-owned **external, tenant-isolated** commercial intelligence a
 - Do not enable GitHub Actions, silently transfer repositories, merge to main, deploy production, issue RFQs, purchase equipment, bind a contract or process payments without required explicit approval.
 - If a needed fact/organogram/contract/process is absent, classify it as OPEN and request authoritative evidence; do not invent or omit it.
 
-**Status:** These architecture documents are consolidated candidates pending Founder approval; until approved, preserve explicit previously confirmed decisions and flag conflicts.
+**Status:** SAR leadership has approved the intended architecture and document-design direction. This mainline documentation baseline does not establish that all application code, signed personnel mandates, company policies or tests are complete; preserve genuine evidence and explicitly mark remaining external gates. The application engineering candidate still exists on a separate draft branch.

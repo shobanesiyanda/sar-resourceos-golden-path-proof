@@ -1,7 +1,7 @@
 # SAR Enterprise Systems — Boundaries, Data Authority and Integration Contracts
 
 **ID:** SAR-XSYS-001 • **Owner:** Shobane African Resources (Pty) Ltd • **Revision:** 2026-10-27 / v0.1  
-**Status:** Architecture contract **draft pending approval and live integration tests**. Defines the intended boundaries; does not claim working connectors or databases.
+**Status:** Founder-ratified cross-system boundary specification; backend integration and security acceptance still OPEN. Defines the intended boundaries; does not claim working connectors or databases.
 
 ## 1. Product boundary register
 

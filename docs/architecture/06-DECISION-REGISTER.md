@@ -2,7 +2,7 @@
 
 **ID:** SAR-ADR-REGISTER-001 • **Initial revision:** 27 October 2026  
 **Scope:** Records explicit operating/product decisions communicated by SAR leadership. Their inclusion here preserves provenance; it does not fabricate signed corporate policies or turn code into a completed product.  
-**State:** **Draft transcription awaiting Founder confirmation as a consolidated register**.
+**State:** **Founder-ratified direction register; not a substitute for signed statutory minutes or authority appointments**.
 
 | Decision | Explicitly stated direction | Affected blueprints | Recorded status |
 |---|---|---|---|

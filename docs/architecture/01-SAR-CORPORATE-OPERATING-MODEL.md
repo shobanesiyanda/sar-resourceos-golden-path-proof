@@ -1,7 +1,7 @@
 # SAR Corporate Operating Model, Structure and Divisional Mandates
 
 **ID:** SAR-ORG-001 • **Owner:** Shobane African Resources (Pty) Ltd • **Revision:** 2026-10-27 / v0.1  
-**Status:** Foundational architecture consolidation **pending Founder review**. Confirmed ownership and business functions are distinguished from proposed internal role assignments. This is not an approved legal organogram or delegation-of-authority instrument.
+**Status:** Founder-ratified **functional corporate architecture**; exact appointments, delegation thresholds and statutory organisational evidence remain OPEN. Confirmed ownership and business functions are distinguished from proposed internal role assignments. This is not an approved legal organogram or delegation-of-authority instrument.
 
 ## 1. Legal identity and organisation boundary
 

@@ -41,8 +41,13 @@ export default function DocumentStudio(){
  const [notice,setNotice]=useState("");
  const [dirty,setDirty]=useState(true);
  const fileRef=useRef<HTMLInputElement>(null);
+ const pdfRef=useRef<HTMLInputElement>(null);
+ const [pdfUrl,setPdfUrl]=useState<string|null>(null);
+ const [pdfName,setPdfName]=useState("");
+ const pdfUrlRef=useRef<string|null>(null);
  const review=useMemo(()=>documentReviewGaps(draft),[draft]);
  const words=useMemo(()=>draft.blocks.map(b=>b.text).join(" ").trim().split(/\s+/).filter(Boolean).length,[draft.blocks]);
+ useEffect(()=>()=>{if(pdfUrlRef.current)URL.revokeObjectURL(pdfUrlRef.current);},[]);
  useEffect(()=>{
   if(!dirty)return;
   const before=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};
@@ -68,6 +73,21 @@ export default function DocumentStudio(){
   if(dirty&&!window.confirm("Start a new document? The current session draft has no server save. Export it first if needed."))return;
   setDraft(createDocumentDraft(id));setSelected(null);setTool("inspector");setMode("edit");setDirty(true);
   setNotice("New template opened. This is a session-only draft, not a saved SAR record.");
+ }
+ function openPdfSource(file:File|undefined){
+  if(!file)return;
+  if(file.type!=="application/pdf"||file.size>15_000_000){
+   setNotice("Reference viewer accepts PDF files up to 15 MB only.");return;
+  }
+  if(pdfUrlRef.current)URL.revokeObjectURL(pdfUrlRef.current);
+  const url=URL.createObjectURL(file);pdfUrlRef.current=url;
+  setPdfUrl(url);setPdfName(file.name);
+  setNotice("Reference PDF opened locally, read-only. Nothing was uploaded or saved.");
+  if(pdfRef.current)pdfRef.current.value="";
+ }
+ function closePdfSource(){
+  if(pdfUrlRef.current)URL.revokeObjectURL(pdfUrlRef.current);
+  pdfUrlRef.current=null;setPdfUrl(null);setPdfName("");
  }
  function exportJson(){
   download(JSON.stringify(draft,null,2),slug(draft.title)+".sardoc.json","application/json;charset=utf-8");
@@ -126,6 +146,8 @@ export default function DocumentStudio(){
       <button onClick={()=>setMode("edit")} className={mode==="edit"?"rounded-xl bg-[#C2A14A] px-4 py-2 text-xs font-black text-[#04111F]":control}>Edit canvas</button>
       <button onClick={()=>setMode("preview")} className={mode==="preview"?"rounded-xl bg-[#C2A14A] px-4 py-2 text-xs font-black text-[#04111F]":control}>Preview</button>
       <button onClick={()=>setTool("templates")} className={control}>Templates</button>
+      <button onClick={()=>pdfRef.current?.click()} className={control}>Open reference PDF</button>
+      <input ref={pdfRef} type="file" accept="application/pdf,.pdf" className="hidden" aria-label="Open local PDF reference" onChange={e=>openPdfSource(e.target.files?.[0])}/> 
       <button onClick={()=>setTool("review")} className={control}>Review gates <span className="ml-1 text-amber-200">{review.length}</span></button>
      </div>
      <div className="flex flex-wrap gap-2">
@@ -172,6 +194,15 @@ export default function DocumentStudio(){
         <button className={control} onClick={()=>setScale(100)} aria-pressed={scale===100}>100%</button>
       </div>
      </div>
+     {pdfUrl && <div className="mx-auto mb-4 w-full max-w-[870px] overflow-hidden rounded-2xl border border-[#C2A14A]/30 bg-[#0a1829] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
+       <div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#C2A14A]">Source reference / local PDF</p>
+        <p className="mt-1 max-w-[450px] truncate text-xs text-slate-200">{pdfName}</p></div>
+       <button onClick={closePdfSource} className={control}>Close viewer ×</button>
+      </div>
+      <iframe src={pdfUrl} title={"Local PDF reference: "+pdfName} className="h-[460px] w-full rounded-lg border border-slate-700 bg-white" />
+      <p className="pt-3 text-[11px] text-slate-400">Reference only, not edited or saved to ResourceOS. Content extraction and annotations require the authenticated document pipeline.</p>
+     </div>}
      <div className="mx-auto w-full max-w-[870px] overflow-hidden rounded-sm border border-[#dbe0e5] bg-white text-[#142237] shadow-[0_30px_90px_rgba(0,0,0,.5)]"
       style={{fontSize:scale===85?"0.88rem":"1rem"}}>
       <div className="mx-auto min-h-[690px] max-w-[750px] px-5 py-8 sm:px-10 sm:py-12">

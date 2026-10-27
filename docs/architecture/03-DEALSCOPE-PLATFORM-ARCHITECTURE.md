@@ -39,6 +39,16 @@ Its competitive proposition: help customers identify **verified, actionable and 
 
 Shared calculation code may be imported from versioned `packages/commodity-core` and `packages/commercial-core`. **Shared code never implies shared tenant data, admin role, database, service key or merchant.**
 
+## 2A. Explicit full-suite preservation and repeat-value lifecycle
+
+**Founder correction (27 October 2026):** DealScope must NOT be reduced to PAYG-only analysis. The full original deal-intelligence and exchange suite is mandatory, and a commercially viable platform should create recurring real value for users rather than repeatedly charge for unchanged arithmetic. Build all original domain capabilities in their authentic dependency order; permit independent monetisation/release of components only after full scope preservation and applicable acceptance.
+
+The customer Opportunity Intelligence Workspace shall support a private evolving dossier, source/sample/lab evidence and chain-of-custody references, buyer and seller indications, provenance and validity, cost and route modelling, multiple immutable Deal Runs, reasoned delta comparisons, acquisition-ceiling movement, risk and profit/capital monitoring, manual refresh and alerts when genuinely new evidence changes viability. Important: an economic pass on client-supplied assumptions remains *user-input indicative*; only independently verified and permitted evidence may qualify a third-party-facing opportunity. Alerts suggest a reassessment; they do not charge credits, share data or execute trades automatically.
+
+The complete Commercial Exchange retains verified buyers/sellers, listings, seller rights and mandates, price/stock validity, recipient-scoped disclosure consent, enquiries, counteroffers/negotiation, contract/deal states, finance reconciliation, disputes and revocation. DealScope may charge for analysis without tying its fee to a successful trade, but must meet defined service-delivery, privacy, refund, contractual and regulatory obligations. No automatic Exchange entitlement arises solely from buying analysis.
+
+**Full suite:** DiscoveryOS / Market Intelligence, EvidenceOS, Opportunity/DossierOS, Scenario/Viability Engine, MonitoringOS, CounterpartyOS, ExchangeOS, Commercial Workflow, PAYG & Subscription Billing, Customer/Identity Admin, Reporting/Analytics/Support, Audit/Security. These are logical capabilities, not automatically separate applications or databases.
+
 ## 3. Identity, customer and trust model
 
 - Authenticated person belongs to one or more **verified organisations** and holds an explicit role and membership state. Never trust browser-supplied organisation IDs alone.

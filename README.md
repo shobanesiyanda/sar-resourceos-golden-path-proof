@@ -20,6 +20,8 @@
 
 **Mandatory discipline:** The documents describe what must exist and what remains incomplete; source code and accepted test evidence determine what actually works. A drafted blueprint is not a signed company policy. No merge to `main`, production deploy, binding RFQ, payment or purchase is authorised by this index.
 
+**Document Studio:** [In-app authoring and viewer architecture](docs/architecture/08-RESOURCEOS-DOCUMENT-STUDIO.md) and [mandatory branded template specification](docs/architecture/07-DOCUMENT-DESIGN-AND-TEMPLATES.md); first structured editor route `/documents/studio`. Exporting or printing a draft never constitutes approval.
+
 ## Product structure
 
 - Root Next.js application: SAR **internal ResourceOS** migration proof and operating modules.

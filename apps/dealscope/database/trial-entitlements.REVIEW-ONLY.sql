@@ -1,90 +1,131 @@
--- DealScope 30-day full-suite introductory trial candidate schema (REVIEW ONLY).
--- NEVER execute in TenderDesk/BidOS, SAR ResourceOS or the SAR corporate website.
--- Requires verified new SAR-controlled isolated DealScope Supabase project.
--- NOT AN APPLIED MIGRATION. No approval for production payment/registration.
--- Verify Supabase version, Data API grants, RLS and actual schema before migration.
--- Trust: identity/person/org correlation keys are deterministic HMACs from a
--- server-only key under documented POPIA retention; NEVER raw RSA/SA ID, company
--- proof or plain SHA of an ID in database/public browser.
-create table if not exists public.ds_trial_offers (
+-- DealScope SINGLE FREE COMPLETE DEAL-ASSISTANCE & ASSESSMENT CYCLE
+-- REVIEW ONLY: DO NOT EXECUTE. No SAR-owned DealScope Supabase is connected.
+-- Supersedes prior TIME-BASED 30-day-trial candidate dated 27 Oct 2026.
+-- Offer is one complete deal cycle, not unlimited reports within a duration.
+-- Independently approved promotions MAY authorise a second full cycle.
+-- Requires existing NEW SAR-owned DealScope ds_organizations, ds_memberships, auth.users.
+-- No TenderDesk/BidOS/Possent fallback. Validate real schema/RLS/provider/DoA first.
+
+create table if not exists public.ds_intro_cycle_offers (
  id uuid primary key default gen_random_uuid(),
- code text not null unique,
- offer_version text not null,
- duration_seconds integer not null default 2592000 check(duration_seconds=2592000),
- full_suite boolean not null check(full_suite=true),
+ offer_version text not null unique,
+ service_code text not null default 'COMPLETE_DEAL_ASSESSMENT'
+   check(service_code='COMPLETE_DEAL_ASSESSMENT'),
+ included_cycles integer not null default 1 check(included_cycles=1),
+ price_minor bigint not null default 0 check(price_minor=0),
  auto_converts boolean not null default false check(auto_converts=false),
  requires_payment_method boolean not null default false check(requires_payment_method=false),
- status text not null check(status in ('draft','published','retired')),
+ state text not null check(state in ('draft','published','retired')),
  terms_version text not null,
  approved_by uuid references auth.users(id),
  approved_at timestamptz,
  created_at timestamptz not null default now(),
- check(status<>'published' or (approved_by is not null and approved_at is not null)),
- unique(code,offer_version)
+ check (state<>'published' or (approved_by is not null and approved_at is not null))
 );
-create table if not exists public.ds_trial_claims (
+create table if not exists public.ds_intro_cycle_claims (
  id uuid primary key default gen_random_uuid(),
- offer_id uuid not null references public.ds_trial_offers(id) on delete restrict,
- organization_id uuid not null references public.ds_organizations(id) on delete restrict,
- account_user_id uuid not null references auth.users(id) on delete restrict,
+ offer_id uuid not null references public.ds_intro_cycle_offers(id) on delete restrict,
+ organisation_id uuid not null references public.ds_organizations(id) on delete restrict,
+ owner_user_id uuid not null references auth.users(id) on delete restrict,
+ -- Use privacy-reviewed keyed deterministic server HMACs only; no raw IDs in exposed tables.
  person_identity_hmac char(64) not null check(person_identity_hmac ~ '^[0-9a-f]{64}$'),
- organization_identity_hmac char(64) check(organization_identity_hmac ~ '^[0-9a-f]{64}$'),
- identity_review_event_id text not null unique,
+ organisation_identity_hmac char(64) check(organisation_identity_hmac ~ '^[0-9a-f]{64}$'),
+ eligibility_review_event_id text not null unique,
+ eligibility_policy_version text not null,
+ state text not null default 'accepted' check(state in ('accepted','revoked','disputed')),
  claimed_at timestamptz not null default now(),
- claim_status text not null default 'accepted'
-  check(claim_status in ('accepted','expired','revoked')),
- policy_version text not null,
  unique(person_identity_hmac),
- unique(organization_identity_hmac),
- unique(organization_id),
- unique(organization_id,id)
+ unique(organisation_identity_hmac),
+ unique(organisation_id),
+ unique(organisation_id,id)
 );
-create table if not exists public.ds_trial_entitlements (
+create table if not exists public.ds_intro_cycle_entitlements (
  id uuid primary key default gen_random_uuid(),
- organization_id uuid not null,
- trial_claim_id uuid not null,
- started_at timestamptz not null,
- expires_at timestamptz not null,
- current_state text not null check(current_state in ('active','expired','suspended','revoked')),
+ organisation_id uuid not null,
+ claim_id uuid not null,
+ owner_user_id uuid not null references auth.users(id) on delete restrict,
+ cycles_granted integer not null default 1 check(cycles_granted between 1 and 2),
+ cycles_available integer not null default 1 check(cycles_available between 0 and 2),
+ cycles_reserved integer not null default 0 check(cycles_reserved between 0 and 2),
+ cycles_completed integer not null default 0 check(cycles_completed between 0 and 2),
+ state text not null check(state in ('active','suspended','revoked','closed')),
  version bigint not null default 1 check(version>0),
- activated_by uuid not null references auth.users(id),
- allowed_suite text not null check(allowed_suite='complete_dealscope'),
- requires_payment_method boolean not null default false check(requires_payment_method=false),
+ intro_activation_event_id text not null unique,
+ activated_at timestamptz not null default now(),
  automatic_charge boolean not null default false check(automatic_charge=false),
  auto_converts boolean not null default false check(auto_converts=false),
- created_at timestamptz not null default now(),
- unique(organization_id,trial_claim_id),
- foreign key(organization_id,trial_claim_id) references public.ds_trial_claims(organization_id,id) on delete restrict,
- check(expires_at=started_at+interval '30 days')
+ unique(organisation_id,claim_id),
+ foreign key(organisation_id,claim_id) references public.ds_intro_cycle_claims(organisation_id,id),
+ check(cycles_available+cycles_reserved+cycles_completed=cycles_granted)
 );
-create index if not exists ds_trial_entitlement_org on public.ds_trial_entitlements(organization_id,current_state,expires_at);
-create table if not exists public.ds_trial_events (
+create table if not exists public.ds_intro_cycle_campaign_approvals (
  id uuid primary key default gen_random_uuid(),
- organization_id uuid not null references public.ds_organizations(id) on delete restrict,
- trial_claim_id uuid not null,
- actor_user_id uuid references auth.users(id),
- kind text not null check(kind in ('eligible','rejected','activated','expired','suspended','revoked','appeal_received','appeal_decided')),
+ organisation_id uuid not null references public.ds_organizations(id),
+ entitlement_id uuid not null,
+ approver_user_id uuid not null references auth.users(id),
+ campaign_version text not null,
  reason text not null,
- policy_version text not null,
- event_id text not null unique,
- occurred_at timestamptz not null default now(),
- foreign key(organization_id,trial_claim_id) references public.ds_trial_claims(organization_id,id) on delete restrict
+ valid_until timestamptz not null,
+ reviewed_at timestamptz not null default now(),
+ unique(entitlement_id),
+ foreign key(organisation_id,entitlement_id)
+  references public.ds_intro_cycle_entitlements(organisation_id,id),
+ unique(organisation_id,id)
 );
-alter table public.ds_trial_offers enable row level security;
-alter table public.ds_trial_claims enable row level security;
-alter table public.ds_trial_entitlements enable row level security;
-alter table public.ds_trial_events enable row level security;
--- Only published, approved trial offer may be viewed publicly.
-create policy ds_trial_offer_public_read on public.ds_trial_offers for select to anon,authenticated
- using(status='published' and approved_by is not null and approved_at is not null);
--- Trials can be read by active members within the exact tenant.
-create policy ds_trial_entitlement_tenant_read on public.ds_trial_entitlements for select to authenticated
- using(exists(select 1 from public.ds_memberships m where
- m.organization_id=ds_trial_entitlements.organization_id
- and m.user_id=(select auth.uid()) and m.membership_state='active'));
--- No client read of protected identity correlation keys or event ledger.
--- NO client INSERT/UPDATE/DELETE policies on ANY trial table.
--- Server activation requires transaction-level unique-key lock, authenticated
--- identity verification, independent account authorization and idempotency.
--- Read-only expiry and paid conversion are separate domain commands; explicit
--- payment-provider verified purchase only. Test under multiple user tokens.
+create table if not exists public.ds_intro_cycle_cases (
+ id uuid primary key default gen_random_uuid(),
+ organisation_id uuid not null,
+ entitlement_id uuid not null,
+ dossier_ref text not null,
+ source_set_sha256 char(64) not null check(source_set_sha256 ~ '^[0-9a-f]{64}$'),
+ state text not null check(state in ('in_progress','delivered','failed_recredited','disputed')),
+ delivered_report_ref text,
+ delivered_report_sha256 char(64),
+ delivered_at timestamptz,
+ evidence_review_event_id text,
+ created_at timestamptz not null default now(),
+ unique(organisation_id,dossier_ref),
+ unique(organisation_id,id),
+ foreign key(organisation_id,entitlement_id)
+  references public.ds_intro_cycle_entitlements(organisation_id,id),
+ check(state<>'delivered' or (delivered_report_ref is not null
+  and delivered_report_sha256 is not null and delivered_at is not null))
+);
+create table if not exists public.ds_intro_cycle_events (
+ id uuid primary key default gen_random_uuid(),
+ organisation_id uuid not null references public.ds_organizations(id),
+ claim_id uuid,
+ case_id uuid,
+ actor_user_id uuid references auth.users(id),
+ event_id text not null unique,
+ kind text not null check(kind in ('eligibility_approved','cycle_granted','cycle_reserved',
+  'intake_attested','integrity_attested','viability_attested','readiness_attested',
+  'report_delivered','service_failed','recredit','promotion_approved',
+  'additional_cycle_granted','revoked','appeal')),
+ evidence_ref text,
+ reason text not null,
+ event_sha256 char(64),
+ occurred_at timestamptz not null default now(),
+ foreign key(organisation_id,claim_id) references public.ds_intro_cycle_claims(organisation_id,id),
+ foreign key(organisation_id,case_id) references public.ds_intro_cycle_cases(organisation_id,id)
+);
+-- All writes are privileged and authenticated via backend atomic transactions.
+-- Do not create public RPC functions bypassing authorisation or use browser service keys.
+alter table public.ds_intro_cycle_offers enable row level security;
+alter table public.ds_intro_cycle_claims enable row level security;
+alter table public.ds_intro_cycle_entitlements enable row level security;
+alter table public.ds_intro_cycle_campaign_approvals enable row level security;
+alter table public.ds_intro_cycle_cases enable row level security;
+alter table public.ds_intro_cycle_events enable row level security;
+create policy ds_intro_offer_public on public.ds_intro_cycle_offers for select to anon,authenticated
+ using(state='published' and approved_by is not null and approved_at is not null);
+create policy ds_intro_entitlement_member_read on public.ds_intro_cycle_entitlements for select to authenticated
+ using(owner_user_id=(select auth.uid()) and exists(
+  select 1 from public.ds_memberships m where m.organization_id=ds_intro_cycle_entitlements.organisation_id
+  and m.user_id=(select auth.uid()) and m.membership_state='active'));
+-- Do not let a client read HMAC identity claims or approval/event ledgers, or alter balances.
+-- Validation: no extra grants from fresh email, cloned company name, replayed campaign,
+-- browser data, parallel sessions, missing report or violated stage sequence.
+-- Only report delivery consumes completed free cycle; service failure recredits once.
+-- No time window controls on deal lifecycle; case acceptance, evidence validity,
+-- document/customer due diligence and abandoned-case policies remain separately governed.

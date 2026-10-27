@@ -87,6 +87,18 @@ Reproducible build of website, ResourceOS and standalone DealScope separately; d
 
 No source package, architectural drawing or READY preview satisfies all of these tests on its own. Approval and deployment remain separate Founder-controlled gates.
 
+## 8A. Public DealScope customer funnel and trial identity are a SEPARATE trust zone
+The public acquisition domain is intended as **dealscope.co.za**, independently owned/managed under SAR's product, not the corporate **www.shobane.co.za** website and not SAR ResourceOS. On the same DealScope application, signed-out marketing (/, /integrity, /runs) must not read private buyer/seller records. Authenticated post-registration customers enter their own DealScope tenant-bound workspace, receive an independently eligibility-verified 30-day full-feature trial and may make an explicit paid conversion. The current /start route is a preview of onboarding and does not collect personal details or activate accounts.
+
+Required customer-side commands and legal source:
+- Referral landing -> public navigation -> customer consent + independent DealScope registration (private tenant) -> identity/organization verification -> atomic trial eligibility and grant -> full suite feature and role security -> Deal Run / Integrity Case / Watch / Exchange specific consent -> explicit PAYG or subscription purchase -> DealScope merchant/cash/ledger verification -> retention and audit.
+- No customer UTM, trial identity proof, personalised price, mandate, stock/document evidence, account access token, provider webhook, invoice, or private DealScope source record is permitted to flow into SAR internal ResourceOS or SAR public website merely because SAR owns DealScope.
+- A specifically disclosed deal can become a NEW independently reviewed SAR ResourceOS intake only through the previously approved tenant+seller-authorised handoff, never direct database joins.
+- Provider-neutral pure code can be reused between SAR and DealScope with separate tenant/company Auth/merchant, lawful storage and audit. Any cross-company Possent/TenderDesk access is forbidden.
+
+Link control documents: SAR-DSC-ACQ-20261027-001 (public website/business model); SAR-DSC-TRIAL-20261027-001 (full-trial entitlements); SAR-DSC-INTEGRITY-001 (claim-by-claim risk guidance); SAR-DSC-ARCH-001 (full product). Individual status: public frontend candidate implemented; Auth/database/payment/source/Exchange live acceptance OPEN.
+
+
 ## 9. Missing definitive engineering artifacts
 
 Final physical ERDs, data dictionaries and migration history for existing ResourceOS/website; a **new** DealScope database reference and applied migrations; API/OpenAPI schemas for all providers; defined events with transactional outbox implementation; complete service owner and failure/recovery map; privacy impact analysis; permissions/approval matrix; operational runbooks; signed test evidence and architecture decision records.

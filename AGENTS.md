@@ -9,7 +9,8 @@ This repository belongs to **Shobane African Resources (Pty) Ltd**. **Possent Sy
 4. `docs/architecture/03-DEALSCOPE-PLATFORM-ARCHITECTURE.md`
 5. `docs/architecture/04-CROSS-SYSTEM-BOUNDARIES.md`
 6. `docs/architecture/05-GOVERNANCE-COMPLETENESS-AND-DECISIONS.md`
-7. `docs/2026-10-27-sar-consolidated-carryforward.md`
+7. `docs/architecture/06-DECISION-REGISTER.md`
+8. `docs/2026-10-27-sar-consolidated-carryforward.md`
 
 For changes to the separate SAR corporate website, the **website's** `docs/SAR_CORPORATE_WEBSITE_MASTER_BUILD_MAP.md` governs public copy, route design and visual brand.
 

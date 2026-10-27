@@ -1,4 +1,4 @@
-import { SAR_OFFICIAL_LOGO_DATA_URI } from "./sar-brand-assets";
+import { SAR_OFFICIAL_LOGO_DATA_URI } from "./sar-brand-assets.mjs";
 /** SAR ResourceOS Document Studio — local draft model only; not a document registry. */
 export type DocumentBlockKind = "heading" | "paragraph" | "bullets" | "callout";
 export type DocumentClass = "internal" | "confidential" | "counterparty";

@@ -9,6 +9,7 @@ This repository belongs to **Shobane African Resources (Pty) Ltd**. **Possent Sy
 4. `docs/architecture/03-DEALSCOPE-PLATFORM-ARCHITECTURE.md`
 5. `docs/architecture/04-CROSS-SYSTEM-BOUNDARIES.md`
 6. `docs/architecture/05-GOVERNANCE-COMPLETENESS-AND-DECISIONS.md`
+7. `docs/architecture/07-DOCUMENT-DESIGN-AND-TEMPLATES.md` and `docs/architecture/08-RESOURCEOS-DOCUMENT-STUDIO.md` — mandatory for ANY client/counterparty/internal document or editor change.
 7. `docs/architecture/06-DECISION-REGISTER.md`
 8. `docs/2026-10-27-sar-consolidated-carryforward.md`
 

@@ -98,3 +98,8 @@ Minimum acceptance for an **authoritative repository library**:
 5. Controlled merge and release approval; the draft branch remains nonproduction until separately accepted.
 
 **This is a governance foundation, not a statement that the full organisational, system and engineering blueprint has been recovered or ratified.**
+
+
+## Customer acquisition and trial — new mandatory acceptance gates (27 October)
+DealScope's full external product now includes its **own** public signed-out website (target domain dealscope.co.za) with audited SAR product ownership, integrity-led consumer proposition and company/person onboarding. The 3 October Founder-mandated 30-day full-feature trial is retained, and 27 October extends the marketing/entitlement requirement to at least one introductory free full trial per eligible person/company/originator. PAYG-only scope reduction remains rejected. Reconcile website/identity architecture to full existing DealScope, not a restricted calculator product. Governing additions: SAR-ADR-016/017; docs/architecture/12-DEALSCOPE-CUSTOMER-ACQUISITION-AND-BUSINESS-MODEL.md and 13-DEALSCOPE-FULL-TRIAL-ONBOARDING-AND-ENTITLEMENTS.md.
+RELEASE GATES OPEN: authentic dealscope.co.za domain/SSL/mail ownership, production page content/claims, separately owned Auth/DB/RLS, unique identity/org trial history, actual 30-day activation, full suite entitlement, expiry with no auto-charge, consent/privacy/terms, approved rates, provider keys, end-to-end app and public site acceptance, legitimate user support and recovery. **Signed-out source and an illustrative self-check do not satisfy independent credibility verification.**

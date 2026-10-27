@@ -48,3 +48,7 @@ test('cost shock raises staged costs without inventing a cash-flow forecast',()=
 test('nonfinite cost shocks fail closed',()=>{
  assert.equal(run([job('A',undefined,{baseCost:1e308})],undefined,{priceFactor:1e308}).state,'incomplete');
 });
+
+test('duplicate demand entries cannot bypass pool capacity',()=>{
+ assert.equal(run([job('A',[{poolId:'truck',units:1},{poolId:'truck',units:1}])]).state,'incomplete');
+});

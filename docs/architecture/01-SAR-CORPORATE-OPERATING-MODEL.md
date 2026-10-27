@@ -128,3 +128,9 @@ Numeric targets, staffing, approved capex and client service-level commitments r
 9. Versioned KPI catalogue and management reporting framework.
 
 Until these are recovered/approved, this file is a comprehensive **functional business operating model**, **not** a fully signed organisational constitution.  
+
+
+## 7. DealScope commercial growth and customer-facing product ownership (27 October addendum)
+DealScope is an **SAR-owned external SaaS business capability**, not a fourth commodity-operating division, not the corporate shobane.co.za sourcing funnel and not the company's internal ResourceOS. Its targeted own signed-out site is dealscope.co.za, with independently governed customer onboarding, introductory 30-day full-feature trials, repeat Deal Integrity/Viability/Readiness analysis, verified opportunity intelligence, a permissioned Commercial Exchange, PAYG/credit packs and subscriptions. Growth functions must include positioning, compliant acquisition, onboarding, customer support, evidence methodology, case review, paid entitlement and merchant financial governance, retention/churn, data stewardship and complaints. Finance/cash/accounting responsibility belongs to SAR's designated financial authorities and its statutory systems; public marketing cannot promise buyer deals or publish unqualified offers.
+
+The Founder-approved trial value comes from complete, genuinely usable platform capabilities; marketing measures qualified activation and ongoing decisions, not just traffic or paid clicks. Organisational heads, marketing expenditure, DoA, approved actual tariffs, professional issuer-verification staffing, support SLAs and commercial terms are not established by this annex. Refer to SAR-DSC-ACQ-20261027-001 and SAR-DSC-TRIAL-20261027-001 for the product-specific operating model and guards.

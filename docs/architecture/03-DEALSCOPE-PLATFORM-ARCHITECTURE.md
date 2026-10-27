@@ -49,6 +49,10 @@ The complete Commercial Exchange retains verified buyers/sellers, listings, sell
 
 **Full suite:** DiscoveryOS / Market Intelligence, EvidenceOS, Opportunity/DossierOS, Scenario/Viability Engine, MonitoringOS, CounterpartyOS, ExchangeOS, Commercial Workflow, PAYG & Subscription Billing, Customer/Identity Admin, Reporting/Analytics/Support, Audit/Security. These are logical capabilities, not automatically separate applications or databases.
 
+## 2B. Deal IntegrityOS is central, not an optional bolt-on
+
+A commercially viable arithmetic calculation is insufficient. Every opportunity should have an independent **integrity and credibility investigation**, explaining claims about parties, lawful material title, selling mandates, sample and laboratory evidence, buyer authority, source documents, stock and banking instructions with each separate evidence state and documented how-to-verify next step. More guidance and the twelve-check architecture are in [SAR-DSC-INTEGRITY-001](11-DEALSCOPE-DEAL-INTEGRITY-OS.md). Integrity, Viability and Readiness are three separately explainable decision layers. Public criminality/blacklist scores and promises that a transaction is legitimate are explicitly prohibited. The platform should not infer crime from missing evidence; provide correction and human-review paths. The complete Discovery/MarketOS, Deal Runs, saved dossiers, Commercial Exchange, subscriptions/PAYG, reporting and operations remain in scope.
+
 ## 3. Identity, customer and trust model
 
 - Authenticated person belongs to one or more **verified organisations** and holds an explicit role and membership state. Never trust browser-supplied organisation IDs alone.

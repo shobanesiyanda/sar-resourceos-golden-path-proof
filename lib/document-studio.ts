@@ -1,3 +1,4 @@
+import { SAR_OFFICIAL_LOGO_DATA_URI } from "./sar-brand-assets";
 /** SAR ResourceOS Document Studio — local draft model only; not a document registry. */
 export type DocumentBlockKind = "heading" | "paragraph" | "bullets" | "callout";
 export type DocumentClass = "internal" | "confidential" | "counterparty";
@@ -119,14 +120,14 @@ export function renderDocumentHtml(d:DocumentDraft):string{
 <meta name="viewport" content="width=device-width, initial-scale=1"><style>
 @page{size:A4;margin:17mm 18mm}*{box-sizing:border-box}body{margin:0;color:#152033;background:#fff;font:11pt/1.6 Arial,Helvetica,sans-serif}
 .top{border-bottom:2px solid #C2A14A;padding-bottom:14px;display:flex;justify-content:space-between}
-.brand{font-size:19pt;letter-spacing:.06em;font-weight:700;color:#04111F}.legal{font-size:8pt;color:#526274}
+.brand{font-size:19pt;letter-spacing:.06em;font-weight:700;color:#04111F}.logo{height:65px;width:auto;max-width:250px;object-fit:contain;object-position:left}.legal{font-size:8pt;color:#526274}
 .meta{font-size:8pt;color:#4c5e77;text-align:right}.draft{color:#955a00;font-size:8pt;letter-spacing:.07em;font-weight:700}
 h1{font-size:24pt;line-height:1.18;color:#04111F;margin:32px 0 6px}h2{font-size:13pt;color:#07192F;margin:23px 0 9px;border-bottom:1px solid #e3e8ee;padding-bottom:5px}
 p,li{overflow-wrap:anywhere;white-space:normal}p{margin:0 0 13px}.subject{font-size:12pt;font-weight:bold;margin:0 0 22px}
 ul{padding-left:22px}.notice{background:#f7f4e9;border-left:3px solid #C2A14A;padding:12px;margin:14px 0}
 .foot{margin-top:38px;border-top:1px solid #dce2e8;padding-top:12px;color:#526274;font-size:8pt}
 @media print{.no-print{display:none}.draft{color:#955a00!important}h2,aside{break-after:avoid}}
-</style></head><body><header class="top"><div><div class="brand">SHOBANE AFRICAN RESOURCES</div><div class="legal">Shobane African Resources (Pty) Ltd</div></div><div class="meta">DOCUMENT STUDIO · DRAFT<br>${esc(d.classification.toUpperCase())}<br><span class="draft">NOT APPROVED FOR ISSUE</span></div></header>
+</style></head><body><header class="top"><div><div class="brand"><img class="logo" src="${SAR_OFFICIAL_LOGO_DATA_URI}" alt="Shobane African Resources official logo"></div><div class="legal">Shobane African Resources (Pty) Ltd</div></div><div class="meta">DOCUMENT STUDIO · DRAFT<br>${esc(d.classification.toUpperCase())}<br><span class="draft">NOT APPROVED FOR ISSUE</span></div></header>
 <h1>${esc(d.title)}</h1><p class="subject">${esc(d.subject)}</p><p>Reference: ${esc(d.documentRef||"Unassigned")} &nbsp; | &nbsp; Date: ${esc(d.date)}<br>Division: ${esc(d.division)}${d.recipient?"<br>To: "+esc(d.recipient):""}</p>
-<main>${pieces}</main><footer class="foot">Shobane African Resources (Pty) Ltd · ${esc(d.classification)} · ${esc(d.documentRef||"unassigned reference")}<br>WORKING DRAFT — requires SAR approval, verified data and authorised issue. Official emblem pending asset verification.</footer></body></html>`;
+<main>${pieces}</main><footer class="foot">Shobane African Resources (Pty) Ltd · ${esc(d.classification)} · ${esc(d.documentRef||"unassigned reference")}<br>WORKING DRAFT — requires SAR approval, verified data and authorised issue. Official SAR brand asset · original website file preserved.</footer></body></html>`;
 }

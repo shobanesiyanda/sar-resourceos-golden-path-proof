@@ -61,3 +61,22 @@ The amendment-engine submission gate now requires the authenticated requester's 
 
 ## 8. Scope correction / no PAYG-only cutdown
 Founder clarified that the mining-intermediary commercial example did **not** approve trimming DealScope. ALL of the original discovery, verified market/price intelligence, opportunity qualification, saved Deal Runs, watchlists, scenario history, subscriptions, customer organisations and entitlements, offer/disclosure/exchange, dispute/support, payments and verified fulfilment boundaries remain in scope. The PAYG contract is a workstream, not the entire roadmap. No change to original exchange launch requirements or customer-data segregation is authorised by this checkpoint.
+
+## 9. Founder scope correction and Deal IntegrityOS (27 Oct)
+Founder confirmed PAYG is only one monetisation method, NOT a reduction of full DealScope. The full sourcing, verified opportunity discovery, MarketOS, Opportunity/Scenario history, EvidenceOS, buyer/seller validation, Commercial Exchange, PAYG/subscriptions, notifications and monitoring remain in scope.
+Founder defined Deal Integrity as the most important user value: evaluate whether claimed parties, title/stock, mandate, sample/lab assay, buyer, commercial terms and banking instructions are credible based on independent corroboration, explain weaknesses and provide explicit investigation steps. Distinguish Integrity vs Viability vs Readiness.
+
+### Newly committed source
+- apps/dealscope/lib/opportunity-lifecycle.mjs and test: 5 source-level passes, versioned comparisons and evidence change notices; never auto-bill.
+- apps/dealscope/lib/exchange-consent.mjs and test: 4 source-level passes, exact seller-consented buyer/fields/hash/time, non-binding enquiries; actual exchange disabled.
+- apps/dealscope/lib/deal-integrity.mjs and test: 6 source-level passes, twelve defensible evidence categories, missing/contradictory/stale sources and actionable issuer verification; no criminal or legitimacy certification.
+- apps/dealscope/app/integrity/page.tsx: public nonpersistent locally selected self-check, explicitly NOT actual independent verification; homepage now links to it.
+- apps/dealscope/database/deal-integrity-extension.REVIEW-ONLY.sql: proposed tenant-private case/evidence/finding/event custody, not a live migration.
+- docs/architecture/11-DEALSCOPE-DEAL-INTEGRITY-OS.md and revised 03/06/10: authoritative new requirement, original suite preserved.
+
+### Verification and release boundary
+- Exact connector-fetched six Deal Integrity tests ran against exact fetched source: 6 pass, 0 fail. Prior exercised source suites: amendment 7, PAYG 4, ResourceOS variance 4, SAR website intake 3, DealScope history/watch 5, Exchange consent 4. Overall source-level set 33 passing cases; NOT independent production acceptance or node --test / CI evidence.
+- Both SAR ResourceOS and SAR website development branches were checked against main: ahead with zero behind. Their protected main branches were not modified.
+- No issuer/provider system was queried for an actual DealScope customer's deal. Independent CIPC, DMPR, SANAS, laboratory, buyer and banking verification, legal privacy review, verified SAR-controlled Supabase, secured case records, authenticated human review, browser tests and payments remain OPEN.
+- No public risk blacklist, allegations of criminal conduct, legally definitive legitimacy verdict, suspicious-person profiling or cross-tenant data aggregation is authorised. Report only private case-specific evidence, uncertainties, corrections and human-reviewed decision guidance.
+- Entire system remains UNRELEASED. Do not merge incomplete app to main until proper end-to-end security, role RLS, financial and operational acceptance.

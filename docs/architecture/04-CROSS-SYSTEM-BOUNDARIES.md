@@ -3,6 +3,9 @@
 **ID:** SAR-XSYS-001 • **Owner:** Shobane African Resources (Pty) Ltd • **Revision:** 2026-10-27 / v0.1  
 **Status:** Founder-ratified cross-system boundary specification; backend integration and security acceptance still OPEN. Defines the intended boundaries; does not claim working connectors or databases.
 
+## Public presentation supersession (28 October 2026)
+DealScope and the SAR website are two DISTINCT externally presented identities. **Do not cross-link them or identify DealScope as Shobane/SAR-owned in either public UI**. Internal accurate ownership/custody records still exist and should be restricted. Do not use separate brand presentation to misstate the legal supplier: an authorised standalone DealScope legal contracting entity, merchant, email, tax and required consumer legal disclosures must be established/verified before ecommerce. No public Shobane link, logo, metadata, footer, invoice or marketing references. Details: [public brand/entity separation](14-DEALSCOPE-PUBLIC-BRAND-AND-ENTITY-SEPARATION.md).
+
 ## 1. Product boundary register
 
 | Product | Purpose | Authoritative business data | Legal / operator rule | Source of truth |

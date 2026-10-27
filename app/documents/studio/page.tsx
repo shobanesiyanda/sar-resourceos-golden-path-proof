@@ -1,5 +1,6 @@
-import { SAR_OFFICIAL_LOGO_DATA_URI } from "../../../lib/sar-brand-assets";
 "use client";
+
+import { SAR_OFFICIAL_LOGO_DATA_URI } from "../../../lib/sar-brand-assets";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";

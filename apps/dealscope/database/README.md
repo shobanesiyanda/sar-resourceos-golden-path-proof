@@ -71,3 +71,7 @@ This is an interconnected proposed schema collection, not a sequence of migratio
 - deal-integrity-extension.REVIEW-ONLY.sql: private tenant-bound evidence cases, structured source references, reviewer findings and protected event history.
 - trial-entitlements.REVIEW-ONLY.sql: current 28 Oct **ONE FREE COMPLETE DEAL ASSESSMENT** default, conditional independently approved second, no duration-based unlimited report entitlement; privacy-protected eligibility, organisation-bound balances, cases, stages and delivery ledger. NO SQL applied.
 Identity provider and company registry correlation, authorised reviewers, tenant-granted user memberships, source documents, offer slots, PAYG/annual plans and accounting authority remain distinct. **Do not apply multiple schema proposals blindly.** Reconcile one complete SAR-owned database plan; use real Supabase migrations and negative-path tests. No production data capture or trial entitlement while only the unrelated TenderDesk Supabase organisation is connected.
+
+
+### 28 October authoritative entitlement override
+The previously discussed 30-day time-based trial is superseded. The file trial-entitlements.REVIEW-ONLY.sql has been rewritten to represent **ONE COMPLETE FREE DEAL ASSISTANCE AND ASSESSMENT**, an optional separately approved second cycle, source-attested stages, delivered report events and safe recredit. No 30-day free usage or auto-converting subscription. These are still not applied database migrations. See architecture 13; any earlier duration description in archival material is obsolete.

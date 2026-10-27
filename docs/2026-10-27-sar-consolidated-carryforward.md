@@ -136,3 +136,12 @@ Run pricing as a sourced, dated weekly evaluation, preferably Monday/Tuesday. Bu
 - No GitHub Actions, no production merge or live provider charging as a side effect of this documentation.
 - No cross-legal-entity database substitution; SAR, DealScope and TenderDesk/BidOS retain separate merchant, settlement, invoice, permissions and customer obligations.
 - Maintain one consolidated macro-batch change journal with precise SHAs, evidence, blockers and next action. A macro batch may contain many internal steps, but only verified PASS items can be closed.
+
+## 7. Macro-batch executed 27 October: independent DealScope economics hardening
+
+- Source commit: 1e6f4872486c6347eb35a0bf25927b2b02bc78f1 (packages/commodity-core/src/economics.ts).
+- Regression-test commit: 332de892f1f0f4c7c042be8d78c2c7c6c5da7a27 (packages/commodity-core/test/economics.test.mjs).
+- Implemented in the **draft branch only**: strict present-stage/currency/yield validation, calendar-valid non-future buyer-price reference date, and fail-closed checks for arithmetic overflow/NaN in all derived profitability/ceiling values.
+- Four tests added for invalid/future dates, numeric overflow, unsupported stage/currency and hidden yield on saleable product; ten total logic tests passed in a controlled in-memory execution after type syntax was erased. This is **not** a repository TypeScript compiler pass, Node test runner pass, dependency check or live UI/backend acceptance.
+- GitHub source and test file SHAs were re-fetched and confirmed after writes. Vercel preview of the resulting ResourceOS branch was QUEUED at inspection, not declared READY. Separate DealScope project was not deployed by this change; the existing DealScope preview predates these commits.
+- Release gate remains OPEN until a clean checked-out repo executes package-managed typecheck, exact committed tests, production build, security and browser/data acceptance.

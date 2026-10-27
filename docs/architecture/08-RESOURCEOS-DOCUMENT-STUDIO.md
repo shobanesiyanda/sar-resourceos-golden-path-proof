@@ -31,7 +31,7 @@ The experience combines an executive-grade dark navy/gold command rail, a bright
 - `/documents/studio` opens a client-side draft session with template picker, editable block-canvas, structural outline, reference, division, classification, recipient and date fields, detail inspector, review gaps, HTML export, JSON portable local draft backup/import and browser A4 print.
 - Mark draft visibly **SESSION ONLY / NOT SAVED**. No `localStorage`, privileged API route, Supabase inserts or synchronisation is attached. A browser reload can destroy work unless the user deliberately downloads a backup.
 - Import accepts only bounded SAR structured JSON (`*.sardoc.json`), **not arbitrary HTML**. Imported fields are validated and all rendered body text is escaped by React or the exported HTML renderer. No untrusted markup is inserted into the editor.
-- Export is a **watermarked draft** with the verified legal entity. The original official logo binary has not been transferred from the corporate website into the app in this batch; text identity and explicit asset-gap flag avoid a fake logo. This must be completed from approved identical original bytes before any external issue.
+- Export is a **watermarked draft** with the verified legal entity. The exact official main logo PNG from the SAR website, original Git blob `7c7a25d45c0a386e2b885499d7f7e9727623be6d` (506×262 RGBA), is now embedded byte-for-byte in the first draft Studio through `lib/sar-brand-assets.mjs` for the canvas and printable HTML. The browser renders the ORIGINAL asset, not a recreated emblem. Final A4/PDF visual validation, design sign-off, efficient binary asset packaging and authorised issuance are still OPEN.
 - No "save to SAR", "send", "approve", "issue", "sign", "pay" or "place order" action is enabled. It is forbidden to misrepresent exporting as server persistence.
 
 ## 4. Authoritative object and revision contracts (planned, not migrated)
@@ -76,7 +76,7 @@ Enforce foreign-key project and division scoping, real authenticated identities,
 - **D-STUDIO-02:** verify SAR Supabase project and Auth/Storage; create separate `documents`, `document_revisions`, `document_approvals`, `document_comments`, `document_issue_events`, `document_attachments` data with RLS; use advisory transaction locks and server-owned version increments.
 - **D-STUDIO-03:** persistent save, library, access scopes, optimistic revisions and version comparisons/restore; typed source linking and template registry.
 - **D-STUDIO-04:** responsive rich-text editor with table/inline styles, embedded media and accessibility; real authenticated server autosave, collaboration and annotation.
-- **D-STUDIO-05:** safe DOCX/PDF import/conversion, original binary viewer, branded high-fidelity issue-grade PDF/DOCX, official logo file hash transfer, retention and audit.
+- **D-STUDIO-05:** safe DOCX/PDF import/conversion, original binary viewer, branded high-fidelity issue-grade PDF/DOCX, final issue-grade logo visual QA and efficient binary asset packaging, retention and audit.
 - **D-STUDIO-06:** Document Intelligence/AI-assisted drafting grounded in approved project/commodity/contract evidence; clause/price verification, human redlines.
 - **D-STUDIO-07:** approval/recipient/contract/finance authority, provider-connected correspondence and direct counterparty response ingestion, RFQ/quotation/project feedback and notifications.
 - **D-STUDIO-08:** security, POPIA, restore, collaborative denial/conflict, mobile/print/export parity, digital signature and full UAT; Founder-governed release.

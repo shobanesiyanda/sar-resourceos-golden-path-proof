@@ -20,6 +20,9 @@
 | SAR-ADR-011 | **ALL** SAR client-facing, internal, supplier, buyer, financial, regulatory and counterparty documents must be professionally designed, consistent and accurately branded using the approved original SAR corporate identity. Templates and delivery are centrally governed. | SAR-DOC-001, ResourceOS and all external document flows | Founder-approved 27 Oct 2026 |
 | SAR-ADR-012 | ResourceOS must include a **native, futuristic document viewing, creation and editing workspace** with an integrated corporate template library, instead of requiring external Word-style applications. Advanced editable PDF/DOCX, reviews, collaboration and authorised issuance are governed next-stage requirements. | SAR Document Studio engineering blueprint, ResourceOS | Founder direction 27 Oct 2026 |
 
+| SAR-ADR-013 | A system-generated/controlled document can be modified ONLY after an attributed, reasoned, section-scoped amendment request receives independent preapproval, followed by exact-revision independent postapproval, immutable attribution/timestamps and server-enforced publication. Ordinary scratch drafts remain separate. | Document Studio, BusinessOS DoA, ResourceOS, controlled records | Explicit Founder requirement 27 Oct 2026; implementation incomplete |
+| SAR-ADR-014 | DealScope must monetise a defined pay-as-you-go Deal Run/report for independently acting deal originators and traders; payment buys honest analysis whether the eventual underlying transaction succeeds or fails, without suspending consumer service/legal duties. Prices, provider, tax and terms require separate acceptance. | DealScope and financial/entitlement records | Explicit Founder product direction 27 Oct 2026; payment not live |
+
 ## Supersessions and conflicts to track
 
 - Earlier proposed transfer of SAR GitHub history/assets to **Possent Systems** is **cancelled** by SAR-ADR-001. Historical non-SAR staging snapshots require custody review, not continued expansion.

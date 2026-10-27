@@ -5,6 +5,7 @@ import { SAR_OFFICIAL_LOGO_DATA_URI } from "../../../lib/sar-brand-assets.mjs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import ResourceShell from "../../../components/ResourceShell";
+import { prepareSimulatedProjectDocuments } from "../../../packages/project-core/src/document-pack.mjs";
 import {
   createDocumentDraft, documentReviewGaps, newBlock,
   renderDocumentHtml, TEMPLATE_CATALOG, validateDocumentDraft,
@@ -43,6 +44,8 @@ export default function DocumentStudio(){
  const [notice,setNotice]=useState("");
  const [dirty,setDirty]=useState(true);
  const fileRef=useRef<HTMLInputElement>(null);
+ const projectBundleRef=useRef<HTMLInputElement>(null);
+ const [preparedDocuments,setPreparedDocuments]=useState<DocumentDraft[]>([]);
  const pdfRef=useRef<HTMLInputElement>(null);
  const [pdfUrl,setPdfUrl]=useState<string|null>(null);
  const [pdfName,setPdfName]=useState("");
@@ -105,6 +108,31 @@ export default function DocumentStudio(){
   w.opener=null;w.document.open();w.document.write(renderDocumentHtml(draft));w.document.close();
   w.focus();setNotice("Print-ready A4 draft opened. Use the browser Print / Save as PDF control.");
  }
+ async function importScenarioBundle(file:File|undefined){
+  if(!file)return;
+  if(file.size>1_000_000){setNotice("Scenario bundle exceeds 1 MB; rejected.");return;}
+  try{
+   const input:unknown=JSON.parse(await file.text());
+   const pack=prepareSimulatedProjectDocuments(input);
+   if(pack.state!=="draft_only"||!Array.isArray(pack.documents)||
+      pack.documents.some(d=>!validateDocumentDraft(d))){
+    setPreparedDocuments([]);
+    setNotice("Cannot prepare documents: "+(pack.issues.slice(0,3).join("; ")||"bundle invalid"));
+    return;
+   }
+   setPreparedDocuments(pack.documents as DocumentDraft[]);
+   setNotice(pack.documents.length+" source-linked working drafts prepared locally. Input hashes, prices and supplier evidence are NOT independently authenticated here; no backend save or approval occurred.");
+  }catch{setPreparedDocuments([]);setNotice("Invalid structured scenario bundle; nothing imported.");}
+  finally{if(projectBundleRef.current)projectBundleRef.current.value="";}
+ }
+ function openPreparedDraft(index:number){
+  const selectedDraft=preparedDocuments[index];
+  if(!selectedDraft)return;
+  if(dirty&&!window.confirm("Replace the current unsaved document with this prepared working draft? Export any changes first."))return;
+  setDraft({...selectedDraft,id:selectedDraft.id+"-session-"+Date.now().toString(36)});
+  setSelected(null);setMode("edit");setDirty(true);setTool("review");
+  setNotice("System-prepared working draft opened. Review every costing, source, recipient and approval gap before any use. This session is not saved.");
+ }
  async function importJson(file:File|undefined){
   if(!file)return;
   if(file.size>1_000_000){setNotice("Import refused: the draft file exceeds the 1 MB safety limit.");return;}
@@ -148,6 +176,8 @@ export default function DocumentStudio(){
       <button onClick={()=>setMode("edit")} className={mode==="edit"?"rounded-xl bg-[#C2A14A] px-4 py-2 text-xs font-black text-[#04111F]":control}>Edit canvas</button>
       <button onClick={()=>setMode("preview")} className={mode==="preview"?"rounded-xl bg-[#C2A14A] px-4 py-2 text-xs font-black text-[#04111F]":control}>Preview</button>
       <button onClick={()=>setTool("templates")} className={control}>Templates</button>
+      <button onClick={()=>projectBundleRef.current?.click()} className={control}>Prepare from scenarios</button>
+      <input ref={projectBundleRef} type="file" accept=".sarproject.json,application/json" className="hidden" aria-label="Load source-linked SAR scenario bundle" onChange={e=>importScenarioBundle(e.target.files?.[0])}/>
       <button onClick={()=>pdfRef.current?.click()} className={control}>Open reference PDF</button>
       <input ref={pdfRef} type="file" accept="application/pdf,.pdf" className="hidden" aria-label="Open local PDF reference" onChange={e=>openPdfSource(e.target.files?.[0])}/> 
       <button onClick={()=>setTool("review")} className={control}>Review gates <span className="ml-1 text-amber-200">{review.length}</span></button>
@@ -159,6 +189,10 @@ export default function DocumentStudio(){
      </div>
     </div>
     {notice && <p role="status" className="mt-3 rounded-xl border border-sky-400/20 bg-sky-400/[.05] px-4 py-2 text-xs leading-5 text-sky-100">{notice}</p>}
+    {preparedDocuments.length>0 && <div className="mt-3 rounded-xl border border-amber-400/30 bg-amber-500/[.05] p-3" aria-label="System-prepared drafts">
+     <p className="mb-2 text-xs font-semibold text-amber-100">Prepared locally · not verified or saved · select one draft for editing</p>
+     <div className="flex flex-wrap gap-2">{preparedDocuments.map((item,i)=><button key={item.id} onClick={()=>openPreparedDraft(i)} className={control}>{item.templateId==="rfq"?"Unsent RFQ":item.templateId==="project-brief"?"Feasibility brief":"Decision memo"}</button>)}</div>
+    </div>}
    </div>
    <div className="grid grid-cols-1 gap-0 xl:grid-cols-[215px_minmax(0,1fr)_240px]">
     <aside className="space-y-4 border-b border-white/10 p-4 xl:border-b-0 xl:border-r xl:border-white/10">

@@ -214,3 +214,73 @@ Activation requires owner approval, validated input evidence, authority checks, 
 | SIM-12 | Reconcile commodity route simulation with yield, pricing, two assay costs, inventory, physical dispatch and settlement |
 
 **Build sequencing change:** the project-intelligence canonical model, simulation contracts and evidence framework are part of ResourceOS foundational architecture and must be included before declaring the core enterprise system architecturally complete. Downstream forms and dashboards consume this authoritative simulation/execution state; they do not replace the engine.
+
+## 9. ResourceOS governed RFQ, vendor response intelligence and simulation feedback
+
+**Foundational extension to Section 8 — REQUIRED, NOT YET IMPLEMENTED OR ACCEPTED.** The complete project simulation must identify goods, plant, machinery, outsourced fleet, third-party equipment hire, labour/contracted services, processing capacity and other procurements that need actual supplier prices. ResourceOS must prepare and manage the full RFQ lifecycle without allowing AI to issue binding enquiries or awards independently.
+
+### 9.1 RFQ generation from the project model
+
+For each approved project requirement or sourcing gap:
+- Generate an RFQ draft from the versioned work package, bill of quantities, technical specifications, site, delivery schedule, target capacity and needed service level.
+- Support separate supplier classes: commodity/material suppliers, machinery manufacturers and OEMs, machinery/equipment rental firms, transporters, processing plants, specialist contractors and professional service providers.
+- Identify qualified vendor candidates from an authorised supplier register, preserving vendor legal identity, communication channel, credentials/compliance where applicable, previous performance and scope suitability. Supplier selection is proposed, **never silently authorised**.
+- Include line items, quantities/units, specification and accepted equivalents, drawings/document references, installation/commissioning if applicable, transport or mobilisation, required delivery date/location, warranty/maintenance terms, quote currency, VAT/tax basis, quotation validity, bid deadline and a structured response template.
+- Flag unknown or unapproved technical specifications, commercially sensitive content and unsupported project assumptions before review. Do not disclose the entire project document set unless explicitly approved and access-scoped.
+
+### 9.2 Human approval and controlled dispatch
+
+State flow: NEED IDENTIFIED -> RFQ DRAFT -> INTERNAL TECHNICAL REVIEW -> COMMERCIAL/PROCUREMENT APPROVAL -> APPROVED FOR DISPATCH -> SENT -> RESPONSES RECEIVED -> COMPARISON -> AWARD RECOMMENDATION -> AUTHORISED PO/CONTRACT (separate approval gate).
+
+- Reviewers can edit specification, requirements, vendor shortlist, deadline and attachments; each revision is immutable and attributable.
+- Authorised persons approve exact RFQ version **and exact recipient set** before a system dispatch action. The dispatch service must reject pending/rejected/changed versions and duplicate send attempts.
+- Send through an organisation-controlled identity/channel (approved business email or authenticated supplier portal; other channels only if configured). Record source sender, recipients, message IDs, attachments, delivery state, timestamp and RFQ ID.
+- No AI-initiated transmission, unreviewed vendor outreach, automatic financial commitment, contract award or payment.
+- RFQ modifications after dispatch create a formal addendum and a controlled versioned reissue, not a silent overwrite.
+
+### 9.3 Direct response ingestion
+
+An authorised inbox connector, secure vendor portal or signed system integration must ingest incoming quotations **directly** into ResourceOS with no manual copy-and-paste requirement. Preserve original email/thread, attachments, provider message IDs, received time, sender identity and immutable document hashes.
+
+- Correlate by RFQ ID, recipient/vendor, approved contact, thread and version; uncertain matches enter a manual triage queue instead of contaminating a project.
+- Run attachment security scanning, document classification and OCR/table/quote extraction where needed; untrusted document content must not command system tools or override permissions.
+- Extract quoted line items, model/specification, quantities, unit and total price, tax and freight, currency, exclusions, technical deviations, availability, lead times, hiring period/rate, deposits, maintenance, warranty, delivery/mobilisation and validity.
+- Retain source-page/line evidence and confidence for each extracted value. Normalize apples-to-apples comparisons (units, exclusions, hire vs purchase, ZAR/USD and VAT basis) while keeping the original supplier offer unmodified.
+- Incomplete/contradictory quotations trigger clarifications; revisions create new quotation versions. Duplicate replies/webhook retries are idempotent.
+
+### 9.4 Evaluation and immediate simulation feedback
+
+New quotations enter a project-linked quotation register in status RECEIVED/EXTRACTED/UNDER_REVIEW; they do not silently become accepted contract prices.
+
+- The simulation can recalculate **provisional scenarios** as soon as a response arrives, clearly flagging its unverified status. Commercially authoritative costing uses only human-validated quotations with approved validity and procurement scope.
+- Compare supplier alternatives by compliant specification, total delivered/installed/hired cost, lead time, capacity, payment terms, reliability, operating costs and impact on critical path, working capital and project risk.
+- Re-run project schedule, equipment plan, cash requirements, commodity route economics and feasibility scenarios using versioned quote inputs. Preserve scenario lineage and source-document references.
+- Produce a comparison and award recommendation with transparent tradeoffs. Approval of a purchase order, hire agreement or other legal commitment is a **new, separate human-controlled gate**.
+- On accepted/contracted quotes, update the authorised budget baseline and downstream procurement, fleet/resource, Finance and project execution tasks; record actual order/receipt/invoice separately.
+
+### 9.5 Divisional integration and data boundaries
+
+- **Mining & Contract Services:** machinery purchase/hire, subcontractors, mobilisation, processing equipment, plant services, staffing and technical capabilities for proposed projects.
+- **Commodity Trading:** commodity supply, tolling/processing, transport, assay, storage, handling and buyer/offtake-related price/route inputs.
+- **DealScope:** shared comparison and commercial intelligence concepts may be offered as a separate permissioned customer product later. SAR internal RFQs, suppliers' confidential quotations and project strategies must not leak into unrelated DealScope tenant spaces.
+
+The authoritative schema must preserve at least: project/work-package/requirement identifiers; RFQ ID and immutable version; supplier and recipient IDs; draft/approval/signatures; dispatch ID and provider message correlation; response/attachment hashes; extracted and approved quote lines; comparison/scenario IDs; event/audit trail; quotation validity; and eventual separately authorised PO/contract IDs. Apply ownership and least-privilege policies to all records and attachments.
+
+### 9.6 RFQ acceptance matrix — all currently OPEN
+
+| Test ID | Required evidence |
+| --- | --- |
+| RFQ-01 | Simulated project produces correctly scoped machinery, material, service and hire RFQ drafts |
+| RFQ-02 | Every RFQ line links to original project requirement and approved technical specification |
+| RFQ-03 | Missing technical values and unverified vendor identities block dispatch |
+| RFQ-04 | No message leaves the system until authorised review and approval of exact version and recipients |
+| RFQ-05 | Dispatch records verified delivery attempt, message/thread ID, attachment set and audit actor |
+| RFQ-06 | Supplier replies by official inbox or portal automatically correlate to correct RFQ/vendor/version |
+| RFQ-07 | Duplicate messages, malicious attachments and wrong/unmatched RFQ replies fail safely |
+| RFQ-08 | AI extracts detailed prices and terms with source provenance and reviewable confidence |
+| RFQ-09 | Multi-vendor comparison normalises units, VAT, transport, lead times and hire-versus-purchase assumptions |
+| RFQ-10 | New received quote produces a visibly **provisional** re-simulation; only approved values enter financial baseline |
+| RFQ-11 | Changed quotation/expired offer invalidates recommendations until reapproval, preserving original versions |
+| RFQ-12 | Separate authorised PO/award gate, no auto-purchase, no cross-project/tenant quotation access |
+
+**Execution dependency:** requires correct SAR database, approved sender and inbound channels, attachment storage/scanning, supplier identity records, technical approvers, role/approval policies and a writable tested codebase. No dispatch or real supplier outreach is authorised by this specification.

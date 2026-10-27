@@ -34,6 +34,7 @@ Every engineer, software agent, business analyst and change reviewer **must** re
 - [ResourceOS Document Studio — product and engineering blueprint](08-RESOURCEOS-DOCUMENT-STUDIO.md) — first-party editor/viewer workflow, templates, editing experience, revision/approval model, backend dependencies and acceptance gates.
 - [Controlled Document Amendment Authority](09-DOCUMENT-AMENDMENT-AUTHORITY.md) — new Founder-mandated request -> independent preapproval -> section-limited edit -> independent postreview -> exact revision governance; source implementation is NOT backend authority.
 - [DealScope PAYG Report Product](10-DEALSCOPE-PAYG-PRODUCT.md) — per-analysis paid service independent of whether a prospect becomes a contracted trade; price, consumer terms, payment infrastructure and acceptance pending.
+- [DealScope Deal Integrity & Counterparty Intelligence OS](11-DEALSCOPE-DEAL-INTEGRITY-OS.md) — explained claim-by-claim credibility assessment, evidence checks and investigation actions, separated from commercial profitability; live verification remains open.
 
 ## Architecture domain coverage and unresolved gaps
 

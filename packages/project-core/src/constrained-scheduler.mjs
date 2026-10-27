@@ -27,7 +27,10 @@ export function scheduleConstrainedProject({projectId,packages,pools,horizonDays
        !Number.isSafeInteger(p.earliestStartDay)||p.earliestStartDay<0||
        !nonnegative(p.baseCost)||!Array.isArray(p.predecessors)||!Array.isArray(p.resources))
       issues.push(p.id+': missing verified scope, cost, timing or resource requirements');
+    const demandedPools=new Set();
     for(const r of p.resources??[]){
+      if(r && demandedPools.has(r.poolId))issues.push(p.id+': duplicate resource demand');
+      if(r)demandedPools.add(r.poolId);
       if(!r||!present(r.poolId)||!positive(r.units)||!capacities.has(r.poolId)||
          r.units>(capacities.get(r.poolId)??0))issues.push(p.id+': resource demand exceeds capacity');
     }

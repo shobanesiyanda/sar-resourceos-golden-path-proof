@@ -4,7 +4,7 @@
 This is a staging branch, not a production release.
 
 - **SAR Corporate Website:** public corporate identity and information; an optional Sell to SAR path directs to the governed submission journey, not its own buyer/supplier marketplace.
-- **DealScope:** externally commercialised multi-commodity intelligence, subscription and PAYG Deal Runs, and the controlled multi-buyer Commercial Exchange. Separate customer identities, tenant access controls, entitlements and commercial records. SAR receives no privileged access to other buyer tenants' data.
+- **DealScope:** a product owned by **Shobane African Resources (Pty) Ltd (SAR)**, externally commercialised as multi-commodity intelligence, subscription and PAYG Deal Runs, and a controlled multi-buyer Commercial Exchange. Its customer identities, tenant access, entitlements and commercial records are isolated from ResourceOS; ownership does not grant SAR operational users access to unrelated customer tenants. **Possent Systems has no association or role.**
 - **SAR ResourceOS:** SAR's internal end-to-end enterprise operating system for Commodity Trading, DealScope division oversight and Mining Services. Internal purchasing, approvals, fleet, custody, warehouse, assay, settlements, treasury and operational controls remain exclusive to authorised SAR users.
 - **Shared domain logic:** product registry, classification, commodity profiles, signals, provenance, price calculations, scenario/economics and evidence schemas. Shared code does not mean shared access to databases.
 
@@ -27,7 +27,7 @@ Original repo: shobanesiyanda/sar-resourceos-golden-path-proof
 Original main: f784c998745526d54b13a3f93f77b512ebe5e7e3
 Vercel application: sar-resourceos-golden-path-proof-live
 Vercel last READY deployment: dpl_5JmqfwfajTCpLdrsNCJPSn9EyR1P
-Destination GitHub owner: Possent-Systems
+Destination GitHub owner: **SAR-controlled GitHub organisation/account only**. Earlier Possent-Systems destination was an incorrect historical plan, explicitly cancelled by the Founder on 27 October 2026. No SAR repositories, assets, credentials or administration should be transferred to Possent Systems.
 Current SAR Supabase database reference: **unverified** on the connected Supabase account; do not invent or substitute a TenderDesk project.
 
 ## Gates

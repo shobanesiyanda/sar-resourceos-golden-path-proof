@@ -32,6 +32,8 @@ Every engineer, software agent, business analyst and change reviewer **must** re
 ### Native corporate documentation architecture
 - [SAR Corporate Documentation and Templates Standard](07-DOCUMENT-DESIGN-AND-TEMPLATES.md) — **Founder-approved requirement** for all branded client, internal and counterparty documents, with ResourceOS-native creation, editing, preview, approvals and controlled issue.
 - [ResourceOS Document Studio — product and engineering blueprint](08-RESOURCEOS-DOCUMENT-STUDIO.md) — first-party editor/viewer workflow, templates, editing experience, revision/approval model, backend dependencies and acceptance gates.
+- [Controlled Document Amendment Authority](09-DOCUMENT-AMENDMENT-AUTHORITY.md) — new Founder-mandated request -> independent preapproval -> section-limited edit -> independent postreview -> exact revision governance; source implementation is NOT backend authority.
+- [DealScope PAYG Report Product](10-DEALSCOPE-PAYG-PRODUCT.md) — per-analysis paid service independent of whether a prospect becomes a contracted trade; price, consumer terms, payment infrastructure and acceptance pending.
 
 ## Architecture domain coverage and unresolved gaps
 

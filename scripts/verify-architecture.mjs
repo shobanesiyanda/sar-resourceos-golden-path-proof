@@ -15,6 +15,8 @@ const spec=[
 "docs/architecture/03-DEALSCOPE-PLATFORM-ARCHITECTURE.md",
 "docs/architecture/04-CROSS-SYSTEM-BOUNDARIES.md",
 "docs/architecture/05-GOVERNANCE-COMPLETENESS-AND-DECISIONS.md",
+"docs/architecture/07-DOCUMENT-DESIGN-AND-TEMPLATES.md",
+"docs/architecture/08-RESOURCEOS-DOCUMENT-STUDIO.md",
 "docs/architecture/06-DECISION-REGISTER.md",
 "docs/architecture/2026-10-27-BLUEPRINT-AUDIT.md",
 "docs/2026-10-27-sar-consolidated-carryforward.md",

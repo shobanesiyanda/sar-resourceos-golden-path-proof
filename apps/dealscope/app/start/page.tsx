@@ -45,8 +45,8 @@ export default function TrialJourney(){
    </div>
   </div></section>
   <section className="ds-section"><div className="wrap ds-faq"><div><div className="ds-eyebrow">ACTIVATION STATUS</div><h2>Account registration and free assessment activation are not yet available.</h2><p style={{color:"#b6c4d2"}}>We will not display a fake account-creation button or accept sensitive records without authenticated storage, deal-cycle introductory entitlements and independently tested tenant security.</p></div>
-   <div className="ds-plan"><h3>What is still required?</h3><p>Dedicated SAR-controlled DealScope identity/database, verified trial eligibility, secure customer invitations, audit history, email verification, role-scoped permissions and real activation/recovery tests.</p><Link href="/">Return to the public site →</Link></div>
+   <div className="ds-plan"><h3>What is still required?</h3><p>A dedicated DealScope customer identity and isolated database, verified trial eligibility, secure customer invitations, audit history, email verification, role-scoped permissions and real activation/recovery tests.</p><Link href="/">Return to the public site →</Link></div>
   </div></section>
-  <footer className="ds-footer"><div className="wrap ds-legal" style={{marginTop:0}}>DealScope · Operated by Shobane African Resources (Pty) Ltd · Development preview · No live account creation or payments.</div></footer>
+  <footer className="ds-footer"><div className="wrap ds-legal" style={{marginTop:0}}>DealScope · Commercial intelligence and full deal assessment · Development preview · No live account creation or payments.</div></footer>
  </main>;
 }

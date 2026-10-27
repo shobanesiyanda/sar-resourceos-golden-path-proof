@@ -102,3 +102,16 @@ test("nonfinite quote multiplication cannot produce a provisional total",()=>{
  assert.equal(q.status,"under_review");
  assert.equal(quoteProvisionalCost(q).status,"incomplete");
 });
+
+
+test("task-start cost staging groups parallel work packages without duplicating costs",()=>{
+ const r=simulateProject(scenario([source,{...source,id:"B",title:"Second supplier",leadDays:2}]));
+ assert.equal(r.status,"provisional");
+ assert.deepEqual(r.indicativeCostByStartDay,[{day:2,amount:400}]);
+ assert.equal(r.knownCosts,400);
+});
+test("dependent work stages costs on separate indicative days",()=>{
+ const r=simulateProject(scenario([source,{...source,id:"B",title:"Second stage",predecessors:["A"],leadDays:1}]));
+ assert.equal(r.status,"provisional");
+ assert.deepEqual(r.indicativeCostByStartDay,[{day:2,amount:200},{day:5,amount:200}]);
+});

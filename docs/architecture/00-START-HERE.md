@@ -35,6 +35,8 @@ Every engineer, software agent, business analyst and change reviewer **must** re
 - [Controlled Document Amendment Authority](09-DOCUMENT-AMENDMENT-AUTHORITY.md) — new Founder-mandated request -> independent preapproval -> section-limited edit -> independent postreview -> exact revision governance; source implementation is NOT backend authority.
 - [DealScope PAYG Report Product](10-DEALSCOPE-PAYG-PRODUCT.md) — per-analysis paid service independent of whether a prospect becomes a contracted trade; price, consumer terms, payment infrastructure and acceptance pending.
 - [DealScope Deal Integrity & Counterparty Intelligence OS](11-DEALSCOPE-DEAL-INTEGRITY-OS.md) — explained claim-by-claim credibility assessment, evidence checks and investigation actions, separated from commercial profitability; live verification remains open.
+- [DealScope Public Website & Commercial Acquisition Blueprint](12-DEALSCOPE-CUSTOMER-ACQUISITION-AND-BUSINESS-MODEL.md) — independent dealscope.co.za signed-out experience, value proposition, trial funnel, flexible PAYG/subscription packaging and complete client retention strategy.
+- [DealScope 30-Day Full-Suite Trial](13-DEALSCOPE-FULL-TRIAL-ONBOARDING-AND-ENTITLEMENTS.md) — recovered approved 3 Oct full-feature 30-day trial, 27 Oct eligibility instruction, Auth, anti-duplicate claims, expiry and opt-in conversion boundaries.
 
 ## Architecture domain coverage and unresolved gaps
 

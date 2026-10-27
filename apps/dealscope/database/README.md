@@ -63,3 +63,11 @@ It sketches 9 database entities:
 `DB-10` signed release approval. **Every gate is currently OPEN.**
 
 Do not relabel `project not created` as `existing project inaccessible`.
+
+
+## Full-suite October extensions (ALL UNAPPLIED)
+This is an interconnected proposed schema collection, not a sequence of migrations ready to run. Existing initial-schema.REVIEW-ONLY.sql has **nine** foundation entities. The following add complementary domain designs which may require reconciliation, referential-integrity review, append-only event locks, adviser checks, naming changes and generated migration files:
+- payg-extension.REVIEW-ONLY.sql: orders, provider receipts, wallets, report runs and atomic credit journal.
+- deal-integrity-extension.REVIEW-ONLY.sql: private tenant-bound evidence cases, structured source references, reviewer findings and protected event history.
+- trial-entitlements.REVIEW-ONLY.sql: full 30-day once-per-eligible-person/organisation claims using protected identity HMAC keys, actual entitlements, published trial offer and immutable events. No raw identity claims or card details.
+Identity provider and company registry correlation, authorised reviewers, tenant-granted user memberships, source documents, offer slots, PAYG/annual plans and accounting authority remain distinct. **Do not apply multiple schema proposals blindly.** Reconcile one complete SAR-owned database plan; use real Supabase migrations and negative-path tests. No production data capture or trial entitlement while only the unrelated TenderDesk Supabase organisation is connected.

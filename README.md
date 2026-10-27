@@ -15,8 +15,8 @@
 6. [05 — Governance and Missing Blueprint Register](docs/architecture/05-GOVERNANCE-COMPLETENESS-AND-DECISIONS.md): source/approval/test/release traceability and material documentation still outstanding.
 7. [06 — Decision / Supersession Register](docs/architecture/06-DECISION-REGISTER.md): confirmed Founder directions and explicitly cancelled historical assumptions; consolidation review still pending.
 8. [Engineering evidence / latest carry-forward](docs/2026-10-27-sar-consolidated-carryforward.md): historical commits, open dependencies, verified and unverified tests.
-8. [Corporate Website Master Build Map](https://github.com/shobanesiyanda/sar-website/blob/redesign/full-corporate-website-oct-2026/docs/SAR_CORPORATE_WEBSITE_MASTER_BUILD_MAP.md): **separate corporate website source of truth**, not replaced by this repo.
-9. [DealScope Database Blueprint](apps/dealscope/database/README.md): **SAR-controlled greenfield project not provisioned**, schema proposal and acceptance gates.
+9. [Corporate Website Master Build Map](https://github.com/shobanesiyanda/sar-website/blob/redesign/full-corporate-website-oct-2026/docs/SAR_CORPORATE_WEBSITE_MASTER_BUILD_MAP.md): **separate corporate website source of truth**, not replaced by this repo.
+10. [DealScope Database Blueprint](apps/dealscope/database/README.md): **SAR-controlled greenfield project not provisioned**, schema proposal and acceptance gates.
 
 **Mandatory discipline:** The documents describe what must exist and what remains incomplete; source code and accepted test evidence determine what actually works. A drafted blueprint is not a signed company policy. No merge to `main`, production deploy, binding RFQ, payment or purchase is authorised by this index.
 

@@ -12,7 +12,7 @@ const start=()=>openAmendment({document,request:{id:'A-1',reason:'Unverified mac
 const pre=r=>transitionAmendment({record:r,principal:p('chief','amendment_preapprover',2),
  command:{type:'preapprove',reason:'Technical correction justified',expectedBaseHash:H}});
 const submit=r=>transitionAmendment({record:r,principal:p('engineer','document_requester',3),
- command:{type:'submit',expectedBaseHash:H,newContentHash:H2,changedSectionIds:['s1'],diffSummary:'Revised excavator capacity'}});
+ command:{type:'submit',expectedBaseHash:H,serverDiffVerified:true,diffBaseHash:H,newContentHash:H2,changedSectionIds:['s1'],diffSummary:'Revised excavator capacity'}});
 const approve=(r,role,id,min)=>transitionAmendment({record:r,principal:p(id,role,min),
  command:{type:'postapprove',reviewRole:role,reason:'Source evidence verified',proposalHash:H2}});
 test('preapproval and two independent postreviews are mandatory before commit readiness',()=>{
@@ -41,7 +41,7 @@ test('no author self-approval or unapproved/unscoped edits',()=>{
  assert.equal(submit(x).state,'blocked');
  const a=pre(x).record;
  const wrong=transitionAmendment({record:a,principal:p('engineer','document_requester',3),
-  command:{type:'submit',expectedBaseHash:H,newContentHash:H2,changedSectionIds:['s2'],diffSummary:'out of scope'}});
+  command:{type:'submit',expectedBaseHash:H,serverDiffVerified:true,diffBaseHash:H,newContentHash:H2,changedSectionIds:['s2'],diffSummary:'out of scope'}});
  assert.equal(wrong.state,'blocked');
 });
 test('postreview rejects self, duplicate, wrong hash and rollback of time',()=>{
@@ -65,4 +65,11 @@ test('rejections and cancellations retain reason, actor, timestamp',()=>{
 test('cross-company principal cannot request an amendment',()=>{
  assert.equal(openAmendment({document,policy,request:{id:'x',reason:'yes',purpose:'change',sectionIds:['s1']},
   principal:{...p('engineer','document_requester',1),entityId:'OTHER'}}).state,'blocked');
+});
+
+test('missing trusted diff verification blocks mutation even for a preapproved engineer',()=>{
+ const draft=pre(start().record).record;
+ const r=transitionAmendment({record:draft,principal:p('engineer','document_requester',3),
+  command:{type:'submit',expectedBaseHash:H,newContentHash:H2,changedSectionIds:['s1'],diffSummary:'client claims edit'}});
+ assert.equal(r.state,'blocked');
 });

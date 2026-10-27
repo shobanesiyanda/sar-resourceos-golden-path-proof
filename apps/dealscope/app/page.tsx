@@ -1,110 +1,84 @@
-"use client";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { calculateDealRun, type DealRunInput } from "../../../packages/commodity-core/src/economics";
-import { fallbackProductCatalogue } from "../../../packages/commodity-core/src/catalogue";
-
-const initial: DealRunInput = {
-  commodity: "", currency: "ZAR", stage: "saleable_product", sourceTonnes: 0,
-  yieldPct: null, buyerPricePerSaleableTonne: 0, acquisitionCostPerSourceTonne: 0,
-  sourceTransportPerSourceTonne: 0, processingCostPerSourceTonne: 0,
-  destinationTransportPerSaleableTonne: 0, handlingPerSaleableTonne: 0,
-  feedstockAssayTotal: 0, concentrateAssayTotal: 0, financeCostTotal: 0,
-  otherDirectCostsTotal: 0, targetNetMarginPct: 10, priceSource: "", priceAsOf: "",
-};
-
-type NumericField = Exclude<keyof DealRunInput, "commodity" | "currency" | "stage" | "priceSource" | "priceAsOf">;
-const fields: {key:NumericField; label:string;help?:string}[] = [
-  { key: "sourceTonnes", label: "Source tonnes" },
-  { key: "yieldPct", label: "Mass yield (%)", help: "Only for ROM/feedstock. This is not metallurgical recovery." },
-  { key: "buyerPricePerSaleableTonne", label: "Buyer price / saleable tonne" },
-  { key: "acquisitionCostPerSourceTonne", label: "Acquisition cost / source tonne" },
-  { key: "sourceTransportPerSourceTonne", label: "Source transport / source tonne" },
-  { key: "processingCostPerSourceTonne", label: "Processing / source tonne" },
-  { key: "destinationTransportPerSaleableTonne", label: "Delivery transport / saleable tonne" },
-  { key: "handlingPerSaleableTonne", label: "Handling / saleable tonne" },
-  { key: "feedstockAssayTotal", label: "Feedstock assay total" },
-  { key: "concentrateAssayTotal", label: "Product assay total" },
-  { key: "financeCostTotal", label: "Finance costs total" },
-  { key: "otherDirectCostsTotal", label: "Other directly attributable costs" },
-  { key: "targetNetMarginPct", label: "Target pre-tax net margin (%)" },
+import "./landing.css";
+const capabilities=[
+ ["01","Deal Integrity","Check claims about mandates, stock rights, assays, buyers and payment instructions. Understand what needs independent verification.","/integrity"],
+ ["02","Deal Viability","Model actual sourcing, grades, yield, logistics, processing, financing, margins and acquisition ceilings.","/runs"],
+ ["03","Opportunity Intelligence","Find and evaluate evidence-qualified commercial opportunities, with dated sources and clear acceptance criteria.","/start"],
+ ["04","Opportunity Workspace","Preserve deal dossiers, evidence revisions, scenario histories, expiries and reassessment decisions.","/start"],
+ ["05","Commercial Exchange","Engage buyers and sellers through controlled permissions, mandate checks, explicit disclosure and auditable negotiation.","/exchange"],
+ ["06","Market & Risk Watch","Follow material changes in verified evidence and relevant market inputs so deals stay current.","/start"]
 ];
-
-function money(value: number, currency: string) {
-  return new Intl.NumberFormat("en-ZA", {style:"currency",currency:currency || "ZAR",maximumFractionDigits:2}).format(value);
-}
-export default function DealScopeHome() {
-  const [input, setInput] = useState<DealRunInput>(initial);
-  const result = useMemo(() => calculateDealRun(input), [input]);
-  function numberField(key: NumericField, value: string) {
-    setInput(previous => ({...previous, [key]: value.trim() === "" ? (key === "yieldPct" ? null : NaN) : Number(value)}));
-  }
-  return <main>
-    <header className="top"><div className="wrap topInner"><Link href="/" className="brand">DEALSCOPE<span className="dot">.</span></Link><nav><Link href="#analyse">Deal Runs</Link><Link href="/integrity">Deal Integrity</Link><Link href="/exchange">Commercial Exchange</Link></nav></div></header>
-    <section className="hero"><div className="wrap">
-      <p className="eyebrow">Multi-commodity commercial intelligence</p>
-      <h1>Discover the economics.<br/><span>Control the transaction.</span></h1>
-      <p className="lead">Full commercial intelligence, Deal Integrity, opportunity discovery, repeat scenario analysis and a consent-governed Commercial Exchange. Analyse the economics—and investigate whether the parties, stock and evidence justify proceeding.</p>
-      <div className="notice">Migration preview — no live market feeds, account registration, payment collection, buyer disclosure or transaction execution.</div>
-    </div></section>
-    <section className="wrap workspace" id="analyse">
-      <div className="sectionLabel">Deal Run | self-entered scenario</div>
-      <div className="layout">
-        <div className="panel">
-          <h2>Route and evidence</h2>
-          <p className="muted">No fabricated market prices. Provide a buyer-price reference and date to complete the arithmetic screen.</p>
-          <div className="formGrid">
-            <label>Commodity / product
-              <select value={input.commodity} onChange={e => setInput(p=>({...p,commodity:e.target.value}))}>
-                <option value="">Select material</option>
-                {fallbackProductCatalogue.map(p => <option key={p.productCode} value={p.productCode}>{p.resource} — {p.materialType}</option>)}
-              </select>
-            </label>
-            <label>Material stage
-              <select value={input.stage} onChange={e=>setInput(p=>({...p,stage:e.target.value as DealRunInput["stage"],yieldPct:e.target.value==="saleable_product"?null:p.yieldPct}))}>
-                <option value="saleable_product">Saleable / finished product</option><option value="raw_feedstock">Raw feedstock / ROM</option>
-              </select>
-            </label>
-            <label>Currency
-              <select value={input.currency} onChange={e=>setInput(p=>({...p,currency:e.target.value}))}><option value="ZAR">ZAR</option><option value="USD">USD</option></select>
-            </label>
-            <label>Buyer-price reference / source
-              <input value={input.priceSource} placeholder="PO, written indication or data source" onChange={e=>setInput(p=>({...p,priceSource:e.target.value}))}/>
-            </label>
-            <label>Buyer-price reference date
-              <input type="date" value={input.priceAsOf} onChange={e=>setInput(p=>({...p,priceAsOf:e.target.value}))}/>
-            </label>
-          </div>
-          <h2 className="subhead">Economics</h2>
-          <div className="formGrid">
-            {fields.filter(f=>input.stage==="raw_feedstock"||f.key!=="yieldPct").map(f=>(
-              <label key={f.key}>{f.label}
-                <input type="number" min="0" step="any" value={input[f.key] ?? ""} onChange={e=>numberField(f.key,e.target.value)}/>
-                {f.help && <small>{f.help}</small>}
-              </label>))}
-          </div>
-        </div>
-        <aside className="panel outcome">
-          <h2>Commercial screen</h2>
-          <div className={"state "+result.state}>
-            {result.state==="qualified"?"Economics pass — inputs unverified":result.state==="rejected"?"Does not meet target":"Insufficient evidence / inputs"}
-          </div>
-          <dl>
-            <div><dt>Source quantity</dt><dd>{result.sourceTonnes.toLocaleString("en-ZA")} t</dd></div>
-            <div><dt>Saleable quantity</dt><dd>{result.saleableTonnes.toLocaleString("en-ZA",{maximumFractionDigits:2})} t</dd></div>
-            <div><dt>Sales value</dt><dd>{money(result.revenue,input.currency)}</dd></div>
-            <div><dt>Total attributable costs</dt><dd>{money(result.directCost,input.currency)}</dd></div>
-            <div><dt>Gross margin</dt><dd>{result.grossMarginPct.toFixed(2)}%</dd></div>
-            <div><dt>Pre-tax net profit</dt><dd>{money(result.netProfitBeforeTax,input.currency)}</dd></div>
-            <div><dt>Pre-tax net margin</dt><dd>{result.netMarginPct.toFixed(2)}%</dd></div>
-            <div><dt>Max source acquisition price for target</dt><dd>{money(result.acquisitionCostCeilingPerSourceTonne,input.currency)} / t</dd></div>
-          </dl>
-          {result.reasons.length>0 && <div className="reasons"><strong>Screening findings</strong><ul>{result.reasons.map((r,i)=><li key={i}>{r}</li>)}</ul></div>}
-          <p className="fine">This is a calculation, not a verified market price, buyer commitment or approved trade. Evidence, counterparty verification, approvals and cash settlement remain separate release gates.</p>
-          <Link href="/exchange" className="outlineLink">Commercial Exchange access rules →</Link>
-        </aside>
-      </div>
-    </section>
-    <footer className="foot"><div className="wrap">DealScope — External commercial application | Infrastructure migration preview</div></footer>
-  </main>;
+const steps=[
+ ["01","Arrive with a question","A WhatsApp link, market opportunity or prospective transaction brings you to DealScope."],
+ ["02","Investigate what is real","Review deal credibility, material rights, documents, counterparty evidence and remaining red flags."],
+ ["03","Model the true economics","Run and compare commercial scenarios, identify acquisition ceilings and understand exposure."],
+ ["04","Return when conditions change","Revisit saved opportunities, review evidence changes and use controlled Exchange workflows."]
+];
+export default function PublicDealScopeHome(){
+ return <main className="ds-site">
+  <div className="ds-preview-bar" role="status"><div className="wrap"><strong>Product development preview.</strong> The public website and 30-day trial are being engineered. Registration, issuer verification, payment and Exchange transactions are not yet live.</div></div>
+  <header className="ds-header"><div className="wrap ds-header-inner">
+   <Link href="/" className="ds-logo" aria-label="DealScope home">DEALSCOPE<span>.</span></Link>
+   <nav className="ds-nav" aria-label="Website navigation">
+    <a href="#platform">Platform</a><a href="#journey">How it works</a><a href="#pricing">Plans</a><Link href="/integrity">Deal Integrity</Link>
+   </nav>
+   <div className="ds-header-actions"><Link className="ds-header-signin" href="/start">Sign in</Link><Link href="/start" className="ds-btn ds-btn-gold ds-btn-small">Explore free trial</Link></div>
+  </div></header>
+  <section className="ds-hero"><div className="wrap ds-hero-grid">
+   <div>
+    <div className="ds-eyebrow"><span className="ds-dot"/> COMMERCIAL INTELLIGENCE. REAL-WORLD DUE DILIGENCE.</div>
+    <h1>Know what you&apos;re <em>dealing with</em> before you commit.</h1>
+    <p className="ds-hero-copy">Investigate deal credibility. Verify the evidence behind the claims. Model real transaction economics. Discover commercial opportunities and manage the deals worth pursuing.</p>
+    <div className="ds-hero-actions">
+     <Link href="/start" className="ds-btn ds-btn-gold">Explore your 30-day full trial <span aria-hidden>→</span></Link>
+     <Link href="/integrity" className="ds-btn ds-btn-outline">Try Deal Integrity self-check <span aria-hidden>↗</span></Link>
+    </div>
+    <p className="ds-hero-trust"><strong>30 days</strong> · Full-platform trial when activated · No automatic paid conversion</p>
+    <div className="ds-hero-context">Built for deal originators, commodity traders, suppliers, mandate holders and commercial teams.</div>
+   </div>
+   <div className="ds-demo" aria-label="Illustrative deal decision brief, not a verified customer assessment">
+    <div className="ds-demo-top"><span>DEALSCOPE / INTELLIGENCE BRIEF</span><span className="ds-demo-chip">ILLUSTRATIVE ONLY</span></div>
+    <div className="ds-demo-label">Example: Chrome concentrate opportunity</div>
+    <div className="ds-demo-head">A deal worth investigating—or walking away from?</div>
+    <div className="ds-demo-metric"><div><small>DEAL INTEGRITY</small><strong>Investigate further</strong></div><span className="ds-dot-warning"/></div>
+    <div className="ds-demo-detail"><span>Stock ownership</span><strong>Supporting proof required</strong></div>
+    <div className="ds-demo-detail"><span>Lab report</span><strong>Issuer confirmation pending</strong></div>
+    <div className="ds-demo-detail"><span>Buyer terms</span><strong>Not independently confirmed</strong></div>
+    <div className="ds-demo-divider"/>
+    <div className="ds-demo-next"><small>NEXT BEST ACTION</small><p>Verify the parcel-specific selling mandate directly with the lawful stock controller before accepting the offer.</p></div>
+    <div className="ds-demo-bottom">Evidence before commitment. No fraud finding or guaranteed transaction.</div>
+   </div>
+  </div></section>
+  <section className="ds-proofbar"><div className="wrap ds-proofbar-grid">
+   <span>Is the stock real?</span><span>Is the mandate genuine?</span><span>Will the numbers work?</span><span>What should I verify next?</span>
+  </div></section>
+  <section className="ds-section" id="platform"><div className="wrap">
+   <div className="ds-section-top"><div><div className="ds-eyebrow">ONE CONNECTED PLATFORM</div><h2>More than a deal calculator.</h2></div><p>DealScope connects deal integrity, financial viability, evidence, market intelligence and commercial workflows. Each assessment explains what is known, what is assumed and what still needs verification.</p></div>
+   <div className="ds-feature-grid">{capabilities.map(([number,title,copy,href])=><Link href={href} key={number} className="ds-feature">
+    <div className="ds-feature-number">{number}</div><h3>{title}</h3><p>{copy}</p><span>Explore capability <span aria-hidden>↗</span></span>
+   </Link>)}</div>
+  </div></section>
+  <section className="ds-section ds-section-contrast" id="journey"><div className="wrap">
+   <div className="ds-eyebrow">FROM FIRST CONTACT TO INFORMED DECISION</div>
+   <div className="ds-section-top"><h2>That WhatsApp deal can wait. The evidence cannot.</h2><p>A forwarded offer may look attractive. DealScope is designed to help you understand what you are buying into before spending on travel, samples, transport or commercial commitments.</p></div>
+   <div className="ds-steps">{steps.map(([number,title,copy])=><div className="ds-step" key={number}><div className="ds-step-number">{number}</div><h3>{title}</h3><p>{copy}</p></div>)}</div>
+  </div></section>
+  <section className="ds-section ds-trial-section" id="trial"><div className="wrap ds-trial-grid">
+   <div><div className="ds-eyebrow">EXPERIENCE THE COMPLETE PLATFORM</div><h2>30 days. Full access. Make your own assessment.</h2><p>Our intended trial gives each eligible new person or organisation 30 days to experience the full suite. Work with a real proposed transaction, see what needs investigation, test the economics and explore your commercial workspace.</p><div className="ds-trial-points"><span>Full-feature trial</span><span>One eligible introductory trial</span><span>No automatic paid conversion</span></div><Link href="/start" className="ds-btn ds-btn-gold">See how trial registration works <span aria-hidden>→</span></Link></div>
+   <div className="ds-trial-card"><div className="ds-trial-number">30<span>days</span></div><h3>Your starting point</h3><p>No need to commit to a long-term licence before understanding the workflow. Account verification and independent evidence-provider connections are release requirements.</p><div className="ds-trial-rule">Preview notice: trial accounts cannot yet be created.</div></div>
+  </div></section>
+  <section className="ds-section" id="pricing"><div className="wrap"><div className="ds-section-top"><div><div className="ds-eyebrow">FLEXIBLE COMMERCIAL ACCESS</div><h2>Choose how you work.</h2></div><p>Trial, pay-as-you-go and subscription models support different transaction volumes. Commercial prices and offer terms will be published only after approval.</p></div>
+   <div className="ds-plans"><div className="ds-plan"><div className="ds-plan-type">INTRODUCTION</div><h3>Full trial</h3><p className="ds-plan-price">30 days</p><p>Experience the complete DealScope suite before choosing how to continue.</p><Link href="/start">Explore trial registration ↗</Link></div>
+   <div className="ds-plan ds-plan-featured"><div className="ds-plan-type">FLEXIBLE USE</div><h3>Pay as you go</h3><p className="ds-plan-price">Per Deal Run</p><p>Use defined analyses when opportunities arise, whether the result is positive or negative.</p><Link href="/start">See access options ↗</Link></div>
+   <div className="ds-plan"><div className="ds-plan-type">REPEAT TEAMS</div><h3>Subscriptions</h3><p className="ds-plan-price">Essential / Professional</p><p>Ongoing intelligence, saved workspaces and team-level access for frequent analysis.</p><Link href="/start">Explore plans ↗</Link></div></div>
+  </div></section>
+  <section className="ds-section ds-section-contrast"><div className="wrap ds-faq"><div><div className="ds-eyebrow">COMMON QUESTIONS</div><h2>Confidence comes from evidence, not promises.</h2></div>
+   <div><details><summary>Does DealScope guarantee a deal is genuine?</summary><p>No. It explains the available evidence, contradictions, uncertainties and independent checks needed. Automated findings cannot certify a company, mandate, stockpile or buyer as legitimate.</p></details>
+    <details><summary>Can I analyse a deal that turns out to be unprofitable?</summary><p>Yes. A useful assessment may show why a deal should not proceed. Such private analyses are distinct from DealScope&apos;s evidence-qualified public opportunity shortlist.</p></details>
+    <details><summary>What happens after the free trial?</summary><p>No automatic charge. The intended policy retains access to permitted records under applicable retention rules, while new paid analyses or active features require an explicit paid choice.</p></details>
+    <details><summary>Is the Commercial Exchange part of DealScope?</summary><p>Yes. It remains part of the full suite, with verified counterparties and permission-controlled disclosures. It is not enabled for live transactions in this development preview.</p></details></div>
+  </div></section>
+  <section className="ds-bottom-cta"><div className="wrap"><div className="ds-eyebrow">START WITH THE RIGHT QUESTIONS</div><h2>Better informed deals start here.</h2><p>Understand the evidence. Know the risks. Model the economics.</p><div className="ds-hero-actions"><Link className="ds-btn ds-btn-gold" href="/start">Explore your full trial →</Link><Link className="ds-btn ds-btn-outline" href="/runs">Explore a Deal Run →</Link></div></div></section>
+  <footer className="ds-footer"><div className="wrap ds-footer-grid"><div><Link href="/" className="ds-logo">DEALSCOPE<span>.</span></Link><p>Independent commercial intelligence and Exchange platform operated by Shobane African Resources (Pty) Ltd.</p></div><div><strong>Explore</strong><Link href="/integrity">Deal Integrity</Link><Link href="/runs">Deal Runs</Link><Link href="/exchange">Commercial Exchange</Link></div><div><strong>Access</strong><Link href="/start">Trial onboarding</Link><a href="#pricing">Plans and pricing</a><a href="#trial">Full trial</a></div></div><div className="wrap ds-legal">Development preview · No active registration, live independent verification, payments or binding transactions · © 2026 Shobane African Resources (Pty) Ltd</div></footer>
+ </main>;
 }

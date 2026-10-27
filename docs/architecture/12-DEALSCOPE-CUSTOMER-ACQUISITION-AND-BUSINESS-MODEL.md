@@ -3,7 +3,7 @@
 **Prepared:** 27 October 2026 (SAST)
 **Legal operator and owner:** Shobane African Resources (Pty) Ltd
 **Target public domain:** dealscope.co.za (Founder-named; DNS/control/live deployment not independently verified)
-**Status:** Controlled requirements and development-source delivery. No live public sign-in, 30-day trial, payment, verified-source checks, Exchange transactions or deployment acceptance.
+**Status:** Controlled requirements and development-source delivery. No live public sign-in, one-free-full-deal-cycle offer, payment, verified-source checks, Exchange transactions or deployment acceptance.
 
 ## 1. The commercial company and product proposition
 DealScope is the SAR-owned independent **external multi-tenant commercial intelligence and exchange suite**, not the SAR corporate website or private ResourceOS, and not a Possent Systems/TenderDesk/BidOS asset. The core public promise is **Know what you're dealing with before you commit.** The three decision layers are:
@@ -33,7 +33,7 @@ No automatic WhatsApp scraping, group-member harvesting, disguised affiliate cam
 - Exchange /exchange : signed-out description only; live buyer/seller access remains locked.
 - Trial /start : explains full-platform trial and onboarding, clearly in development; does NOT accept personal information without secure Auth/storage.
 - Planned production /signup, /signin, /app, /pricing, /solutions, /platform, /trust-and-methodology, /legal, /support : build only when securely linked, not fake working links.
-- Header should surface Platform, How It Works, Plans, Integrity, Sign In and prominent Explore Full Trial CTA.
+- Header should surface Platform, How It Works, Plans, Integrity, Sign In and prominent Explore Free Deal Assessment CTA.
 - Primary hero: **Know what you're dealing with before you commit.**
 - Supporting copy: investigate deal credibility; verify evidence; model profitability; discover opportunities; monitor and manage viable transactions; access a permissioned Exchange.
 - Demo artefacts are visibly illustrative, never real current market prices or specific counterparty grades.
@@ -45,7 +45,7 @@ The customer should return when real new evidence, a revised quote, a new buyer 
 
 ### Marketing and upsell sequence
 1. Trust: public self-check and example of credible evidence scrutiny.
-2. Try: **30-day full-feature trial**, once per eligible new individual or organisation (per approved eligibility policy).
+2. Try: **ONE free full deal assistance & assessment cycle** for one real customer-owned opportunity, once per eligible person/organisation, without calendar-based unlimited access (per approved eligibility policy).
 3. Apply: create actual dossiers, assessments, alerts, scenarios, and permissioned Exchange activities.
 4. Pay by choice: one-off PAYG report, Deal Run credit packs, Essential/Professional subscriptions, and distinctly priced permitted Exchange / professional verification services where approved.
 5. Expand teams with corporate seats and management workflows after a clear payment agreement.
@@ -55,8 +55,8 @@ Paid analysis may conclude "not financially viable" or "insufficient evidence"; 
 Earlier proposed or assistant-referenced pricing (not independently ratified as current tariffs): 1 PAYG Deal Run R450; 5-pack R1,500; 15-pack R3,500; Essential R15,000/year for 1 seat and 20 runs/month; Professional R28,500/year for 3 seats and 50 runs/month. These amounts require founder price adoption, VAT/tax treatment, provider costs, legally compliant payment terms and unit-economics/market validation. Website source therefore currently displays product categories **without binding prices**.
 
 ## 5. Measurement and commercial optimization
-Measure referral visits, signed-out value/CTA engagement, consented registration, identity verification, full trial activation, first investigation, first complete Deal Run, verified evidence follow-up, private qualified opportunities, watch engagement, day-7/day-30 retention, full-trial-to-paid conversion, paid repeat usage, customer support, report delivery/refund, provider fees and gross contribution per customer. Avoid vanity signups, fabricated fear, reselling repeat calculations without new value or misleading qualification.
-Suggested trial first-activation onboarding: classify user's role, choose a first workflow, add a permitted private opportunity, show checks to investigate and calculate route economics, optionally monitor without auto-charging. Any cross-tenant public promotion requires explicit seller consent/independent evidence review.
+Measure referral visits, signed-out value/CTA engagement, consented registration, identity verification, free complete-deal assessment activation, first investigation, first complete Deal Run, verified evidence follow-up, private qualified opportunities, watch engagement, day-7/day-30 retention, full-trial-to-paid conversion, paid repeat usage, customer support, report delivery/refund, provider fees and gross contribution per customer. Avoid vanity signups, fabricated fear, reselling repeat calculations without new value or misleading qualification.
+Suggested free assessment first-activation onboarding: classify user's role, choose a first workflow, add a permitted private opportunity, show checks to investigate and calculate route economics, optionally monitor without auto-charging. Any cross-tenant public promotion requires explicit seller consent/independent evidence review.
 
 ## 6. Corporate boundary and website linkages
 SAR public corporate site www.shobane.co.za remains its own approved supplier and contracting funnel; it may **link** to DealScope as an external independent SAR-owned service only when approved. Dealscope.co.za is an external multi-tenant SaaS marketing + login site; it does not share the SAR corporate website contact database, SAR ResourceOS auth/database, unrestricted supplier contacts, deals, merchant balances or private source rights. Source-neutral calculation code reuse does not confer access.
@@ -65,5 +65,5 @@ The operator's legal details, customer terms, privacy/POPIA disclosures, subscri
 ## 7. Engineering/acceptance
 **Source delivered:** new responsive public Home, /start trial journey and /runs calculator relocation, using original DealScope visual identity; /integrity and /exchange retained. Not a live customer acquisition service until independent tests and required SAR-owned infrastructure are accepted.
 Signed-out QA: Android-first small-screen and desktop, accessible contrast/keyboard, all navigation/anchor routes, illustrative disclosures, no invented market prices, no PII collection when unavailable, legal/footer accuracy, index/noindex readiness, true domain/TLS/mail ownership, performance, no confidential link query parameters.
-Secure signup/trial QA: Auth, email validation, trusted person+organisation eligibility, one-time 30-day full access, exact expiry, staff invites without repeated trials, tenant isolation, no automatic payment and a read-only expiry policy, support appeals, signed consent and recovery.
+Secure signup/introductory-cycle QA: Auth, email validation, trusted person+organisation eligibility, one-time full single-deal-cycle assistance, completion and report delivery, staff invites without repeated trials, tenant isolation, no automatic payment and a read-only expiry policy, support appeals, signed consent and recovery.
 Full-suite acceptance remains separate: real provider verification, private evidence storage, qualified discovery, buyer/seller disclosure, actual payment, statutory reconciliation, market data, notifications and Exchange. Nothing in this marketing design constitutes a release approval.

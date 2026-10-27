@@ -389,3 +389,30 @@ Date: 27 October 2026. These are access-independent code foundations committed *
 - **78/78 combined local isolated tests PASS** (33 older standalone scenario/RFQ/pricing/evidence candidate tests + 14 quote feedback + 11 vendor comparisons + 8 SAR merchant payment contracts + 12 constrained scheduler tests). This is not a verified whole-branch Next.js build or live SAR/DealScope RLS/provider E2E.
 - Simulation limitations are explicit: deterministic earliest-feasible allocation under one task-order heuristic, not an optimised global construction/mining schedule; assumes availability from reviewed resource pools, without shift calendars, breakdown distributions, site geospatial paths, environmental constraints, predictive maintenance or stochastic performance. The costs are staged by task start, NOT an actual finance cash-flow or committed purchase plan.
 - Next connected integration: extend the versioned approved project model with equipment pools, crew allocations, shift/availability calendars, maintenance/permit gates, dispatch actuals and schedule/finance reforecast. Any external supplier response remains provisional until authenticated humans validate the quote and authorise procurement. No system execution or purchase may follow from simulation results alone.
+
+
+## 18. Repository source-of-truth audit and architecture consolidation — 27 October 2026
+
+**Founder concern:** An engineer had to be reminded of foundational intelligent document analysis, full project simulation and RFQ response feedback. The repository did not have an unambiguous, complete architecture entry point despite detailed fragments in this carry-forward.
+
+**Verified prior state:**
+- Website redesign branch already had an approved 20K-character `docs/SAR_CORPORATE_WEBSITE_MASTER_BUILD_MAP.md` and an implementation register linked from website README.
+- ResourceOS root `README.md` was an **839-character parcel-demo-only** introduction and did not link or enforce the whole SAR business/system architecture.
+- The ResourceOS document/simulation and RFQ requirements existed in this long engineering carry-forward (sections 8 and 9) but were **buried**. Corporate organisational mandates/functional reporting and system/data ownership were fragmented.
+- No `docs/architecture` directory or named `docs/ORGANISATIONAL_STRUCTURE.md` / `docs/SAR_ENTERPRISE_ARCHITECTURE.md` existed at inspected draft paths.
+- This is a named-document and direct-path audit; no complete recursive source/tree audit, approval-signature recovery or signed policy reconciliation was performed.
+
+**New draft architecture library, committed to the existing unmerged branch:**
+- `docs/architecture/00-START-HERE.md`: authoritative source index, document precedence, open coverage, Founder review status.
+- `01-SAR-CORPORATE-OPERATING-MODEL.md`: SAR legal/functional model, trading, mining contracting, Project Development, Technology, DealScope, shared support, decision-rights and missing formal organogram.
+- `02-RESOURCEOS-INTELLIGENCE-AND-EXECUTION.md`: full unstarted-project documents -> evidence model -> constrained simulation -> RFQs -> direct response -> re-simulation -> controlled physical/finance lifecycle.
+- `03-DEALSCOPE-PLATFORM-ARCHITECTURE.md`: SAR-owned external customer product, tenant privacy, Deal Runs, commercial screening, disclosures, subscriptions and merchant processing (not live).
+- `04-CROSS-SYSTEM-BOUNDARIES.md`: website/ResourceOS/DealScope data authority, integration/event and security contracts.
+- `05-GOVERNANCE-COMPLETENESS-AND-DECISIONS.md`: status gates, approvals, missing organisation/engineering/SOP documentation.
+- `06-DECISION-REGISTER.md`: Founder directions, website approval, product boundaries and superseded assumptions.
+- `2026-10-27-BLUEPRINT-AUDIT.md`: detailed audit findings and scope limitations.
+- Root `README.md` replaced with enterprise entry point, retaining parcel demo as historical proof; root `AGENTS.md` makes the architecture read order mandatory for coding agents.
+- `scripts/verify-architecture.mjs` and `package.json` script `verify:architecture` added as dependency-free **local-only** documentation integrity guard; source-content checks against fetched files were executed, but the exact Node script has not yet been run from a complete repository checkout.
+- Website redesign branch `README.md` and `AGENTS.md` updated to point engineers to this private enterprise library while retaining the website's approved master map and the prohibition on leaking internal system names into public content.
+
+**Exact status:** This is a major **documentation/navigation correction, not certification of “the entire blueprint is complete.”** The new files are consolidation **candidates requiring Founder review**. Formal signed organogram, delegation levels, division SOPs, full ERDs, complete mining/project simulation model/data, AI extraction evaluation suite, live supplier response adapters, security/finance policies and all end-to-end acceptance remain OPEN. Both repos' changes are on **unmerged working branches**. Do not promote without explicit permission. Preserve historical source/approval context and supersede it only with a dated decision.

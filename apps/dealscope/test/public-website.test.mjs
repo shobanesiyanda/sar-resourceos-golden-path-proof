@@ -42,3 +42,13 @@ test("search indexing remains disabled until authenticated launch",()=>{
  assert.match(layout,/index:\s*false/);
  assert.match(layout,/DealScope/);
 });
+
+test("DealScope customer-facing React pages do not disclose or link SAR corporate branding",()=>{
+ const pages=["app/page.tsx","app/start/page.tsx","app/runs/page.tsx",
+  "app/integrity/page.tsx","app/exchange/page.tsx","app/layout.tsx"];
+ for(const path of pages){
+  const src=source(path);
+  assert.doesNotMatch(src,/\bShobane\b|\bShobani\b|\bSAR\b|shobane\.co\.za|Shobane African Resources/i,
+    "Corporate parent must never appear in public DealScope UI at "+path);
+ }
+});

@@ -54,8 +54,9 @@ export function transitionAmendment({record,command,principal}){
    {reason:command.reason,sections:r.allowedSectionIds,baseHash:r.baseContentHash})};
  }
  if(command.type==="submit"){
-  if(r.status!=="edit_authorised"||principal.authenticated!==true||principal.entityId!==r.entityId||
+  if(r.status!=="edit_authorised"||!actor(principal,"document_requester",r.entityId)||
      principal.userId!==r.requesterId||!sha(command.newContentHash)||command.newContentHash===r.baseContentHash||
+     command.serverDiffVerified!==true||command.diffBaseHash!==r.baseContentHash||
      !present(command.diffSummary,2500)||!IDs(command.changedSectionIds)||
      command.changedSectionIds.some(x=>!r.allowedSectionIds.includes(x))||
      command.expectedBaseHash!==r.baseContentHash)

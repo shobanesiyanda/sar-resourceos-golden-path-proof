@@ -46,6 +46,7 @@ export default function DocumentStudio(){
  const fileRef=useRef<HTMLInputElement>(null);
  const projectBundleRef=useRef<HTMLInputElement>(null);
  const [preparedDocuments,setPreparedDocuments]=useState<DocumentDraft[]>([]);
+ const [preparedReadOnly,setPreparedReadOnly]=useState(false);
  const pdfRef=useRef<HTMLInputElement>(null);
  const [pdfUrl,setPdfUrl]=useState<string|null>(null);
  const [pdfName,setPdfName]=useState("");
@@ -60,6 +61,7 @@ export default function DocumentStudio(){
   return ()=>window.removeEventListener("beforeunload",before);
  },[dirty]);
  function update<K extends keyof DocumentDraft>(name:K,value:DocumentDraft[K]){
+   if(preparedReadOnly){setNotice("System-prepared document is read-only until authenticated section-scoped amendment authorisation is operational.");return;}
    setDraft(current=>({...current,[name]:value}));setDirty(true);
  }
  function editBlock(id:string,patch:Partial<DocumentBlock>){
@@ -76,7 +78,7 @@ export default function DocumentStudio(){
  }
  function replaceTemplate(id:DocumentTemplateId){
   if(dirty&&!window.confirm("Start a new document? The current session draft has no server save. Export it first if needed."))return;
-  setDraft(createDocumentDraft(id));setSelected(null);setTool("inspector");setMode("edit");setDirty(true);
+  setDraft(createDocumentDraft(id));setPreparedReadOnly(false);setSelected(null);setTool("inspector");setMode("edit");setDirty(true);
   setNotice("New template opened. This is a session-only draft, not a saved SAR record.");
  }
  function openPdfSource(file:File|undefined){
@@ -130,8 +132,8 @@ export default function DocumentStudio(){
   if(!selectedDraft)return;
   if(dirty&&!window.confirm("Replace the current unsaved document with this prepared working draft? Export any changes first."))return;
   setDraft({...selectedDraft,id:selectedDraft.id+"-session-"+Date.now().toString(36)});
-  setSelected(null);setMode("edit");setDirty(true);setTool("review");
-  setNotice("System-prepared working draft opened. Review every costing, source, recipient and approval gap before any use. This session is not saved.");
+  setPreparedReadOnly(true);setSelected(null);setMode("preview");setDirty(true);setTool("review");
+  setNotice("Protected system-prepared draft opened READ-ONLY. Editing requires an approved, scoped amendment request through the SAR authority backend, which is not yet connected.");
  }
  async function importJson(file:File|undefined){
   if(!file)return;
@@ -141,7 +143,7 @@ export default function DocumentStudio(){
    if(!validateDocumentDraft(parsed)){setNotice("Import refused: invalid or unsupported SAR draft structure.");return;}
    if(dirty&&!window.confirm("Replace this unsaved session draft with the imported file?"))return;
    const next=parsed as DocumentDraft;
-   setDraft({...next, id: next.id + "-import-" + Date.now().toString(36)});
+   setDraft({...next, id: next.id + "-import-" + Date.now().toString(36)});setPreparedReadOnly(false);
    setSelected(null);setMode("edit");setDirty(true);
    setNotice("Draft imported in this browser session. No external file was uploaded.");
   }catch{setNotice("Import refused: file is not a valid SAR draft JSON file.");}
@@ -173,7 +175,7 @@ export default function DocumentStudio(){
     </div>
     <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
      <div className="flex flex-wrap items-center gap-2">
-      <button onClick={()=>setMode("edit")} className={mode==="edit"?"rounded-xl bg-[#C2A14A] px-4 py-2 text-xs font-black text-[#04111F]":control}>Edit canvas</button>
+      <button disabled={preparedReadOnly} title={preparedReadOnly?"Section-scoped amendment approval is required":"Edit session draft"} onClick={()=>setMode("edit")} className={mode==="edit"?"rounded-xl bg-[#C2A14A] px-4 py-2 text-xs font-black text-[#04111F]":control}>Edit canvas</button>
       <button onClick={()=>setMode("preview")} className={mode==="preview"?"rounded-xl bg-[#C2A14A] px-4 py-2 text-xs font-black text-[#04111F]":control}>Preview</button>
       <button onClick={()=>setTool("templates")} className={control}>Templates</button>
       <button onClick={()=>projectBundleRef.current?.click()} className={control}>Prepare from scenarios</button>
@@ -189,6 +191,7 @@ export default function DocumentStudio(){
      </div>
     </div>
     {notice && <p role="status" className="mt-3 rounded-xl border border-sky-400/20 bg-sky-400/[.05] px-4 py-2 text-xs leading-5 text-sky-100">{notice}</p>}
+    {preparedReadOnly && <p role="status" className="mt-3 rounded-xl border border-amber-300/30 bg-amber-300/[.07] p-3 text-xs font-semibold text-amber-100">Protected system-prepared working draft — READ ONLY. Request a justified amendment, obtain preapproval, edit only the authorised sections, then submit for independent postapproval. This governance backend is not live.</p>}
     {preparedDocuments.length>0 && <div className="mt-3 rounded-xl border border-amber-400/30 bg-amber-500/[.05] p-3" aria-label="System-prepared drafts">
      <p className="mb-2 text-xs font-semibold text-amber-100">Prepared locally · not verified or saved · select one draft for editing</p>
      <div className="flex flex-wrap gap-2">{preparedDocuments.map((item,i)=><button key={item.id} onClick={()=>openPreparedDraft(i)} className={control}>{item.templateId==="rfq"?"Unsent RFQ":item.templateId==="project-brief"?"Feasibility brief":"Decision memo"}</button>)}</div>

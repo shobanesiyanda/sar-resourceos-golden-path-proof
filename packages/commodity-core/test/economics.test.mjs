@@ -40,3 +40,25 @@ test("raw material without yield fails closed", () => {
   const r = calculateDealRun({...valid,stage:"raw_feedstock",yieldPct:null});
   assert.equal(r.state, "incomplete");
 });
+
+test("invalid, impossible or future price reference dates never qualify", () => {
+  for (const priceAsOf of ["not-a-date", "2026-02-30", "2099-01-01", ""]) {
+    const result = calculateDealRun({...valid, priceAsOf});
+    assert.equal(result.state, "incomplete", priceAsOf);
+  }
+});
+test("derived arithmetic overflow cannot be classified as a profitable deal", () => {
+  const result = calculateDealRun({
+    ...valid, sourceTonnes: 1e308, buyerPricePerSaleableTonne: 1e308,
+  });
+  assert.equal(result.state, "incomplete");
+  assert.ok(result.reasons.some(reason => reason.includes("numeric range")));
+  assert.equal(result.revenue, 0);
+});
+test("unsupported material stage and currency fail closed", () => {
+  assert.equal(calculateDealRun({...valid, stage: "unknown"}).state, "incomplete");
+  assert.equal(calculateDealRun({...valid, currency: "???"}).state, "incomplete");
+});
+test("finished product cannot carry a hidden processing yield", () => {
+  assert.equal(calculateDealRun({...valid, stage: "saleable_product", yieldPct: 50}).state, "incomplete");
+});

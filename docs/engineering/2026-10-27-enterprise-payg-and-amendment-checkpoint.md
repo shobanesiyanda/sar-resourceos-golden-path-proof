@@ -36,7 +36,7 @@
 - No signed technical, finance, statutory or external communications were created or dispatched.
 
 ## 4. Commercial product policy — PAYG does not require transaction success
-- DealScope's first monetisable SKU should be a clearly defined paid **decision-support Deal Run report** for a user's own mineral/commodity opportunity.
+- DealScope's PAYG SKU can be a clearly defined paid **decision-support Deal Run report** for a user's own mineral/commodity opportunity.
 - A report that identifies a poor deal is a valid delivered service when the report meets the agreed scope and evidence-quality commitment.
 - **Do not relax the public qualified opportunity shortlist:** display only evidence-qualified profitable opportunities as qualified. Reports about unqualified user candidates are distinct from advertised live deals.
 - Report pricing/credits/merchant/tax, checkout consent, dispute/cancellation/consumer rights and signed customer terms are not approved. The customer's eventual trade outcome never controls consumption of the delivered analysis credit.
@@ -58,3 +58,6 @@
 
 ## 7. Incremental security hardening
 The amendment-engine submission gate now requires the authenticated requester's effective editor/requester role and trusted, source-bound diff-verification proof of the exact changed base before it will create a review candidate. A dedicated negative-path test rejects edited content without that proof. This remains a source-contract guard; only authenticated SAR backend evidence can make it enforceable.
+
+## 8. Scope correction / no PAYG-only cutdown
+Founder clarified that the mining-intermediary commercial example did **not** approve trimming DealScope. ALL of the original discovery, verified market/price intelligence, opportunity qualification, saved Deal Runs, watchlists, scenario history, subscriptions, customer organisations and entitlements, offer/disclosure/exchange, dispute/support, payments and verified fulfilment boundaries remain in scope. The PAYG contract is a workstream, not the entire roadmap. No change to original exchange launch requirements or customer-data segregation is authorised by this checkpoint.

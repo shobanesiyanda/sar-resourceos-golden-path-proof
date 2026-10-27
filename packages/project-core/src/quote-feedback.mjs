@@ -10,7 +10,7 @@ export function prepareQuoteScenario({projectId, scenario, rfq, quote, evidence}
   const issues = [];
   const reject = () => ({status:'blocked', issues:[...new Set(issues)], proposedScenario:null,
     comparison:null, quoteSource:null});
-  if (!present(projectId) || !scenario || !present(scenario.id) ||
+  if (!present(projectId) || !scenario || scenario.projectId !== projectId || !present(scenario.id) ||
       !Array.isArray(scenario.requirements) || scenario.requirements.length === 0) {
     issues.push('Valid project and simulation requirements required'); return reject();
   }
@@ -23,6 +23,10 @@ export function prepareQuoteScenario({projectId, scenario, rfq, quote, evidence}
     issues.push('Approved RFQ and matched, cleared quotation required'); return reject();
   }
   if (!evidence || !present(evidence.ingestionEventId) ||
+      !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(evidence.validUntil || '') ||
+      Number.isNaN(Date.parse(evidence.validUntil + 'T00:00:00Z')) ||
+      new Date(evidence.validUntil + 'T00:00:00Z').toISOString().slice(0,10) !== evidence.validUntil ||
+      evidence.validUntil < new Date().toISOString().slice(0,10) ||
       !/^[a-f0-9]{64}$/i.test(evidence.sourceSha256 || '') ||
       !present(quote.messageId) || !present(quote.vendorId)) {
     issues.push('Immutable inbound source evidence required'); return reject();
@@ -92,6 +96,6 @@ export function prepareQuoteScenario({projectId, scenario, rfq, quote, evidence}
       quotedRequirements:priced.map(row=>row.id)},
     quoteSource:{rfqId:rfq.id,rfqVersion:rfq.version,vendorId:quote.vendorId,
       messageId:quote.messageId,ingestionEventId:evidence.ingestionEventId,
-      sourceSha256:evidence.sourceSha256,authority:'not_approved'}
+      sourceSha256:evidence.sourceSha256,validUntil:evidence.validUntil,authority:'not_approved'}
   };
 }

@@ -12,10 +12,13 @@ Status: UNRELEASED INTEGRATION CANDIDATE (source commits verified; exact final c
 - `app/documents/studio/page.tsx`: bounded `.sarproject.json` session import, draft-only validation and direct loading into existing editable Document Studio. No persistence or automatic approvals.
 - **These changes are not merged into main**, not connected to live SAR records, not certified by a technical professional, not an issuance capability and not a market quote/price data source.
 
+A clearly labelled test-only, fictitious (not market evidenced) scenario bundle is provided under `packages/project-core/test/fixtures/SYNTHETIC-DEMO.sarproject.json` for manually exercising Document Studio import; fake hash/costs are not authenticated by the client-side adapter. This is **not** an operational opportunity or verified market quote.
+
 Change commits:
 - `7d56d5c19cad2e713f011c170f7b6343be415e18` adapter
 - `7b028cdf5d070bf63e4d7d083f528e60ce1008fd` tests
 - `a870ec78b95d584f9c53532618ffcfb60acf25cf` Document Studio integration
+- `c86f0e9916b494d0d1e2cc6910f3e8532c9a8420` synthetic import exercise fixture
 
 ## Exact validation boundary
 

@@ -40,11 +40,11 @@ export default function DealScopeHome() {
     setInput(previous => ({...previous, [key]: value.trim() === "" ? (key === "yieldPct" ? null : NaN) : Number(value)}));
   }
   return <main>
-    <header className="top"><div className="wrap topInner"><Link href="/" className="brand">DEALSCOPE<span className="dot">.</span></Link><nav><Link href="#analyse">Deal Runs</Link><Link href="/exchange">Commercial Exchange</Link></nav></div></header>
+    <header className="top"><div className="wrap topInner"><Link href="/" className="brand">DEALSCOPE<span className="dot">.</span></Link><nav><Link href="#analyse">Deal Runs</Link><Link href="/integrity">Deal Integrity</Link><Link href="/exchange">Commercial Exchange</Link></nav></div></header>
     <section className="hero"><div className="wrap">
       <p className="eyebrow">Multi-commodity commercial intelligence</p>
       <h1>Discover the economics.<br/><span>Control the transaction.</span></h1>
-      <p className="lead">Analyse hard and soft commodity routes using consistent quantities, source evidence, direct costs and pricing assumptions. DealScope is separate from SAR's internal operating system.</p>
+      <p className="lead">Full commercial intelligence, Deal Integrity, opportunity discovery, repeat scenario analysis and a consent-governed Commercial Exchange. Analyse the economics—and investigate whether the parties, stock and evidence justify proceeding.</p>
       <div className="notice">Migration preview — no live market feeds, account registration, payment collection, buyer disclosure or transaction execution.</div>
     </div></section>
     <section className="wrap workspace" id="analyse">

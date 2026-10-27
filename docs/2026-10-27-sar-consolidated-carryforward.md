@@ -45,7 +45,7 @@ DealScope is an **independent customer-facing product**, not a page inside Resou
 - Current source: separate Next.js app apps/dealscope; shared calculation kernel; user-input Deal Runs; candidate state qualified/rejected/incomplete; product catalogue fallback; commercial Exchange GET/POST deliberately return HTTP 503; health route reports identity/subscriptions/trading disabled. **SOURCE ONLY**.
 - Complete separate identity and tenant memberships; verified buyer/seller organisation registry; roles and per-tenant RLS; subscription/PAYG entitlements and billing; evidence/price provenance; saved Deal Runs and immutable result versions; candidate qualification and rejection audit; verified sourcing signals; controlled offer/disclosure workflow; buyer authorisation and seller consent; audit events; notifications; dispute and refund states; integrated provider-based payments and finance reconciliation with separate merchant/legal records.
 - Commercial filter: show only genuinely qualified, positive-profit actionable deals to users; rejected, break-even and below-threshold candidates remain in private screening audit. Conditional leads require a credible negotiable acquisition ceiling and evidence route to target margin. A calculator outcome alone must never be represented as a verified live buyer/market commitment.
-- Shared code is permitted; shared privileged database access is not. Dedicated DealScope Supabase/Auth/tenant/finance stack and provider sandbox **BLOCKED**.
+- Shared code is permitted; shared privileged database access is not. A dedicated DealScope Supabase project and database **DO NOT YET EXIST**. Greenfield project creation, Auth, tenant schema, payment provider sandbox and end-to-end implementation are **OPEN**, with owner organisation confirmation required.
 - Accept full customer registration -> identity -> entitlement -> documented Deal Run -> candidate -> explicit offer/disclosure -> licensed-provider payment or authorised manual route -> SAR/third-party fulfilment where applicable -> settlement/reconciliation -> refund/dispute with RLS and idempotency. Keep execution disabled until all relevant gates PASS.
 
 ### MACRO SAR-05 — Three-product cross-system integration and release acceptance
@@ -70,7 +70,7 @@ DealScope is an **independent customer-facing product**, not a page inside Resou
 | A09 | ResourceOS | Approved market/PO/assay provider data, FX/port/transport source | Dated pricing/override snapshots and versioned weekly offer engine |
 | A10 | ResourceOS | Operational document evidence and controlled storage | Sampling, seals, weighbridge, custody and permissions |
 | A11 | ResourceOS | Finance, approvals, treasury and ledger tables | Assay split, stage-aware cost rollup, negative surplus block, settlement |
-| A12 | DealScope | Separate DealScope Supabase Auth/project and tenant schema | RLS cross-tenant denial tests, public access fail closed |
+| A12 | DealScope | **CREATE a new project** in explicitly selected owner organisation (no existing DealScope DB); design tenant schema/Auth and migrations | Verify actual project ref, RLS cross-tenant denial, fail closed |
 | A13 | DealScope | Subscription/PAYG provider sandbox and merchant account decision | Webhook replay, entitlements, invoices, refunds, cancellations |
 | A14 | DealScope | Verified buyer/supplier identity, disclosure and catalogue data | Per-offer consent, no privileged SAR access to unrelated tenants |
 | A15 | DealScope | Credible live sourcing/buyer data and price provenance | No fabricated price, rejection filter, margin/ceiling proof |
@@ -339,3 +339,12 @@ The authoritative schema must preserve at least: project/work-package/requiremen
 - `packages/project-core/test/project-core.test.mjs` commit `211afa3da6c3f6e01260f85c797465ba03305540`: adds two tests for parallel cost grouping and successor-stage timing (22 project-core tests now defined). Exact branch tests await reproducible checkout execution.
 - Vercel nonproduction root ResourceOS preview corresponding to `211afa3da6c3f6e01260f85c797465ba03305540` reported **READY**. This is a build status only; not UI, database, simulation, RFQ sending, tenant, recovery or end-to-end acceptance.
 - Final remaining physical integration sequence: connect trusted SAR document ingestion -> authenticated technical review -> versioned scenario model -> simulated resource/cost/procurement plan -> human-reviewed RFQ -> authorised dispatch adapter -> directly matched supplier response -> provisional re-simulation -> reviewed budget/PO authority -> real delivery/finance variance. Do not activate automatically or merge on build success.
+
+
+## 13. Founder clarification: DealScope database is GREENFIELD, not an access-recovery issue
+- Confirmed on 27 October 2026: **DealScope has never had a Supabase project or database.** The earlier access-dependent register could incorrectly imply there was an existing project whose permissions needed restoration. There is not.
+- DealScope must receive an entirely new, independent project once the Founder selects its ownership organisation. No creation, billing commitment, data migration or production authorisation occurs from this clarification alone.
+- Updated `apps/dealscope/.env.example` to remove the incorrect statement that a project already exists.
+- Created `apps/dealscope/database/initial-schema.REVIEW-ONLY.sql` (not a migration, not executed) and `apps/dealscope/database/README.md` to document nine initial entities, default-deny RLS, tenant onboarding, Deal Runs, offers, subscriptions, webhook idempotency, audit trails, ownership choice and ten greenfield acceptance gates.
+- The connected Supabase organisation currently contains BidOS and related acceptance projects only; **never deploy DealScope schema to that organisation without explicit owner selection** or point it at BidOS data.
+- Unblocked work = design, security review, source code preparation, static schema tests. Blocked work = actual project creation pending organisation/cost confirmation; migrations and real RLS tests pending new project; customer identity/payments pending provider credentials and acceptance.

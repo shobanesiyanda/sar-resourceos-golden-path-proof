@@ -13,9 +13,9 @@ export default function TrialJourney(){
  const [role,setRole]=useState<Role>("originator");
  const choice=categories.find(x=>x.id===role)!;
  return <main className="ds-site">
-  <div className="ds-preview-bar"><div className="wrap"><strong>Account provisioning not live.</strong> This is a preview of the proposed 30-day full-platform trial journey. No identities, invitations or payments are being collected here.</div></div>
+  <div className="ds-preview-bar"><div className="wrap"><strong>Account provisioning not live.</strong> This is a preview of the one-free-complete-deal-cycle introduction. No identities, invitations or payments are being collected here.</div></div>
   <header className="ds-header"><div className="wrap ds-header-inner"><Link href="/" className="ds-logo">DEALSCOPE<span>.</span></Link><div className="ds-header-actions"><Link href="/integrity" className="ds-header-signin">Explore integrity checks</Link><Link href="/" className="ds-btn ds-btn-outline ds-btn-small">Back to website</Link></div></div></header>
-  <section className="ds-hero" style={{padding:"66px 0 60px"}}><div className="wrap"><div className="ds-eyebrow">GET TO KNOW THE PLATFORM</div><h1 style={{maxWidth:850}}>Your first <em>30 days</em> of DealScope.</h1><p className="ds-hero-copy">The full-feature trial is designed for eligible new people and companies, not a restricted calculator. Learn the steps for activating your account and preparing your first opportunity.</p></div></section>
+  <section className="ds-hero" style={{padding:"66px 0 60px"}}><div className="wrap"><div className="ds-eyebrow">GET TO KNOW THE PLATFORM</div><h1 style={{maxWidth:850}}>Your first <em>complete deal assessment</em> — free.</h1><p className="ds-hero-copy">One complete Deal Assistance & Assessment cycle is designed for eligible new people and companies, not a restricted calculator or a 30-day unlimited-use trial. Learn the steps for activating your account and preparing your first opportunity.</p></div></section>
   <section className="ds-section"><div className="wrap">
    <div className="ds-section-top"><div><div className="ds-eyebrow">STEP 01 · CHOOSE YOUR COMMERCIAL WORKFLOW</div><h2>What brings you to DealScope?</h2></div><p>Select your primary use case to see the relevant first activity. This selection remains in your browser session only.</p></div>
    <div className="ds-feature-grid" style={{gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))"}}>
@@ -36,15 +36,15 @@ export default function TrialJourney(){
    </div>
   </div></section>
   <section className="ds-section ds-section-contrast"><div className="wrap">
-   <div className="ds-eyebrow">STEP 02 · ACCOUNT VERIFICATION & FULL ACCESS</div><h2>How the full trial will activate</h2>
+   <div className="ds-eyebrow">STEP 02 · ELIGIBILITY & COMPLETE DEAL WORKFLOW</div><h2>How the first full assessment is activated</h2>
    <div className="ds-steps">
     <div className="ds-step"><div className="ds-step-number">01</div><h3>Create identity</h3><p>Register as an eligible person and, where applicable, associate with your legitimate business.</p></div>
     <div className="ds-step"><div className="ds-step-number">02</div><h3>Verify eligibility</h3><p>Verify account control and prior trial history without assuming that a forwarded invitation proves legal authority.</p></div>
-    <div className="ds-step"><div className="ds-step-number">03</div><h3>Activate full trial</h3><p>Start 30 days of full-feature access from verified activation, with no automatic paid conversion.</p></div>
-    <div className="ds-step"><div className="ds-step-number">04</div><h3>Continue by choice</h3><p>At expiry, explicitly select subscription, PAYG or another offered plan. The system must not charge silently.</p></div>
+    <div className="ds-step"><div className="ds-step-number">03</div><h3>Activate free full assessment</h3><p>Start one complete deal investigation, scenario and commercial-readiness assessment, including the final report; no automatic paid conversion.</p></div>
+    <div className="ds-step"><div className="ds-step-number">04</div><h3>Continue by choice</h3><p>After your completed free assessment, explicitly select PAYG, subscription or another offered plan for further deals. No automatic charge.</p></div>
    </div>
   </div></section>
-  <section className="ds-section"><div className="wrap ds-faq"><div><div className="ds-eyebrow">ACTIVATION STATUS</div><h2>Registration is not yet available.</h2><p style={{color:"#b6c4d2"}}>We will not display a fake account-creation button or accept sensitive records without authenticated storage, trial entitlements and independently tested tenant security.</p></div>
+  <section className="ds-section"><div className="wrap ds-faq"><div><div className="ds-eyebrow">ACTIVATION STATUS</div><h2>Account registration and free assessment activation are not yet available.</h2><p style={{color:"#b6c4d2"}}>We will not display a fake account-creation button or accept sensitive records without authenticated storage, deal-cycle introductory entitlements and independently tested tenant security.</p></div>
    <div className="ds-plan"><h3>What is still required?</h3><p>Dedicated SAR-controlled DealScope identity/database, verified trial eligibility, secure customer invitations, audit history, email verification, role-scoped permissions and real activation/recovery tests.</p><Link href="/">Return to the public site →</Link></div>
   </div></section>
   <footer className="ds-footer"><div className="wrap ds-legal" style={{marginTop:0}}>DealScope · Operated by Shobane African Resources (Pty) Ltd · Development preview · No live account creation or payments.</div></footer>

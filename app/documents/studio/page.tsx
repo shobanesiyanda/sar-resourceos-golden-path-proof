@@ -1,3 +1,4 @@
+import { SAR_OFFICIAL_LOGO_DATA_URI } from "../../../lib/sar-brand-assets";
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -120,7 +121,7 @@ export default function DocumentStudio(){
  const sidecard="rounded-2xl border border-white/[0.09] bg-[#081423]/85 p-4 shadow-[0_15px_50px_rgba(0,0,0,.25)]";
  const editorialHeader=<div className="border-b-2 border-[#C2A14A] pb-5">
    <div className="flex flex-wrap items-start justify-between gap-4">
-    <div><p className="text-[12px] font-extrabold tracking-[0.19em] text-[#07192F]">SHOBANE AFRICAN RESOURCES</p>
+    <div><img src={SAR_OFFICIAL_LOGO_DATA_URI} alt="Shobane African Resources official logo" className="h-[68px] max-w-[200px] object-contain object-left" />
        <p className="mt-1 text-[10px] text-[#617085]">Shobane African Resources (Pty) Ltd</p></div>
     <div className="text-right"><p className="text-[10px] font-bold tracking-[0.14em] text-[#8f660a]">WORKING DRAFT</p>
       <p className="mt-1 text-[9px] font-medium uppercase tracking-widest text-[#64748b]">Not approved for issue</p></div>
@@ -252,11 +253,11 @@ export default function DocumentStudio(){
        </div>}
        <footer className="mt-14 flex flex-wrap justify-between gap-4 border-t border-slate-200 pt-4 text-[9px] leading-5 text-slate-500">
         <span>Shobane African Resources (Pty) Ltd<br/>Reference: {draft.documentRef||"unassigned"} · {draft.classification}</span>
-        <span className="text-right font-semibold text-amber-800">UNAPPROVED DRAFT<br/>Official emblem pending verified asset</span>
+        <span className="text-right font-semibold text-amber-800">UNAPPROVED DRAFT<br/>Official SAR emblem · source-matched</span>
        </footer>
       </div>
      </div>
-     <p className="mx-auto mt-4 max-w-[850px] text-center text-[11px] text-slate-400">Secure corporate canvas preview · No live save, approval signature, external issue or original-logo asset yet.</p>
+     <p className="mx-auto mt-4 max-w-[850px] text-center text-[11px] text-slate-400">Secure corporate canvas preview · No live save, approval signature or external issue. Original logo reproduced from SAR website asset.</p>
     </section>
     <aside className="space-y-4 p-4 xl:border-l xl:border-white/10">
       {tool==="templates"?<div className={sidecard}>

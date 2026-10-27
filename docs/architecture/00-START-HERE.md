@@ -3,7 +3,7 @@
 **Document ID:** SAR-ARCH-INDEX-001  
 **Owner:** Shobane African Resources (Pty) Ltd  
 **Prepared:** 27 October 2026  
-**State:** Architecture consolidation **FOUNDER-RATIFIED REQUIREMENTS BASELINE — detailed organisational appointments, professional certification, implementation, testing and operational issuance are NOT implied**. This documentation-only mainline candidate must still pass review/controlled promotion.
+**State:** Architecture consolidation **FOUNDER-RATIFIED REQUIREMENTS BASELINE — detailed organisational appointments, professional certification, implementation, testing and operational issuance are NOT implied**. Founder-approved architecture requirements are now in SAR's protected mainline; application implementation, legal appointments, technical validation and production service releases are independent OPEN gates.
 
 ## Mandatory rule: repository first, not chat first
 
@@ -20,7 +20,7 @@ Every engineer, software agent, business analyst and change reviewer **must** re
 | 2 — Internal operating intelligence | [ResourceOS system architecture](02-RESOURCEOS-INTELLIGENCE-AND-EXECUTION.md) | Document-to-project modelling, simulation, RFQ, commodities, contracts, execution and finance | **Consolidated draft; implementation incomplete** |
 | 2 — External platform | [DealScope product architecture](03-DEALSCOPE-PLATFORM-ARCHITECTURE.md) | SAR-owned external SaaS, Deal Runs, sourcing, buyer/seller exchange, tenants and payments | **Consolidated draft; no DealScope database yet** |
 | 2 — Cross-system architecture | [System boundaries, integrations and data ownership](04-CROSS-SYSTEM-BOUNDARIES.md) | Website -> intake -> ResourceOS; external DealScope; shared calculation packages | **Consolidated draft; adapters not accepted** |
-| 2 — Corporate website | [Website Master Build Map — other SAR repository](https://github.com/shobanesiyanda/sar-website/blob/redesign/full-corporate-website-oct-2026/docs/SAR_CORPORATE_WEBSITE_MASTER_BUILD_MAP.md) | **Approved** public identity, page routes, media, copy, supplier journey, design and QA | Approved requirements, incomplete acceptance |
+| 2 — Corporate website | [Website Master Build Map — other SAR repository](https://github.com/shobanesiyanda/sar-website/blob/main/docs/SAR_CORPORATE_WEBSITE_MASTER_BUILD_MAP.md) | **Approved** public identity, page routes, media, copy, supplier journey, design and QA | Approved requirements, incomplete acceptance |
 | 3 — Executed engineering | [Current macro implementation/evidence ledger](../2026-10-27-sar-consolidated-carryforward.md) | Source SHAs, test evidence, open gates, blockers and engineering batches | Living ledger, **not** substitute for a blueprint |
 | 3 — DealScope schema proposal | [New DealScope database plan](../../apps/dealscope/database/README.md) and `initial-schema.REVIEW-ONLY.sql` | Customer organisations, roles, evidence, deals, disclosures, payments and RLS | **Review-only, not a live migration** |
 | 3 — Deployment | [Portable infrastructure](../PORTABLE_INFRASTRUCTURE_AND_PRODUCT_BOUNDARIES.md) | Container portability and system deployment boundaries | Draft / staging, unverified |

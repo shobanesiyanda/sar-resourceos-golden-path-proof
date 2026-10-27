@@ -1,6 +1,6 @@
 # SAR portable infrastructure reference
 
-The current applications use managed Vercel and Supabase. These Dockerfiles define a migration path to SAR- or Possent-controlled compute **without** pretending that a PostgreSQL container alone replaces Supabase Auth, RLS, Storage, Realtime and Edge Functions.
+These Dockerfiles are a reference for future **SAR-controlled** hosting only, not Possent Systems. A PostgreSQL container alone does not replace Supabase Auth, RLS, Storage, Realtime or Edge Functions. The separate DealScope database does not yet exist; the existing ResourceOS preview and any staging infrastructure must not be mistaken for a live DealScope backend.
 
 ## Scope
 - DealScope: separate external application, its own subscriber identity and future database, no cross-tenant data sharing.

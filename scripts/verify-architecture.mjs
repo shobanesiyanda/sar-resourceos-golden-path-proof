@@ -26,7 +26,7 @@ includes("docs/architecture/00-START-HERE.md","2026-10-27-BLUEPRINT-AUDIT.md");
 includes("docs/architecture/01-SAR-CORPORATE-OPERATING-MODEL.md","Mining & Contract Services");
 includes("docs/architecture/01-SAR-CORPORATE-OPERATING-MODEL.md","Commodity Trading");
 includes("docs/architecture/01-SAR-CORPORATE-OPERATING-MODEL.md","DealScope");
-includes("docs/architecture/02-RESOURCEOS-INTELLIGENCE-AND-EXECUTION.md","unstarted project");
+includes("docs/architecture/02-RESOURCEOS-INTELLIGENCE-AND-EXECUTION.md","that has not started");
 includes("docs/architecture/02-RESOURCEOS-INTELLIGENCE-AND-EXECUTION.md","Document intelligence");
 includes("docs/architecture/02-RESOURCEOS-INTELLIGENCE-AND-EXECUTION.md","RFQ");
 includes("docs/architecture/02-RESOURCEOS-INTELLIGENCE-AND-EXECUTION.md","Inbound quotation");

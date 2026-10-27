@@ -13,7 +13,8 @@
 4. [03 — DealScope Blueprint](docs/architecture/03-DEALSCOPE-PLATFORM-ARCHITECTURE.md): SAR-owned external commercial intelligence, multi-tenant customer exchange, qualification and finance boundaries.
 5. [04 — Cross-System Data / API Boundaries](docs/architecture/04-CROSS-SYSTEM-BOUNDARIES.md): website, ResourceOS, DealScope and shared logic interactions.
 6. [05 — Governance and Missing Blueprint Register](docs/architecture/05-GOVERNANCE-COMPLETENESS-AND-DECISIONS.md): source/approval/test/release traceability and material documentation still outstanding.
-7. [Engineering evidence / latest carry-forward](docs/2026-10-27-sar-consolidated-carryforward.md): historical commits, open dependencies, verified and unverified tests.
+7. [06 — Decision / Supersession Register](docs/architecture/06-DECISION-REGISTER.md): confirmed Founder directions and explicitly cancelled historical assumptions; consolidation review still pending.
+8. [Engineering evidence / latest carry-forward](docs/2026-10-27-sar-consolidated-carryforward.md): historical commits, open dependencies, verified and unverified tests.
 8. [Corporate Website Master Build Map](https://github.com/shobanesiyanda/sar-website/blob/redesign/full-corporate-website-oct-2026/docs/SAR_CORPORATE_WEBSITE_MASTER_BUILD_MAP.md): **separate corporate website source of truth**, not replaced by this repo.
 9. [DealScope Database Blueprint](apps/dealscope/database/README.md): **SAR-controlled greenfield project not provisioned**, schema proposal and acceptance gates.
 

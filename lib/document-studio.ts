@@ -59,11 +59,11 @@ const presets: Record<DocumentTemplateId, {title:string;division:string;subject:
     ["heading","Options and implications"],["bullets","[Option one: cost, risks and benefits]\n[Option two: cost, risks and benefits]"],
     ["heading","Recommendation"],["paragraph","[Proposed course of action, owners and controls; approval not implied.]"]]},
 };
-export function createDocumentDraft(templateId: DocumentTemplateId = "corporate-letter"): DocumentDraft {
+export function createDocumentDraft(templateId: DocumentTemplateId = "corporate-letter", deterministic = false): DocumentDraft {
  const p = presets[templateId];
- return { schemaVersion:1,id:makeId(),templateId,title:p.title,documentRef:"",
+ return { schemaVersion:1,id:deterministic ? "initial-"+templateId : makeId(),templateId,title:p.title,documentRef:"",
    division:p.division,recipient:"",subject:p.subject,classification:"internal",
-   date:new Date().toISOString().slice(0,10),blocks:p.blocks.map(([kind,text])=>block(kind,text)) };
+   date:new Date().toISOString().slice(0,10),blocks:p.blocks.map(([kind,text],i)=>deterministic ? {id:"initial-"+templateId+"-"+i,kind,text} : block(kind,text)) };
 }
 export const newBlock = (kind:DocumentBlockKind):DocumentBlock =>
  block(kind,kind==="heading"?"New section":kind==="bullets"?"First item":"");
@@ -80,6 +80,8 @@ export function validateDocumentDraft(value:unknown):value is DocumentDraft{
   typeof d.subject!=="string" || d.subject.length>600 ||
   !["internal","confidential","counterparty"].includes(d.classification as string) ||
   typeof d.date!=="string" || !/^\d{4}-\d{2}-\d{2}$/.test(d.date as string) ||
+  !Number.isFinite(Date.parse((d.date as string)+"T00:00:00Z")) ||
+  new Date((d.date as string)+"T00:00:00Z").toISOString().slice(0,10)!==d.date ||
   !Array.isArray(d.blocks) || d.blocks.length>250)return false;
  const seen=new Set<string>();
  return d.blocks.every(item=>{

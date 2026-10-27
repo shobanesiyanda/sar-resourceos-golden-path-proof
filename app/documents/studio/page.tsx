@@ -33,7 +33,7 @@ function formatBlock(b:DocumentBlock){
  return <p className="my-3 whitespace-pre-line text-sm leading-7 text-[#27364b]">{b.text || "Add content"}</p>;
 }
 export default function DocumentStudio(){
- const [draft,setDraft]=useState<DocumentDraft>(()=>createDocumentDraft("corporate-letter"));
+ const [draft,setDraft]=useState<DocumentDraft>(()=>createDocumentDraft("corporate-letter",true));
  const [mode,setMode]=useState<"edit"|"preview">("edit");
  const [selected,setSelected]=useState<string|null>(null);
  const [tool,setTool]=useState<"inspector"|"templates"|"review">("inspector");

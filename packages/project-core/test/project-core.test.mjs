@@ -75,3 +75,30 @@ test("unit deviations and missing landed costs never yield an accepted quote",()
  assert.equal(ingestQuote(approved(),inbound({items:[{requirementId:"A",quantity:2,unit:"ton",price:180}]})).status,"quarantined");
  assert.equal(quoteProvisionalCost(ingestQuote(approved(),inbound({delivery:null}))).status,"incomplete");
 });
+
+
+test("impossible and past RFQ deadlines fail closed",()=>{
+ for(const deadline of ["2026-02-30","2020-01-01","not-a-date"]){
+ const d=prepareRfq({...draft(),deadline,requirements:[source]});
+ assert.ok(d.blockers.length,deadline);
+ }
+});
+test("unsupported RFQ currencies never advance",()=>{
+ const d=prepareRfq({...draft(),currency:"FAKE",requirements:[source]});
+ assert.ok(d.blockers.length);
+});
+test("duplicate requirement lines and absent units block authorisation",()=>{
+ const d=prepareRfq({...draft(),requirements:[source,{...source}]});
+ assert.ok(d.blockers.some(x=>x.includes("Duplicate")));
+ const e=prepareRfq({...draft(),requirements:[{...source,unit:""}]});
+ assert.ok(e.blockers.length);
+});
+test("empty attachment references and invalid received amounts are quarantined",()=>{
+ assert.equal(ingestQuote(approved(),inbound({attachmentHashes:[""]})).status,"quarantined");
+ assert.equal(ingestQuote(approved(),inbound({vat:-1})).status,"quarantined");
+});
+test("nonfinite quote multiplication cannot produce a provisional total",()=>{
+ const q=ingestQuote(approved(),inbound({items:[{requirementId:"A",quantity:2,unit:"unit",price:1e308}]}));
+ assert.equal(q.status,"under_review");
+ assert.equal(quoteProvisionalCost(q).status,"incomplete");
+});

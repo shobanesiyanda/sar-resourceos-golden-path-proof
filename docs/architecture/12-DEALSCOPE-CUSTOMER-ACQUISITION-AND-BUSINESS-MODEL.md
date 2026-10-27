@@ -67,3 +67,7 @@ The operator's legal details, customer terms, privacy/POPIA disclosures, subscri
 Signed-out QA: Android-first small-screen and desktop, accessible contrast/keyboard, all navigation/anchor routes, illustrative disclosures, no invented market prices, no PII collection when unavailable, legal/footer accuracy, index/noindex readiness, true domain/TLS/mail ownership, performance, no confidential link query parameters.
 Secure signup/introductory-cycle QA: Auth, email validation, trusted person+organisation eligibility, one-time full single-deal-cycle assistance, completion and report delivery, staff invites without repeated trials, tenant isolation, no automatic payment and a read-only expiry policy, support appeals, signed consent and recovery.
 Full-suite acceptance remains separate: real provider verification, private evidence storage, qualified discovery, buyer/seller disclosure, actual payment, statutory reconciliation, market data, notifications and Exchange. Nothing in this marketing design constitutes a release approval.
+
+
+## Brand clarification — 28 October 2026
+DealScope marketing and consumer product pages use the DealScope identity. The current company supplying its future paid services has not been independently replaced by a verified registered DealScope entity. A lawful and accurate legal-supplier disclosure, customer contract, payment merchant, tax invoice and privacy notice are therefore mandatory commercial launch gates. Do not misrepresent separate incorporation as completed. Follow architecture 14 and decision SAR-ADR-019.

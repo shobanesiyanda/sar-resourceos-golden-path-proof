@@ -109,6 +109,18 @@ Start with unbegun project scope and verified commercial entitlement. Apply sour
 
 No assumption of existing mine ownership, legal mining rights or a statutory engineering practice.
 
+## 8A. Native ResourceOS Document Studio — first-class system capability
+
+ResourceOS must provide a **futuristic, accessible first-party document viewer/editor and corporate template library**. Operators must be able to prepare, revise, assemble, view and professionally brand internal, client-facing and third-party engagement documents **within ResourceOS**, without requiring Microsoft Word or other external editors. PDF/DOCX import/export and secure collaboration are supported by controlled adapters when approved; internal rich editing remains the default.
+
+This includes supplier RFQs, client commercial proposals, tender packs, project feasibility documents, minutes, correspondence, counterparty letters and financial/operational supporting reports. Document identity must link to projects, route/parcel, counterparty, controlling source evidence, approval and exact issuing version. Documents may contain structured blocks, tables, metadata, images (official asset only), comments, citations/evidence references and generated source-authorised values.
+
+**Design:** Dark executive command shell, high-precision gold accents and a clean, printable branded A4 paper canvas. Approved public website navy `#04111F`, `#07192F`, gold `#C2A14A`, original SAR emblem/wordmark only, no fake stamp/letterhead or invented corporate details. Printing/exports must separate draft from authorised issue.
+
+**Authorisation:** Prepare/draft, technical and commercial review, revisions requested, approved, issue authorised, sent and acknowledged are independently recorded stages with RBAC/RLS, source hashes and immutable audit trails. Neither the AI, document editor nor a local export operation is permitted to issue an RFQ or a PO. A signed, reviewed RFQ is only released via provider after a separate dispatch authorisation.
+
+**Current state:** `app/documents/studio/page.tsx` is a native **session-only structured editor**, supported by `lib/document-studio.ts`, while existing `/documents` parcel evidence readiness remains intact. Editing, preview, template switching, local JSON draft backup and safe draft HTML/A4 printing exist at source level. Secure persisted library, rich inline formatting, comments, tracked changes, multi-user collaboration, original PDF/DOCX editing, official logo binary packaging, controlled PDF/DOCX generation, signature/issue and live ingestion are not yet accepted. Full design and staged release requirements: [Document Studio engineering blueprint](08-RESOURCEOS-DOCUMENT-STUDIO.md), [brand/template standard](07-DOCUMENT-DESIGN-AND-TEMPLATES.md).
+
 ## 9. Security and acceptance
 
 All persistence and commands require correct SAR backend identity, project-level permission, least privilege, evidence integrity and audit logging. Separate SAR internal operator roles from DealScope customer tenancy. Use signed event IDs and transactional outbox; treat external email and webhook content as untrusted. Secure stored source documents, provider attachments, bank information and personally identifiable information; enforce retention/withdrawal.

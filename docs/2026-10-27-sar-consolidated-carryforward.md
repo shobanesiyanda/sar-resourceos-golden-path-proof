@@ -284,3 +284,30 @@ The authoritative schema must preserve at least: project/work-package/requiremen
 | RFQ-12 | Separate authorised PO/award gate, no auto-purchase, no cross-project/tenant quotation access |
 
 **Execution dependency:** requires correct SAR database, approved sender and inbound channels, attachment storage/scanning, supplier identity records, technical approvers, role/approval policies and a writable tested codebase. No dispatch or real supplier outreach is authorised by this specification.
+
+## 10. Macro engineering continuation — 27 October 2026, final normal-chat access ledger
+
+### Repository implementation committed in this continuation
+- `packages/project-core/src/simulation.ts` commit `aeecf85fde36d9f84155fd4cbc2eb7f0c1a13b88`: deterministic, **provisional-only** WBS/dependency, lead time, cost, contingency, critical path, constraint and source provenance simulation. This is NOT the complete AI document interpreter, calibrated stochastic/discrete-event digital simulation, executable project activation or financial system.
+- `packages/project-core/src/rfq.ts` commit `bf355cb7ac5c18bcc5c41abd03b53d891fd8dc79`: pure RFQ drafts, exact-revision/recipient human approval, tamper-detecting dispatch *intent*, replay-aware quote ingestion and quarantine, provisional quote arithmetic. **No mail, supplier contact, spending, awarding, portal, OCR, scanning, connector or DB write is performed by this module.** Caller-provided `authorised` and `scanned` flags MUST only be sourced from trusted server-side permission/security adapters, never from browser submissions. Original source and quotations must be stored immutably and approved independently.
+- `packages/project-core/test/project-core.test.mjs` commit `3870f8b6b20d16e16e870a6b0fb0c02d88aba6be`: fifteen Node test cases added. These exact committed files still require execution using the correct Node TypeScript configuration and repository dependency environment. An earlier 18-case isolated scratch simulation tested a similar architecture but does NOT certify the committed regression suite.
+- SAR website `app/api/contact/route.js` commit `b6d2847083bab0513a0e99a0b72725cf0aeba2f7` on `redesign/full-corporate-website-oct-2026`: reject malformed request body, limit metadata type to plain nonarray objects, check email format and replace exposed Supabase insert error text with generic HTTP 503. This is code review hardening, NOT evidence of a tested operational supplier intake or abuse protection.
+
+### Still-blocked engineering / real-system dependencies
+- Current tool-linked Supabase account still lists BidOS only; the SAR website's actual `contact_enquiries` instance and ResourceOS project ref are unknown, and DealScope has no confirmed separate tenant database. Do not repoint to BidOS.
+- The execution container's outbound clone of GitHub failed due to DNS resolution. The GitHub connector can write individual files but cannot substitute a clean checkout for full dependency resolution, TypeScript compiler/build, container build, full source/hash parity, branch ancestry reconciliation or UI/browser acceptance.
+- Human-reviewed outbound email/portal delivery, inbound reply correlation, storage, attachment malware scanning, OCR/AI document dissection, confidence/provenance extraction, server-side identity/approval, full DB RLS and vendor onboarding are UNIMPLEMENTED or UNVERIFIED.
+- Website Vercel GitHub collaboration blocker, missing lockfile, original asset completeness, staging form/Chrome regression and mobile/visual acceptance remain OPEN.
+- DealScope identity, subscriptions, PAYG payment/provider sandbox, buyer discovery, audited offer consent, commercial Exchange and tenant isolation remain OPEN; no live deal execution.
+- ResourceOS full simulation and operations-to-finance handoff, fleet dispatch, pricing engine, calibrated resource constraints, supplier price normalisation, approvals, receipt-to-settlement, backups/restore and comprehensive source-to-execution acceptance remain OPEN.
+- The separate DealScope preview has NOT been rebuilt from this new ResourceOS/project-core change; a ROOT ResourceOS preview status does not certify DealScope application integration.
+
+### Required next execution order
+1. Recover full native repo history and source assets, pin deps, secure writable runner, confirm current Git/PR head and Vercel team access. **No merge to main.**
+2. Verify real SAR staging Supabase ownership/schema and separate DealScope Auth/DB, establish server-side RBAC/RLS and immutable evidence model.
+3. Run `node --experimental-strip-types --test packages/project-core/test/project-core.test.mjs` (or the documented compatible Node 24 flag), package compiler checks, full dependency/build/regression tests, then repair actual defects. No unchecked test claims.
+4. Implement source document parse -> validated canonical model -> simulation -> governed RFQ -> human approval -> trusted outbound delivery -> direct inbound ingestion -> validation -> provisional resimulation -> separately approved procurement -> live actuals/finance feedback.
+5. Finish DealScope independent external identity/entitlements/evidence/Exchange/payment lifecycle and SAR corporate website staging supplier acquisition tests.
+6. Run three-product negative/positive end-to-end, security, privacy, recovery and visual/route tests; prepare separately signed Founder cutover decision. No live supplier messages, charges, orders or production promotion without authorisation.
+
+**This continuation does not establish full release acceptance.** All remaining work requiring live system data, clean build runner, infrastructure connections, external communications or management approval remains in the blocked execution register.

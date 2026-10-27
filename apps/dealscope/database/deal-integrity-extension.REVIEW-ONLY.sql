@@ -32,7 +32,7 @@ create table if not exists public.ds_integrity_evidence(
  source_class text not null check(source_class in ('self_declaration','uploaded_copy',
           'direct_issuer_record','direct_verified_callback','licensed_provider_result')),
  verification_state text not null default 'unverified'
-  check (verification_state in ('unverified','under_review','independently_corrobated','contradicted','stale','rejected')),
+  check (verification_state in ('unverified','under_review','independently_corroborated','contradicted','stale','rejected')),
  reviewed_by uuid references auth.users(id),
  verified_at timestamptz,
  reviewer_decision_ref text,
@@ -41,7 +41,7 @@ create table if not exists public.ds_integrity_evidence(
  foreign key(organization_id,case_id)
   references public.ds_integrity_cases(organization_id,id) on delete restrict,
  check (valid_until is null or observed_on is null or valid_until>=observed_on),
- check (verification_state<>'independently_corrobated' OR
+ check (verification_state<>'independently_corroborated' OR
         (reviewed_by is not null and verified_at is not null and reviewer_decision_ref is not null))
 );
 create table if not exists public.ds_integrity_findings(

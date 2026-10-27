@@ -4,7 +4,7 @@ Document ID: SAR-MACRO-CARRY-2026-10-27-001
 Date: 27 October 2026 (Africa/Johannesburg)  
 Status: **UNRELEASED INTEGRATION CANDIDATE — NOT FULLY ACCEPTED**  
 Scope: SAR Corporate Website + SAR ResourceOS + DealScope as three first-class workstreams.  
-Authority: Latest expressly approved product boundaries and SAR website master build map; preserve original project and source history. This register does not authorise production changes.
+Authority: Latest expressly approved product boundaries and SAR website master build map; preserve original project and source history. **Shobane African Resources (Pty) Ltd owns DealScope and all SAR systems; Possent Systems is unaffiliated and has no rights to SAR source, data, infrastructure or decisions.** This register does not authorise production changes.
 
 ## 0. Evidence and precedence
 
@@ -12,7 +12,7 @@ Authority: Latest expressly approved product boundaries and SAR website master b
 - Older website draft PR #1: migration/2026-10-22-corporate-site at 70e0c1ef1ae6b74028163c59a2ad53cffe360768; OPEN, UNMERGED. It contains older public DealScope/ResourceOS language and must **not** be blindly merged over later requirements.
 - Later authoritative website implementation: redesign/full-corporate-website-oct-2026, checked commit 0bb92e28a15b8cdf081dbd9ff28eceb2a4006d18; docs/SAR_CORPORATE_WEBSITE_MASTER_BUILD_MAP.md and docs/IMPLEMENTATION_STATUS.md. This latest website direction deliberately omits internal application/product names from public corporate copy.
 - ResourceOS/DealScope draft PR #1: shobanesiyanda/sar-resourceos-golden-path-proof, migration/2026-10-22-dealscope-resourceos at 1ee34fa2494906b60e818da822c5448733b10209; OPEN, UNMERGED. Original main f784c998745526d54b13a3f93f77b512ebe5e7e3.
-- Possent Systems staging copies: sar-website-migration-staging-20261023 reports 78 of 80 source blobs, two original image assets outstanding; sar-resourceos-migration-staging-20261023 is a source snapshot, not native Git history transfer. Possent-Systems/sar-resourceos-golden-path-proof contains a 95-file original-source snapshot, not verified equivalent ancestry.
+- **Historical, superseded staging evidence only:** repositories previously copied into a non-SAR organisation reported 78/80 website binary blobs and a 95-file ResourceOS snapshot. These copies were never native-history transfers; **they do not establish corporate affiliation, ownership, permission or an approved destination**. Flag for SAR-authorised access/content audit and appropriate separation/remediation; do not move further SAR assets outside SAR control.
 - Vercel: sar-resourceos-golden-path-proof-live and dealscope latest previews READY; sar-website-live recent redesign deploy BLOCKED under collaboration controls. A preview build is not full functional acceptance.
 - Connected Supabase listing at audit time exposed BidOS-related projects only. Actual SAR ResourceOS/SAR website data projects and a separate DealScope data project are not identified on this connection. **Never connect SAR or DealScope to BidOS data as a fallback.**
 - Current engineering executor was read-only when tested; isolated Git clone failed, and the escalated attempt failed at the execution wrapper. The later website branch also lacks package-lock.json. Tests must remain unverified until a writable trusted checkout and reproducible dependencies exist.
@@ -22,9 +22,9 @@ Authority: Latest expressly approved product boundaries and SAR website master b
 ## 1. Large macro batches — one dependency-controlled programme
 
 ### MACRO SAR-01 — Source and infrastructure reconciliation (three products)
-Deliverables: full byte/hash inventory; preserve native history; reconcile older website PR against newer approved redesign; move ownership via controlled native transfer rather than duplicate history; recover two missing exact original website binaries; pin dependency lockfiles; verify Vercel project IDs, branch root directories and team permissions; register environment ownership and database refs; record rollback.
+Deliverables: full byte/hash inventory; preserve native history; reconcile older website PR against newer approved redesign; **retain SAR-exclusive source ownership** (only a SAR-controlled organisation/account may be an authorised future destination); recover two missing exact original website binaries; pin dependency lockfiles; verify Vercel project IDs, branch root directories and team permissions; register environment ownership and database refs; record rollback.
 - Independent work: branch mapping and precedence decisions **SPECIFIED**.
-- Requires code/asset access: actual transfer, 80/80 image hash parity, working checkout, npm ci/build/test, branch convergence and deployment protection **BLOCKED**.
+- Requires code/asset access: SAR ownership/access verification and external historical snapshot audit, 80/80 image hash parity, working checkout, npm ci/build/test, branch convergence and deployment protection **BLOCKED**.
 - Stop: no forced push, no replacement images, no silent repo or domain cutover.
 
 ### MACRO SAR-02 — Corporate Website: Industrial Intelligence and governed supplier acquisition
@@ -41,11 +41,11 @@ Preserve dark executive shell, topbar/sidebar, central heat map, gold accents an
 - Full source-to-settlement, RLS, audit, migration, backup and restore acceptance **BLOCKED** until correct SAR project and executable repository are available.
 
 ### MACRO SAR-04 — DealScope: external commercial platform (equal priority)
-DealScope is an **independent customer-facing product**, not a page inside ResourceOS or the SAR website. SAR must not receive privileged visibility of another buyer's tenant records.
+**DealScope belongs to Shobane African Resources (Pty) Ltd (SAR)** and operates as a distinct customer-facing product, not a page inside ResourceOS or the corporate website. Its data/identity infrastructure is isolated, but this is not a separate Possent-owned company. SAR's ownership does not give internal operators privileged visibility of another buyer's tenant records.
 - Current source: separate Next.js app apps/dealscope; shared calculation kernel; user-input Deal Runs; candidate state qualified/rejected/incomplete; product catalogue fallback; commercial Exchange GET/POST deliberately return HTTP 503; health route reports identity/subscriptions/trading disabled. **SOURCE ONLY**.
 - Complete separate identity and tenant memberships; verified buyer/seller organisation registry; roles and per-tenant RLS; subscription/PAYG entitlements and billing; evidence/price provenance; saved Deal Runs and immutable result versions; candidate qualification and rejection audit; verified sourcing signals; controlled offer/disclosure workflow; buyer authorisation and seller consent; audit events; notifications; dispute and refund states; integrated provider-based payments and finance reconciliation with separate merchant/legal records.
 - Commercial filter: show only genuinely qualified, positive-profit actionable deals to users; rejected, break-even and below-threshold candidates remain in private screening audit. Conditional leads require a credible negotiable acquisition ceiling and evidence route to target margin. A calculator outcome alone must never be represented as a verified live buyer/market commitment.
-- Shared code is permitted; shared privileged database access is not. A dedicated DealScope Supabase project and database **DO NOT YET EXIST**. Greenfield project creation, Auth, tenant schema, payment provider sandbox and end-to-end implementation are **OPEN**, with owner organisation confirmation required.
+- Shared code is permitted; shared privileged database access is not. A dedicated DealScope Supabase project and database **DO NOT YET EXIST**. Greenfield project creation, Auth, tenant schema, payment provider sandbox and end-to-end implementation are **OPEN**. Legal owner is confirmed as SAR; the SAR-controlled Supabase technical organisation ID and billing approval must be established.
 - Accept full customer registration -> identity -> entitlement -> documented Deal Run -> candidate -> explicit offer/disclosure -> licensed-provider payment or authorised manual route -> SAR/third-party fulfilment where applicable -> settlement/reconciliation -> refund/dispute with RLS and idempotency. Keep execution disabled until all relevant gates PASS.
 
 ### MACRO SAR-05 — Three-product cross-system integration and release acceptance
@@ -70,12 +70,12 @@ DealScope is an **independent customer-facing product**, not a page inside Resou
 | A09 | ResourceOS | Approved market/PO/assay provider data, FX/port/transport source | Dated pricing/override snapshots and versioned weekly offer engine |
 | A10 | ResourceOS | Operational document evidence and controlled storage | Sampling, seals, weighbridge, custody and permissions |
 | A11 | ResourceOS | Finance, approvals, treasury and ledger tables | Assay split, stage-aware cost rollup, negative surplus block, settlement |
-| A12 | DealScope | **CREATE a new project** in explicitly selected owner organisation (no existing DealScope DB); design tenant schema/Auth and migrations | Verify actual project ref, RLS cross-tenant denial, fail closed |
+| A12 | DealScope | **CREATE a new DealScope project under SAR-controlled Supabase ownership** (no existing DealScope DB); SAR technical organisation ID must be verified; design tenant schema/Auth and migrations | Verify project owner/ref, RLS cross-tenant denial, fail closed |
 | A13 | DealScope | Subscription/PAYG provider sandbox and merchant account decision | Webhook replay, entitlements, invoices, refunds, cancellations |
 | A14 | DealScope | Verified buyer/supplier identity, disclosure and catalogue data | Per-offer consent, no privileged SAR access to unrelated tenants |
 | A15 | DealScope | Credible live sourcing/buyer data and price provenance | No fabricated price, rejection filter, margin/ceiling proof |
 | A16 | All | Approved preview access, device/browser QA, logs, security audit | Browser -> API -> database -> response end-to-end with evidence |
-| A17 | All | GitHub ownership-transfer authority and Vercel target configuration | Full native history, repo settings and deployment target reconciled |
+| A17 | All | **SAR-only** GitHub ownership/access and Vercel target configuration; audit any unauthorised external staging copies | SAR owns source and deployments; original native history and settings verified |
 | A18 | All | Source/data backups, restored fixture, signed risk and legal review | Disaster recovery dry run and explicit Founder production approval |
 
 ## 3. Independent functional specifications ready for implementation
@@ -134,7 +134,7 @@ Run pricing as a sourced, dated weekly evaluation, preferably Monday/Tuesday. Bu
 - Three equal product workstreams: website, ResourceOS, DealScope. No “website plus backend” shorthand that hides DealScope.
 - Historical checkpoint statements are not verified current production functionality.
 - No GitHub Actions, no production merge or live provider charging as a side effect of this documentation.
-- No cross-legal-entity database substitution; SAR, DealScope and TenderDesk/BidOS retain separate merchant, settlement, invoice, permissions and customer obligations.
+- No cross-entity database substitution. **DealScope is a SAR-owned product, not a separate legal person by default.** DealScope-specific tenant, invoice and settlement records remain isolated from SAR ResourceOS operational access; third-party TenderDesk/BidOS and Possent Systems have no SAR affiliation, shared credentials or default authority.
 - Maintain one consolidated macro-batch change journal with precise SHAs, evidence, blockers and next action. A macro batch may contain many internal steps, but only verified PASS items can be closed.
 
 ## 7. Macro-batch executed 27 October: independent DealScope economics hardening
@@ -343,8 +343,16 @@ The authoritative schema must preserve at least: project/work-package/requiremen
 
 ## 13. Founder clarification: DealScope database is GREENFIELD, not an access-recovery issue
 - Confirmed on 27 October 2026: **DealScope has never had a Supabase project or database.** The earlier access-dependent register could incorrectly imply there was an existing project whose permissions needed restoration. There is not.
-- DealScope must receive an entirely new, independent project once the Founder selects its ownership organisation. No creation, billing commitment, data migration or production authorisation occurs from this clarification alone.
+- DealScope must receive an entirely new project **owned by SAR**. This legal-ownership decision is confirmed; only the technical SAR-controlled Supabase organisation ID, applicable costs and provisioning approvals remain open. No creation, billing commitment, data migration or production authorisation occurs from this clarification alone.
 - Updated `apps/dealscope/.env.example` to remove the incorrect statement that a project already exists.
 - Created `apps/dealscope/database/initial-schema.REVIEW-ONLY.sql` (not a migration, not executed) and `apps/dealscope/database/README.md` to document nine initial entities, default-deny RLS, tenant onboarding, Deal Runs, offers, subscriptions, webhook idempotency, audit trails, ownership choice and ten greenfield acceptance gates.
-- The connected Supabase organisation currently contains BidOS and related acceptance projects only; **never deploy DealScope schema to that organisation without explicit owner selection** or point it at BidOS data.
+- The currently connected Supabase organisation contains BidOS-related projects, not a verified SAR-controlled organisation. **Do not use that organisation for DealScope, and never point SAR systems at BidOS data.**
 - Unblocked work = design, security review, source code preparation, static schema tests. Blocked work = actual project creation pending organisation/cost confirmation; migrations and real RLS tests pending new project; customer identity/payments pending provider credentials and acceptance.
+
+## 14. Explicit SAR ownership boundary — founder correction, 27 October 2026
+
+**Locked business decision:** Shobane African Resources (Pty) Ltd (SAR) owns the DealScope division/platform, its corporate website and its internal ResourceOS. DealScope is a SAR product and must have a *separate application database and external-customer tenant controls*, not a different corporate parent. Possent Systems is not a SAR affiliate, owner, operator, repository custodian, infrastructure provider or merchant by default; no SAR assets, credentials, applications, customer data or source code may be transferred or linked to it without a future, distinct and explicit written mandate.
+
+**Corrective scope:** Prior proposals for a GitHub transfer to Possent Systems are cancelled. Historical copies in a non-SAR organisation are evidence of earlier technical work only, **not** authorisation for ongoing custody; register a SAR-led inventory of cloned source, access permissions, deployment secrets and any data, then review remediation with the Founder. Do not delete external history or change permissions automatically without authorised review.
+
+**DealScope provisioning:** Set legal owner to SAR. Obtain a verified Supabase organisation under SAR control (not the currently connected BidOS organisation), confirm cost/region, then create DealScope's new project and perform migration, RLS and tenant-privacy acceptance. Its own project is isolated from SAR ResourceOS to protect unrelated external customers. Merchant/provider configuration, invoicing and settlement must be SAR-authorised, with licensed external processors and explicit transaction controls. Do not classify this remaining infrastructure task as an unresolved *owner decision*—it is a technical connection/provisioning dependency.

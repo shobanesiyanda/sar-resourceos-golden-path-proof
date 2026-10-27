@@ -29,6 +29,10 @@ Every engineer, software agent, business analyst and change reviewer **must** re
 ### Independent completeness audit
 - [27 October source-of-truth repository audit](2026-10-27-BLUEPRINT-AUDIT.md) — exactly what documents were inspected, what had been fragmented or absent, the new canonical structure, and why **the complete corporate/technical blueprint cannot yet be certified as recovered or approved**.
 
+### Native corporate documentation architecture
+- [SAR Corporate Documentation and Templates Standard](07-DOCUMENT-DESIGN-AND-TEMPLATES.md) — **Founder-approved requirement** for all branded client, internal and counterparty documents, with ResourceOS-native creation, editing, preview, approvals and controlled issue.
+- [ResourceOS Document Studio — product and engineering blueprint](08-RESOURCEOS-DOCUMENT-STUDIO.md) — first-party editor/viewer workflow, templates, editing experience, revision/approval model, backend dependencies and acceptance gates.
+
 ## Architecture domain coverage and unresolved gaps
 
 | Domain | Where it is documented | Remaining gap |

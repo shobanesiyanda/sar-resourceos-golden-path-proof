@@ -3,6 +3,9 @@
 **ID:** SAR-DSC-ARCH-001 • **Legal owner:** Shobane African Resources (Pty) Ltd • **Revision:** 2026-10-27 / v0.1  
 **Status:** Founder-ratified intended product architecture; detailed legal/customer/technical release sign-off remains OPEN. The DealScope web preview exists; **no DealScope Supabase project, customer database, live paid subscriptions or transactional Exchange exist yet**.
 
+## 0. Current public independence directive — 28 October 2026
+Public-facing DealScope branding, signed-out app, accounts, copy, SEO, screenshots, shared link previews, emails and external documents must have NO Shobane/SAR name, ownership attribution or corporate product link. This does not change the currently evidenced internal SAR legal ownership; the operation cannot truthfully offer customer purchases under a fictitious entity. Require an independently registered/verified DealScope legal supplier and separate compliant merchant, invoicing, terms, contacts and consumer disclosures before live sales under a zero-Shobane public identity. Until resolved, marketing is informational, signup/paid features and legally binding services are HOLD. See [DealScope public brand/entity separation rule](14-DEALSCOPE-PUBLIC-BRAND-AND-ENTITY-SEPARATION.md).
+
 ## 1. Product identity, mandate and legal boundary
 
 DealScope is SAR's independent **external customer-facing** commercial intelligence and opportunity/transaction platform, implemented under `apps/dealscope` in the current controlled draft. It is not a corporate website page, not simply an SAR staff dashboard and **not owned or operated by Possent Systems**.

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DealScope | Commodity Intelligence & Deal Runs",
-  description: "DealScope commodity discovery, structured deal economics and governed commercial exchange.",
+  title: "DealScope | Investigate Deal Credibility, Viability & Opportunities",
+  description: "Know what you are dealing with before you commit. Deal integrity, evidence investigation, opportunity intelligence, route economics and a permission-controlled commercial exchange.",
   robots: { index: false, follow: false },
 };
 

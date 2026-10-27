@@ -145,3 +145,72 @@ Run pricing as a sourced, dated weekly evaluation, preferably Monday/Tuesday. Bu
 - Four tests added for invalid/future dates, numeric overflow, unsupported stage/currency and hidden yield on saleable product; ten total logic tests passed in a controlled in-memory execution after type syntax was erased. This is **not** a repository TypeScript compiler pass, Node test runner pass, dependency check or live UI/backend acceptance.
 - GitHub source and test file SHAs were re-fetched and confirmed after writes. Vercel preview of the resulting ResourceOS branch was QUEUED at inspection, not declared READY. Separate DealScope project was not deployed by this change; the existing DealScope preview predates these commits.
 - Release gate remains OPEN until a clean checked-out repo executes package-managed typecheck, exact committed tests, production build, security and browser/data acceptance.
+
+## 8. Foundational ResourceOS intelligent project analysis, simulation and execution (architecture correction)
+
+**Priority: foundational, not optional.** ResourceOS must not be reduced to dashboards, logistics, finance and saved route forms. Its defining central capability is to take a proposed project that has **not yet begun**, interpret its documentation, construct a structured model of the entire project, run controlled virtual execution and produce a decision-ready plan that can later be activated and managed.
+
+### 8.1 Project intake and document intelligence
+
+Input classes may include client scope of work, tender/RFP documents, technical specifications, BOQ/quantity schedules, engineering drawings, mining/plant concepts, geological/assay information, contracts, procurement requirements, permits, site constraints and finance terms. Each input requires confidentiality classification, version, issuer, file hash, permission, page/section origin and timestamp.
+
+The intelligence pipeline must:
+1. Extract and classify text, tables, quantities, clauses, dates, units, drawings/attachments and stated deliverables.
+2. Decompose the scope into work packages, dependencies, milestones, plant/equipment, labour, raw materials, transport, processing, compliance, commercial terms and contractual responsibilities.
+3. Distinguish **document facts**, inferred requirements, proposed assumptions, unknowns and conflicts. Every extracted requirement links back to its source; unproven values cannot silently become project facts.
+4. Detect gaps, conflicting quantities, missing drawings, ambiguous specifications and scope-change risks. Route these to human clarification before any binding quotation or execution plan is approved.
+5. Preserve an auditable versioned project model, with evidence and permission boundaries rather than relying on a chat-generated narrative.
+
+### 8.2 Canonical project model and simulation
+
+Transform accepted extracted facts and approved assumptions into a computable project model:
+- WBS / deliverables / schedule and critical path;
+- stage and resource dependencies;
+- available/required labour, fleet, equipment, plant, contractors, storage and working shifts;
+- procurement, commodity input requirements, material yields, production and stock movements;
+- costs, revenues, cash drawdown, milestone invoicing, finance, liquidity and contingency;
+- safety/environmental/permit gates, contract obligations and uncertainty;
+- location, route capacity and transport/logistics constraints.
+
+Run **actual constrained simulations**, not ungrounded narrative forecasts: baseline, optimistic, downside, schedule compression, asset scarcity, breakdowns, yield variance, input-price change, transport delays and cash-shortage scenarios. Represent deterministic process sequencing and stochastic uncertainty where data allow. Track assumptions, reproducible seeds where applicable, parameter versions and model uncertainty. Outcomes include viability, total cost, gross/net margin, cash profile, completion timing, critical bottlenecks, procurement plan, resource loading, reserve buffer, contract risk and sensitivity.
+
+**Mandatory distinction:** AI interprets the source documents and proposes structure; calculation and simulation engines compute measurable outcomes; authorised professionals approve interpretation, parameters, feasibility and release. No automated model result is a permit, engineering certification, financing commitment or contract award.
+
+### 8.3 From virtual execution to real execution
+
+For an approved scenario, generate a controlled executable baseline:
+- integrated project plan, phases, WBS and milestones;
+- resource/equipment/fleet and contractor assignments;
+- quantities, purchase requirements, logistics/warehouse/processing plans;
+- detailed project budget, working-capital timeline and financial checkpoints;
+- quality/safety/assay/document gates, risk register and exception paths;
+- proposed contracts, procurement/dispatch tasks and approval matrix.
+
+Activation requires owner approval, validated input evidence, authority checks, operational capacity and funding controls. Once active, compare actual progress, cost, production, delivery and cash events to simulation assumptions. Flag variance, trigger reforecast/re-simulation and produce an approved corrective plan without overwriting the original baseline. Maintain scenario lineage, change orders and audit logs.
+
+### 8.4 Division-specific use
+
+**Mining & Contract Services:** primary path for unstarted mine/plant/contracting projects. Read client documents, simulate complete project delivery, identify equipment and contractor capacity, quantify cost/timing/risks, prepare a professionally reviewable proposal and then coordinate actual execution under contract.
+
+**Commodity Trading:** use the same intelligence and simulation foundation to interpret offtake agreements, supplier specs and multi-parcel supply plans; simulate procurement, ROM-to-saleable conversions, processing yield, fleet and storage capacity, buyer deliveries, assay variation, working capital and profit under stress. Connect the weekly export-parity price engine, route economics, source-to-settlement and commodity risk authority.
+
+**DealScope:** only reuse safe shared domain models, arithmetic and permission-cleared market intelligence for external customer Deal Runs and opportunity simulation. No default access to SAR proprietary project documents, bidding strategy, working-capital data or unrelated DealScope tenants' confidential information.
+
+### 8.5 Simulation acceptance gates — all currently OPEN
+
+| Test ID | Required acceptance evidence |
+| --- | --- |
+| SIM-01 | Upload a realistic unstarted-project document set; extract scope and source-linked requirements with field-level provenance |
+| SIM-02 | Parse BOQ units, quantities, clauses, dates and conflicts; surface unknowns rather than fabricating figures |
+| SIM-03 | Generate valid WBS, critical path, dependencies, resource demand, procurement and logistics plan |
+| SIM-04 | Validate cost estimates and detailed cash-flow timing against independently calculated known fixtures |
+| SIM-05 | Run repeatable baseline and stress simulations with recorded parameters and deterministic seed where applicable |
+| SIM-06 | Demonstrate asset/crew/truck/plant capacity bottlenecks and schedule/cash effects |
+| SIM-07 | Compare at least three scenarios and explain differences using actual model outputs, not prose alone |
+| SIM-08 | Require qualified human sign-off before issuing client quotation or converting simulation to project execution |
+| SIM-09 | Activate approved scenario into controlled procurement, workforce, fleet, document, approvals and Finance tasks |
+| SIM-10 | Feed actuals back, detect deviations, reforecast and preserve immutable original baseline/change history |
+| SIM-11 | Enforce project-level and division-level confidentiality, least privilege and cross-tenant denial |
+| SIM-12 | Reconcile commodity route simulation with yield, pricing, two assay costs, inventory, physical dispatch and settlement |
+
+**Build sequencing change:** the project-intelligence canonical model, simulation contracts and evidence framework are part of ResourceOS foundational architecture and must be included before declaring the core enterprise system architecturally complete. Downstream forms and dashboards consume this authoritative simulation/execution state; they do not replace the engine.

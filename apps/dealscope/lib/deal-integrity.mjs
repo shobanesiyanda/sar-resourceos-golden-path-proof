@@ -37,11 +37,11 @@ export function assessDealIntegrity({dossier,principal,checks=[],asOf,verificati
  const known=new Map(INTEGRITY_CHECKS.map(x=>[x.id,x])),received=new Map();
  for(const c of checks){
   if(!c||!known.has(c.id)||received.has(c.id)||
-   !["not_provided","self_asserted","uploaded","independently_corrobated","contradicted"].includes(c.status))
+   !["not_provided","self_asserted","uploaded","independently_corroborated","contradicted"].includes(c.status))
    return denied("Invalid, duplicated or unknown integrity check");
   if(c.status!=="not_provided"&&!documented(c))
    return denied("Evidence claim lacks traceable document/version");
-  if(c.status==="independently_corrobated" &&
+  if(c.status==="independently_corroborated" &&
      (!verification||verification.serverEvidenceBound!==true||
       !Array.isArray(verification.reviewedEvidenceIds)||!verification.reviewedEvidenceIds.includes(c.id)||
       !txt(c.independentVerifierId)||!day(c.verifiedOn)||c.verifiedOn>asOf||
@@ -57,7 +57,7 @@ export function assessDealIntegrity({dossier,principal,checks=[],asOf,verificati
   let state="missing";
   if(c){
    if(c.status==="contradicted")state="material_inconsistency";
-   else if(c.status==="independently_corrobated")state="corroborated";
+   else if(c.status==="independently_corroborated")state="corroborated";
    else if(c.status!=="not_provided")state="unverified_claim";
    if(c.expiresOn!==undefined&&c.expiresOn!==null){
     if(!day(c.expiresOn))return denied("Invalid claim expiry");
@@ -76,7 +76,7 @@ export function assessDealIntegrity({dossier,principal,checks=[],asOf,verificati
  }
  const hasConflict=summary.conflicts>0;
  const hasGap=summary.missing+summary.claimsOnly+summary.stale>0;
- const stage=hasConflict?"stop_and_resolve":hasGap?"investigate_further":"checks_corrobated_with_residual_risk";
+ const stage=hasConflict?"stop_and_resolve":hasGap?"investigate_further":"checks_corroborated_with_residual_risk";
  return {state:"private_guidance_only",reason:null,report:{
   tenantId:dossier.tenantId,dossierId:dossier.id,asOf,stage,
   title:"Deal integrity evidence assessment (not a fraud finding)",

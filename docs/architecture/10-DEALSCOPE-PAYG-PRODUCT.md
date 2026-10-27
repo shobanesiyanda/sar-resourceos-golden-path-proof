@@ -32,3 +32,7 @@ Prove repeat willingness to pay through an opt-in pilot with transparent consent
 
 ## Legal source-review note
 South African ECTA section 43 specifies disclosures and an opportunity to review/correct an online transaction; sections 44-46 establish cooling-off and service-performance requirements with exceptions depending on actual facts. The product must be reviewed for CPA/ECTA and POPIA compliance before accepting money. No unconditional blanket 'no refunds regardless of circumstances' terms.
+
+
+## Trial, marketing and PAYG integration — no implied conversion
+An eligible verified prospective individual or company receives a **30-day full-feature trial** that covers the actual DealScope capability portfolio; a paid Deal Run is merely ONE choice once the user opts into a paid offer. Do not automatically convert trial to PAYG/subscription, debit a user for expired evidence alerts or secretly limit modules only to create an upsell. Customer pricing and payment consent must be explicitly displayed before checkout. The public acquisition site is separate and operated at intended dealscope.co.za; underlying customer order IDs, private transaction data and cards must not appear in referral links or SAR ResourceOS. Detailed source: DealScope acquisition blueprint 12 and trial contract 13. The historical commercial model's PAYG and Essential/Professional figures are only unapproved internal price discovery, not currently authorised site pricing.

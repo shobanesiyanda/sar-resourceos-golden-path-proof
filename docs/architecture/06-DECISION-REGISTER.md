@@ -17,6 +17,9 @@
 | SAR-ADR-009 | Commodity trading pricing is sourced and date-stamped; separate indicative export parity from buyer-confirmed PO terms, mass yield from grade, feedstock from concentrate assay, direct route cost from overhead, and owner/outsourced transport capacity. | ResourceOS §7, macro §3.1 | Historical trading controls, current price and route evidence not pre-approved |
 | SAR-ADR-010 | No automated purchase, supplier award, finance release, external binding communication or production merge without the relevant **human** authorisation; no GitHub Actions or silent live deployment under present engineering mandate. | All three products, governance | Explicit engineering and operating direction |
 
+| SAR-ADR-011 | **ALL** SAR client-facing, internal, supplier, buyer, financial, regulatory and counterparty documents must be professionally designed, consistent and accurately branded using the approved original SAR corporate identity. Templates and delivery are centrally governed. | SAR-DOC-001, ResourceOS and all external document flows | Founder-approved 27 Oct 2026 |
+| SAR-ADR-012 | ResourceOS must include a **native, futuristic document viewing, creation and editing workspace** with an integrated corporate template library, instead of requiring external Word-style applications. Advanced editable PDF/DOCX, reviews, collaboration and authorised issuance are governed next-stage requirements. | SAR Document Studio engineering blueprint, ResourceOS | Founder direction 27 Oct 2026 |
+
 ## Supersessions and conflicts to track
 
 - Earlier proposed transfer of SAR GitHub history/assets to **Possent Systems** is **cancelled** by SAR-ADR-001. Historical non-SAR staging snapshots require custody review, not continued expansion.

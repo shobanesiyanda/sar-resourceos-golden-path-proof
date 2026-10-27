@@ -62,7 +62,7 @@ const presets: Record<DocumentTemplateId, {title:string;division:string;subject:
 export function createDocumentDraft(templateId: DocumentTemplateId = "corporate-letter", deterministic = false): DocumentDraft {
  const p = presets[templateId];
  return { schemaVersion:1,id:deterministic ? "initial-"+templateId : makeId(),templateId,title:p.title,documentRef:"",
-   division:p.division,recipient:"",subject:p.subject,classification:"internal",
+   division:p.division,recipient:"",subject:p.subject,classification:templateId==="internal-memo"?"internal":templateId==="project-brief"?"confidential":"counterparty",
    date:new Date().toISOString().slice(0,10),blocks:p.blocks.map(([kind,text],i)=>deterministic ? {id:"initial-"+templateId+"-"+i,kind,text} : block(kind,text)) };
 }
 export const newBlock = (kind:DocumentBlockKind):DocumentBlock =>

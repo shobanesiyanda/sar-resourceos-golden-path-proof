@@ -15,7 +15,7 @@ Every engineer, software agent, business analyst and change reviewer **must** re
 
 | Authority level | Document / repository | Scope | Maturity |
 |---|---|---|---|
-| 1 — Founder decisions | Dated, explicit decisions committed into the pertinent blueprint and decision log | Legal ownership, business mandate, architecture locks and release authorisation | Many confirmed; reconciliation incomplete |
+| 1 — Founder decisions | [SAR controlled decision and supersession register](06-DECISION-REGISTER.md) with originating dated instructions | Legal ownership, business mandate, architecture locks and release authorisation | Confirmed project directions; consolidated Founder review still pending |
 | 2 — SAR enterprise operating model | [Corporate structure, divisions and responsibilities](01-SAR-CORPORATE-OPERATING-MODEL.md) | Mandates, divisional interfaces, decision rights, KPIs and differentiators | **Consolidated draft; role assignments and detailed charters need sign-off** |
 | 2 — Internal operating intelligence | [ResourceOS system architecture](02-RESOURCEOS-INTELLIGENCE-AND-EXECUTION.md) | Document-to-project modelling, simulation, RFQ, commodities, contracts, execution and finance | **Consolidated draft; implementation incomplete** |
 | 2 — External platform | [DealScope product architecture](03-DEALSCOPE-PLATFORM-ARCHITECTURE.md) | SAR-owned external SaaS, Deal Runs, sourcing, buyer/seller exchange, tenants and payments | **Consolidated draft; no DealScope database yet** |

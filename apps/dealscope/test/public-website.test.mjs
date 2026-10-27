@@ -6,7 +6,8 @@ test("root is signed-out acquisition not the calculator",()=>{
  const home=source("app/page.tsx");
  assert.match(home,/Know what you/);
  assert.match(home,/dealing with/);
- assert.match(home,/30-day full trial|30 days/);
+ assert.match(home,/one complete deal|one free|1 complete deal cycle/i);
+ assert.doesNotMatch(home,/30-day full trial|30 days|30-day unlimited/i);
  assert.match(home,/Commercial Exchange/);
  assert.match(home,/DEVELOPMENT|development preview|Development preview/);
  assert.doesNotMatch(home,/calculateDealRun/);
@@ -16,6 +17,11 @@ test("existing calculator remains in /runs with corrected shared package imports
  assert.match(calc,/calculateDealRun/);
  assert.match(calc,/\.\.\/\.\.\/\.\.\/\.\.\/packages\/commodity-core\/src\/economics/);
  assert.match(calc,/Gross margin/);
+});
+test("no obsolete thirty-day trial and no misleading live signup",()=>{
+ const start=source("app/start/page.tsx");
+ assert.doesNotMatch(start,/30 days|30-day|thirty days/i);
+ assert.match(start,/complete deal assessment|complete Deal Assistance/i);
 });
 test("every public conversion path has source and no false registration",()=>{
  const home=source("app/page.tsx");

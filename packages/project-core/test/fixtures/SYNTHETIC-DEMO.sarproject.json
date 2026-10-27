@@ -1,0 +1,157 @@
+{
+  "fixtureNotice": "SYNTHETIC TEST FIXTURE ONLY. No real tender, prices, equipment, supplier quote, cash commitment or external communication. Never use to make a business decision.",
+  "projectId": "SAR_SYNTHETIC_TEST_01",
+  "projectName": "SYNTHETIC TEST - material and equipment logistics",
+  "division": "mining_contract_services",
+  "date": "2026-10-27",
+  "currency": "ZAR",
+  "inputVersion": "synthetic-v1",
+  "sourceSetHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "sources": [
+    {
+      "documentId": "FAKE_BOQ_01",
+      "version": "synthetic-v1",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "locator": "Synthetic BOQ section 1"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "TEST_BASE",
+      "kind": "baseline",
+      "sourceSetHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "result": {
+        "status": "provisional",
+        "scenarioId": "TEST_BASE",
+        "issues": [
+          "synthetic only"
+        ],
+        "knownCosts": 600000,
+        "contingency": 60000,
+        "totalBudget": 660000,
+        "completionDays": 5,
+        "criticalPath": [
+          "TASK_A",
+          "TASK_B"
+        ],
+        "tasks": [
+          {
+            "id": "TASK_A",
+            "startDay": 0,
+            "endDay": 2,
+            "cost": 200000
+          },
+          {
+            "id": "TASK_B",
+            "startDay": 2,
+            "endDay": 5,
+            "cost": 400000
+          }
+        ],
+        "indicativeCostByStartDay": [
+          {
+            "day": 0,
+            "amount": 200000
+          },
+          {
+            "day": 2,
+            "amount": 400000
+          }
+        ]
+      }
+    },
+    {
+      "id": "TEST_DOWN",
+      "kind": "downside",
+      "sourceSetHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "result": {
+        "status": "provisional",
+        "scenarioId": "TEST_DOWN",
+        "issues": [
+          "synthetic only"
+        ],
+        "knownCosts": 740000,
+        "contingency": 74000,
+        "totalBudget": 814000,
+        "completionDays": 7,
+        "criticalPath": [
+          "TASK_A",
+          "TASK_B"
+        ],
+        "tasks": [
+          {
+            "id": "TASK_A",
+            "startDay": 0,
+            "endDay": 3,
+            "cost": 240000
+          },
+          {
+            "id": "TASK_B",
+            "startDay": 3,
+            "endDay": 7,
+            "cost": 500000
+          }
+        ],
+        "indicativeCostByStartDay": [
+          {
+            "day": 0,
+            "amount": 240000
+          },
+          {
+            "day": 3,
+            "amount": 500000
+          }
+        ]
+      }
+    }
+  ],
+  "costing": [
+    {
+      "requirementId": "TASK_A",
+      "basis": "assumption",
+      "sourceRef": "synthetic test estimate A",
+      "reviewed": false
+    },
+    {
+      "requirementId": "TASK_B",
+      "basis": "document_rate",
+      "sourceRef": "synthetic test BOQ rate B",
+      "reviewed": false
+    }
+  ],
+  "risks": [
+    "All quantities, grades, engineering conditions, costs and equipment are fictional",
+    "No counterparty or market-price verification exists"
+  ],
+  "unresolved": [
+    "Demonstration purposes only; no actual review or procurement authority"
+  ],
+  "rfq": {
+    "id": "TEST_RFQ_01",
+    "projectId": "SAR_SYNTHETIC_TEST_01",
+    "version": 1,
+    "status": "draft",
+    "currency": "ZAR",
+    "deadline": "2026-12-01",
+    "recipients": [],
+    "blockers": [],
+    "lines": [
+      {
+        "requirementId": "TASK_A",
+        "specification": "SYNTHETIC: equipment mobilisation and site access",
+        "quantity": 1,
+        "unit": "test-lot",
+        "documentId": "FAKE_BOQ_01",
+        "sourceLocator": "Synthetic BOQ section 1"
+      },
+      {
+        "requirementId": "TASK_B",
+        "specification": "SYNTHETIC: sample material haulage",
+        "quantity": 2,
+        "unit": "test-lot",
+        "documentId": "FAKE_BOQ_01",
+        "sourceLocator": "Synthetic BOQ section 1"
+      }
+    ]
+  }
+}

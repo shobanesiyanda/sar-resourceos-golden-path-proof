@@ -27,11 +27,11 @@
 ## 3. Test execution evidence — narrow and truthful
 - Source blobs were fetched back from the SAR GitHub connector after commits.
 - An independent JavaScript evaluation harness executed the EXACT fetched source code and the test cases from four newly committed test suites:
-  - amendment workflow: **6 pass / 0 fail**;
+  - amendment workflow: **7 pass / 0 fail**;
   - DealScope PAYG: **4 pass / 0 fail**;
   - ResourceOS actual-versus-plan: **4 pass / 0 fail**;
   - website intake handoff: **3 pass / 0 fail**.
-- **17 source-level cases pass / 0 fail**. The harness is not Node's own \`node --test\`, a full \`npm ci\`, Next production build, browser test, provider sandbox, Supabase/RLS/migration, SAST, concurrency test or restoration proof.
+- **18 source-level cases pass / 0 fail**. The harness is not Node's own \`node --test\`, a full \`npm ci\`, Next production build, browser test, provider sandbox, Supabase/RLS/migration, SAST, concurrency test or restoration proof.
 - Two early document adapter commits have previously shown Vercel READY build previews. READY is build evidence only and does not establish operational acceptance. Latest commits have no fresh independently accepted build/browser records.
 - No signed technical, finance, statutory or external communications were created or dispatched.
 
@@ -55,3 +55,6 @@
 
 ## 6. Release conclusion
 **Release: HOLD.** Architecture reconciliation is complete *into development branch*, four narrow contract test suites pass, and foundational source is committed. The full enterprise operational backbone, website integrations and commercially charging DealScope are **not yet complete**, and do **not** reduce solely to access blockers. Real engineering, legal/financial setup, provider tests and operational UAT remain. Do not claim a production release, live PAYG product, working payment link, successful source-to-settlement, or human approvals that have not occurred.
+
+## 7. Incremental security hardening
+The amendment-engine submission gate now requires the authenticated requester's effective editor/requester role and trusted, source-bound diff-verification proof of the exact changed base before it will create a review candidate. A dedicated negative-path test rejects edited content without that proof. This remains a source-contract guard; only authenticated SAR backend evidence can make it enforceable.

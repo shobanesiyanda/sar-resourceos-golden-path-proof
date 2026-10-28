@@ -14,9 +14,16 @@ const source={sourceId:"doc1",channel:"uploaded_document",facts:{
 const references={recovery:{pct:75,evidence:"hypothetical"},feedGrades:[28,29,30,31],
  haulage:{dryTonnes:1000,moisturePct:10,payloadWetTonnes:34,billableKmPerTrip:120,rateZarPerKm:25,rateBasis:"dated_market_indication"},
  costs:{routeCostsComplete:true,processingZar:700000,otherDirectZar:100000,financeZar:50000,targetNetMarginPct:15}};
-const request=body=>({headers:{get:()=>String(JSON.stringify(body).length)},json:async()=>body});
-const form=(values,files=[])=>({get:k=>values[k]??null,getAll:k=>k==="documents"?files:[]});
-const intakeRequest=(values,files=[])=>({headers:{get:()=>"100"},formData:async()=>form(values,files)});
+const request=body=>new Request("https://dealscope.co.za/api/assessments",{
+ method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+const form=(values,files=[])=>{
+ const f=new FormData();
+ for(const [key,value] of Object.entries(values))if(value!==null&&value!==undefined)f.append(key,String(value));
+ for(const file of files)f.append("documents",new Blob(["x".repeat(file.size)],{type:"application/octet-stream"}),file.name);
+ return f;
+};
+const intakeRequest=(values,files=[])=>new Request("https://dealscope.co.za/api/assessments/intake",{
+ method:"POST",body:form(values,files)});
 const values={commodity:"chrome",entryPoint:"sale_contract",materialForm:"concentrate",commercialRole:"mandate",
  deliveryTerm:"FOT contract-defined",pastedText:"Buyer requests 1000 dry tonnes of chrome concentrate 42% to City Deep"};
 const saved={tenantId:auth.tenantId,ownerUserId:auth.userId,caseId:"CASE-A",sourceRevision:1,registryVersion,sourcePersisted:true,

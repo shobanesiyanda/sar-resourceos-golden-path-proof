@@ -5,6 +5,8 @@
 -- Independently approved promotions MAY authorise a second full cycle.
 -- Requires existing NEW SAR-owned DealScope ds_organizations, ds_memberships, auth.users.
 -- No TenderDesk/BidOS/Possent fallback. Validate real schema/RLS/provider/DoA first.
+-- 28 Oct macro review: composite entitlement FK target and verified-claim owner FKs corrected.
+-- Still NOT an applied, PostgreSQL-validated migration; review WITH the entire schema.
 
 create table if not exists public.ds_intro_cycle_offers (
  id uuid primary key default gen_random_uuid(),
@@ -37,7 +39,9 @@ create table if not exists public.ds_intro_cycle_claims (
  unique(person_identity_hmac),
  unique(organisation_identity_hmac),
  unique(organisation_id),
- unique(organisation_id,id)
+ unique(organisation_id,id),
+ -- Grant owner must equal the independently verified claimant, not merely match an organisation.
+ unique(organisation_id,id,owner_user_id)
 );
 create table if not exists public.ds_intro_cycle_entitlements (
  id uuid primary key default gen_random_uuid(),
@@ -55,7 +59,10 @@ create table if not exists public.ds_intro_cycle_entitlements (
  automatic_charge boolean not null default false check(automatic_charge=false),
  auto_converts boolean not null default false check(auto_converts=false),
  unique(organisation_id,claim_id),
- foreign key(organisation_id,claim_id) references public.ds_intro_cycle_claims(organisation_id,id),
+ -- Composite uniqueness is needed by the later campaign/case foreign keys.
+ unique(organisation_id,id),
+ foreign key(organisation_id,claim_id,owner_user_id)
+   references public.ds_intro_cycle_claims(organisation_id,id,owner_user_id),
  check(cycles_available+cycles_reserved+cycles_completed=cycles_granted)
 );
 create table if not exists public.ds_intro_cycle_campaign_approvals (
@@ -67,6 +74,7 @@ create table if not exists public.ds_intro_cycle_campaign_approvals (
  reason text not null,
  valid_until timestamptz not null,
  reviewed_at timestamptz not null default now(),
+ check(valid_until>reviewed_at),
  unique(entitlement_id),
  foreign key(organisation_id,entitlement_id)
   references public.ds_intro_cycle_entitlements(organisation_id,id),

@@ -34,3 +34,8 @@ test("customer may read only active-tenancy own receipt; verification proof neve
  assert.doesNotMatch(sql,/create policy[^;]*on public\.ds_customer_verification_reviews for select/i);
  assert.doesNotMatch(sql,/create policy\s+[^;]*\bfor\s+(?:all|insert|update|delete)\b/i);
 });
+
+test("anonymous policy API cannot leak reviewer IDs or internal approval events",()=>{
+ assert.doesNotMatch(sql,/create policy[^;]*on public\.ds_customer_policy_versions\s+for select/i);
+ assert.match(sql,/NO direct anonymous\/browser read of policy-version rows/);
+});

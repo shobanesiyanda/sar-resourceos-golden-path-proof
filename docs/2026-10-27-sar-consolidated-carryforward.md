@@ -8,6 +8,8 @@
 
 **Deployment protection:** SAR-owned ResourceOS main `vercel.json`, the PR4 root and child DealScope configs, and the 3 Vercel project-level Ignored Build Step settings hold automatic builds with `exit 0`. A main merge is not a production release and cannot enable customer/financial writes. Source-copy staging in unrelated organisations is historical and must never be promoted as SAR ownership.
 
+**Critical repository confidentiality hold:** Connected GitHub metadata currently reports `shobanesiyanda/sar-resourceos-golden-path-proof` with `private=false` (public). This is incompatible with confidential server-side proprietary pricing/route-engine implementation if those modules are committed without proper source access controls. No restricted provider secrets or tenant data were read or committed in this continuation. Obtain SAR-approved private repository visibility/ownership and audited source access before adding or promoting sensitive engine internals. A public website does not require the protected source to be public. Private visibility changes and historical-access review require authorised GitHub administration; no such change was made here.
+
 **Next executable dependency:** diagnose/restore authentic GitHub Actions runner execution or trusted full Node24 checkout; execute root Next build, DealScope native tests/typecheck/build and security/negative controls; reconcile original migration + PR4 dependencies against the main architecture; then source-integrate in order with nonforced ancestry and no automatic deployment, checkpoint and retire redundant branches after proof. These are OPEN gates, not completed work.
 
 

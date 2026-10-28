@@ -26,3 +26,12 @@ test("Exchange remains unavailable rather than exposing customer opportunities",
  assert.match(src,/No tenant, customer, buyer or SAR internal data is accessible/);
  assert.match(src,/no-store/);
 });
+
+test("assessment API cannot serialize complete private candidate objects",()=>{
+ const service=read("lib/server/assessment-service.mjs");
+ const projection=read("lib/server/customer-brief.mjs");
+ assert.match(service,/toCustomerDecisionBrief/);
+ assert.doesNotMatch(service,/\.\.\.candidate/);
+ assert.match(projection,/internal_assessment_result_not_publishable/);
+ assert.doesNotMatch(projection,/JSON\.stringify\(candidate\)/);
+});

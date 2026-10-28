@@ -47,7 +47,10 @@ export function prepareAssessmentCandidate({entryPoint,sources,referenceData={}}
   const qty=entryPoint==="sale_contract"?value(known,"buyer_quantity_dry_t"):value(known,"feedstock_quantity_dry_t");
   const gradePct=entryPoint==="sale_contract"?value(known,"buyer_product_grade_pct"):value(known,"feedstock_grade_pct");
   const outputs={gradeAlternatives:[],freightBudget:null,purchaseCeiling:null,
-   directTrade:{minimumProductDryTonnes:positive(qty)?qty:null,productGradeCr2o3Pct:positive(gradePct)?gradePct:null,
+   directTrade:{minimumProductDryTonnes:entryPoint==="sale_contract"&&positive(qty)?qty:null,
+    availableSourceDryTonnes:entryPoint==="source_offer"&&positive(qty)?qty:null,
+    estimatedSaleableDryTonnes:null,
+    productGradeCr2o3Pct:positive(gradePct)?gradePct:null,
     maximumPurchaseZarPerDryT:null,quantityBasis:"excludes losses and contract allowances",status:"provisional"}};
   if(referenceData.haulage){
    const freight=estimateRoadHaulage(referenceData.haulage);
@@ -57,9 +60,14 @@ export function prepareAssessmentCandidate({entryPoint,sources,referenceData={}}
   }
   const retention=referenceData.directTradeRetentionPct;
   if(positive(qty)&&positive(retention)&&retention<=100){
-   outputs.directTrade.minimumProductDryTonnes=Math.ceil(qty/(retention/100)*100)/100;
-   outputs.directTrade.quantityBasis="conditional on documented direct-route retention";
-  }else nextActions.push(task("confirm_quantity_allowance","Confirm loading, moisture and handling allowances before issuing a required purchase quantity"));
+   if(entryPoint==="sale_contract"){
+    outputs.directTrade.minimumProductDryTonnes=Math.ceil(qty/(retention/100)*100)/100;
+    outputs.directTrade.quantityBasis="required source quantity conditional on documented direct-route retention";
+   }else{
+    outputs.directTrade.estimatedSaleableDryTonnes=Math.round(qty*retention)/100;
+    outputs.directTrade.quantityBasis="saleable estimate from available source quantity and documented retention";
+   }
+  }else nextActions.push(task("confirm_quantity_allowance","Confirm loading, moisture and handling allowances before finalising saleable or procurement quantity"));
   const costs=referenceData.costs?.routeCostsComplete===true?referenceData.costs:null;
   const salePrice=value(known,"buyer_price_zar_per_dry_t");
   if(route==="direct_trade"&&entryPoint==="sale_contract"&&positive(qty)&&positive(salePrice)&&

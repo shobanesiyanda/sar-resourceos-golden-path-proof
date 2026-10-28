@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {registryVersion} from "../lib/specialist-registry.mjs";
 import {executeIntakeRequest} from "../lib/server/intake-service.mjs";
 import {executeConfirmationRequest} from "../lib/server/assessment-confirmation.mjs";
 import {executeAssessmentRequest} from "../lib/server/assessment-service.mjs";
@@ -18,7 +19,7 @@ const form=(values,files=[])=>({get:k=>values[k]??null,getAll:k=>k==="documents"
 const intakeRequest=(values,files=[])=>({headers:{get:()=>"100"},formData:async()=>form(values,files)});
 const values={commodity:"chrome",entryPoint:"sale_contract",materialForm:"concentrate",commercialRole:"mandate",
  deliveryTerm:"FOT contract-defined",pastedText:"Buyer requests 1000 dry tonnes of chrome concentrate 42% to City Deep"};
-const saved={tenantId:auth.tenantId,ownerUserId:auth.userId,caseId:"CASE-A",sourceRevision:1,sourcePersisted:true,
+const saved={tenantId:auth.tenantId,ownerUserId:auth.userId,caseId:"CASE-A",sourceRevision:1,registryVersion,sourcePersisted:true,
  customerFactsConfirmed:true,confirmedSourceRevision:1,entryPoint:"sale_contract",sources:[source],conflicts:[]};
 const intakeServices={authenticate:async()=>auth,persistAndExtractIntake:async()=>({...saved,committed:true})};
 const confirmServices={authenticate:async()=>auth,readOwnedCase:async()=>saved,
@@ -58,6 +59,14 @@ test("intake refuses oversized and unsupported uploads",async()=>{
 test("confirmation is an audited server write, not just client checkbox",async()=>{
  const x=await executeConfirmationRequest({request:request({caseId:"CASE-A",confirm:true,sourceRevision:1}),services:confirmServices});
  assert.equal(x.status,200);assert.equal(x.body.independentlyVerified,false);
+});
+test("specialist registry revision changes require re-confirmation",async()=>{
+ const requestBody=request({caseId:"CASE-A",confirm:true,sourceRevision:1});
+ const outdated={...saved,registryVersion:"2026-10-01.0"};
+ const confirmed=await executeConfirmationRequest({request:requestBody,services:{...confirmServices,readOwnedCase:async()=>outdated}});
+ assert.equal(confirmed.status,409);
+ const assessed=await executeAssessmentRequest({request:request({caseId:"CASE-A"}),services:{...assessmentServices,readOwnedCase:async()=>outdated}});
+ assert.equal(assessed.status,409);
 });
 test("confirmation refuses stale source revisions",async()=>{
  const x=await executeConfirmationRequest({request:request({caseId:"CASE-A",confirm:true,sourceRevision:2}),services:confirmServices});

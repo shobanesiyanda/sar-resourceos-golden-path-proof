@@ -1,4 +1,13 @@
 # DealScope — Macro 006 Engineering Integration & Release Hold
+
+## UNIFIED-V6-AUTHORITY — latest same-day Founder product and protected-engine design (28 October 2026)
+
+The consolidated 256-line v6 design source is preserved in SAR's **same Git repository and same active engineering branch** at `docs/architecture/16-DEALSCOPE-UNIFIED-COMMERCIAL-INTELLIGENCE-V6-20261028.md`. It governs the two services (weekly Market Intelligence and customer-supplied Deal Intelligence); commodity-adaptive registry; multi-role/contract- and source-first routes; customer-document, paste and manual evidence intake; explicit facts/unknowns/contradictions; legal freight/wet-dry and plant recovery modelling; data-provenance and pricing basis; protected proprietary internal engine; customer-safe decision brief; one full free assessment cycle subject to approved entitlement; separate SAR-owned customer tenancy; no deal finder/Exchange.
+
+**Status distinction:** v6 is an engineering/architecture CONTRACT; Macro 006 is a narrower, unmerged SOURCE CANDIDATE containing specialist registry, protected intake/assessment components and unit/static tests. Missing v6 capabilities are not implemented merely because the document is now present. No new branch, app rewrite, merge, provider access, live account, customer transaction, payment or deployment is authorised by this preservation commit.
+
+**Branch reconciliation control:** SAR-owned main `6e18d39037373528634a69a132f66fe35577c3f1` already contains the approved 27 October enterprise governance baseline. Existing SAR migration PR #1 (`migration/2026-10-22-dealscope-resourceos`, `f497b6e...`) is the ancestor and integration dependency of current draft PR #4 (`engineering/dealscope-contract-intelligence-v6-20261028`). These candidates must be reconciled **in that order** and promoted once, not rebuilt as separate unrelated products. As of this checkpoint the current PR4 is not integrated into main; native Node24/Next build and external SAR-only security/database acceptance remain OPEN. Prior copied staging-repository additions are NOT a valid source of authority. No new engineering branches should be created for the same workstream.
+
 Record: SAR-DSC-MACRO-006-2026-10-28
 Authority: Shobane African Resources (Pty) Ltd / DealScope
 Date: 28 October 2026

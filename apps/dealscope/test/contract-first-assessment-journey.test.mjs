@@ -19,7 +19,7 @@ const intakeRequest=(values,files=[])=>({headers:{get:()=>"100"},formData:async(
 const values={commodity:"chrome",entryPoint:"sale_contract",materialForm:"concentrate",commercialRole:"mandate",
  deliveryTerm:"FOT contract-defined",pastedText:"Buyer requests 1000 dry tonnes of chrome concentrate 42% to City Deep"};
 const saved={tenantId:auth.tenantId,ownerUserId:auth.userId,caseId:"CASE-A",sourceRevision:1,sourcePersisted:true,
- customerFactsConfirmed:true,entryPoint:"sale_contract",sources:[source],conflicts:[]};
+ customerFactsConfirmed:true,confirmedSourceRevision:1,entryPoint:"sale_contract",sources:[source],conflicts:[]};
 const intakeServices={authenticate:async()=>auth,persistAndExtractIntake:async()=>({...saved,committed:true})};
 const confirmServices={authenticate:async()=>auth,readOwnedCase:async()=>saved,
  persistFactConfirmation:async()=>({committed:true,tenantId:auth.tenantId,caseId:"CASE-A",sourceRevision:1})};
@@ -77,6 +77,11 @@ test("assessment consumes only stored cases and trusted server references",async
  assert.equal(x.body.outputs.gradeAlternatives[0].requiredDryTonnes,2000);
  assert.equal(x.body.outputs.freightBudget.estimatedZarPerDryT,99);
  assert.equal(x.body.verifiedDeal,false);
+});
+test("assessment rejects stale customer confirmation after source amendment",async()=>{
+ const result=await executeAssessmentRequest({request:request({caseId:"CASE-A"}),
+  services:{...assessmentServices,readOwnedCase:async()=>({...saved,sourceRevision:2,confirmedSourceRevision:1})}});
+ assert.equal(result.status,404);
 });
 test("unverified or incomplete costs cannot generate a purchasing ceiling",()=>{
  const x=prepareAssessmentCandidate({entryPoint:"sale_contract",sources:[source],

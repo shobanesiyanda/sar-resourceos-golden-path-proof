@@ -12,11 +12,14 @@ test("root is signed-out acquisition not the calculator",()=>{
  assert.match(home,/DEVELOPMENT|development preview|Development preview/);
  assert.doesNotMatch(home,/calculateDealRun/);
 });
-test("existing calculator remains in /runs with corrected shared package imports",()=>{
- const calc=source("app/runs/page.tsx");
- assert.match(calc,/calculateDealRun/);
- assert.match(calc,/\.\.\/\.\.\/\.\.\/\.\.\/packages\/commodity-core\/src\/economics/);
- assert.match(calc,/Gross margin/);
+test("legacy browser-side calculator redirects to protected customer assessment",()=>{
+ const page=source("app/runs/page.tsx");
+ assert.match(page,/redirect\("\/workspace\/deals\/new"\)/);
+ assert.doesNotMatch(page,/calculateDealRun|packages\/commodity-core/);
+ const secure=source("app/workspace/deals/new/page.tsx");
+ assert.match(secure,/getDealScopeAssessmentServices/);
+ assert.match(secure,/authenticatePage/);
+ assert.match(secure,/return <AssessmentJourney\/>/);
 });
 test("no obsolete thirty-day trial and no misleading live signup",()=>{
  const start=source("app/start/page.tsx");

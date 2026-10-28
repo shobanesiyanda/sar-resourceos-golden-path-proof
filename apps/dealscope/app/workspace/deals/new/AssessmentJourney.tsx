@@ -21,6 +21,8 @@ type Commodity=keyof typeof catalog;
 type Prepared={caseId:string;sourceRevision:number;knownFacts:Record<string,{value:string|number;evidence:string}>;missingFacts:string[];conflicts:{field:string}[]};
 type Report={state:string;assessmentId:string;missingFacts?:string[];nextActions?:{code:string;description:string}[];
  outputs?:{gradeAlternatives?:{feedstockGradeCr2o3Pct:number;requiredDryTonnes:number}[];
+ routeOptions?:{code:string;label:string}[];
+ directTrade?:{minimumProductDryTonnes:number|null;maximumPurchaseZarPerDryT:number|null;quantityBasis:string;status:string};
  freightBudget?:{estimatedZarPerDryT:number;estimatedTrips:number}|null;
  purchaseCeiling?:{feedstockGradeCr2o3Pct:number;maximumPurchaseZarPerDryT:number|null}[]|null}};
 const terms=["Terms stated in my contract","EXW","FCA","FOB","CFR","CIF","DAP","DPU","DDP","FOT / ex-warehouse (contract-specific)","Not yet known"];
@@ -43,13 +45,22 @@ export default function DealAssessmentJourney(){
  const [error,setError]=useState("");
  const [working,setWorking]=useState(false);
  const [entryPoint,setEntryPoint]=useState<"sale_contract"|"source_offer">("sale_contract");
- function chooseCommodity(next:Commodity){setCommodity(next);setRole(catalog[next].roles[0]);setMaterial(catalog[next].materials[0])}
+ const [fulfilmentRoute,setFulfilmentRoute]=useState<"undecided"|"direct_trade"|"process_feedstock"|"own_stock">("undecided");
+ function chooseCommodity(next:Commodity){setCommodity(next);setRole(catalog[next].roles[0]);setMaterial(catalog[next].materials[0]);setFulfilmentRoute("undecided")}
+ function chooseRole(next:string){
+  setRole(next);
+  const lower=next.toLowerCase();
+  if(lower.includes("wash")||lower.includes("process"))setFulfilmentRoute("process_feedstock");
+  else if(lower.includes("direct resale")||lower.includes("trade washed"))setFulfilmentRoute("direct_trade");
+  else if(lower.includes("produce and sell")||lower.includes("supply mine production"))setFulfilmentRoute("own_stock");
+  else setFulfilmentRoute("undecided");
+ }
  async function capture(){
   setError("");setWorking(true);
   try{
    const data=new FormData();
    data.set("commodity",commodity);data.set("materialForm",material);data.set("commercialRole",role);
-   data.set("deliveryTerm",term);data.set("entryPoint",entryPoint);
+   data.set("deliveryTerm",term);data.set("entryPoint",entryPoint);data.set("fulfilmentRoute",fulfilmentRoute);
    data.set("sourceMode",mode);
    if(pasted.trim())data.set("pastedText",pasted);
    if(destination.trim())data.set("deliveryLocation",destination);
@@ -103,13 +114,21 @@ export default function DealAssessmentJourney(){
      </select></label>
      <label>Contractual delivery terms<select value={term} onChange={e=>setTerm(e.target.value)}>
       {terms.map(x=><option key={x}>{x}</option>)}</select></label>
-     <label>Your commercial role<select value={role} onChange={e=>setRole(e.target.value)}>
+     <label>Your commercial role<select value={role} onChange={e=>chooseRole(e.target.value)}>
       {catalog[commodity].roles.map(x=><option key={x}>{x}</option>)}</select></label>
      <label>Material / product form<select value={material} onChange={e=>setMaterial(e.target.value)}>
       {catalog[commodity].materials.map(x=><option key={x}>{x}</option>)}</select></label>
      <label>What are you starting with?<select value={entryPoint} onChange={e=>setEntryPoint(e.target.value as typeof entryPoint)}>
       <option value="sale_contract">A buyer requirement or offtake contract</option>
       <option value="source_offer">Available stock or a supplier offer</option></select></label>
+     <label>How will you fulfil the transaction? (optional)
+      <select value={fulfilmentRoute} onChange={e=>setFulfilmentRoute(e.target.value as typeof fulfilmentRoute)}>
+       <option value="undecided">Not sure — help me assess the possibilities</option>
+       <option value="direct_trade">Buy and resell without processing</option>
+       <option value="process_feedstock">Buy raw material, process and sell</option>
+       <option value="own_stock">Supply from my own stock or production</option>
+      </select>
+     </label>
     </div>
     <button type="button" onClick={()=>setStep(1)}>Continue to my information</button>
    </section>}
@@ -151,6 +170,10 @@ export default function DealAssessmentJourney(){
     {!!report.outputs?.gradeAlternatives?.length&&<div className="ds-journey-table"><h3>Grade-dependent material requirements</h3>
      <table><thead><tr><th>Feedstock grade</th><th>Required dry tonnes</th></tr></thead>
      <tbody>{report.outputs.gradeAlternatives.map(x=><tr key={x.feedstockGradeCr2o3Pct}><td>{x.feedstockGradeCr2o3Pct}%</td><td>{x.requiredDryTonnes.toLocaleString("en-ZA")}</td></tr>)}</tbody></table></div>}
+    {!!report.outputs?.routeOptions?.length&&<div><h3>Possible fulfilment routes</h3><ul>{report.outputs.routeOptions.map(x=><li key={x.code}>{x.label}</li>)}</ul><p>Choose the route you want DealScope to assess. No processing yield has been assumed.</p></div>}
+    {report.outputs?.directTrade&&<div><h3>Direct supply or resale</h3><p>Minimum material before allowances: {report.outputs.directTrade.minimumProductDryTonnes?.toLocaleString("en-ZA")??"Not established"} dry tonnes.</p>
+    <p>Proposed purchase ceiling: {report.outputs.directTrade.maximumPurchaseZarPerDryT===null?"Not established":`R${report.outputs.directTrade.maximumPurchaseZarPerDryT.toLocaleString("en-ZA")} per dry tonne (conditional)`}.</p>
+    <small>{report.outputs.directTrade.quantityBasis}</small></div>}
     <h3>Negotiation and next steps</h3>
     {report.outputs?.freightBudget?<p>Indicative freight allowance: R{report.outputs.freightBudget.estimatedZarPerDryT.toLocaleString("en-ZA")}/dry tonne · {report.outputs.freightBudget.estimatedTrips} loads</p>:<p>Freight allowance: evidence required.</p>}
     {report.outputs?.purchaseCeiling?.length?<ul>{report.outputs.purchaseCeiling.map(x=><li key={x.feedstockGradeCr2o3Pct}>{x.feedstockGradeCr2o3Pct}% feedstock: {x.maximumPurchaseZarPerDryT===null?"Price ceiling not established":`Maximum indicative R${x.maximumPurchaseZarPerDryT.toLocaleString("en-ZA")}/dry tonne`}</li>)}</ul>:<p>Acquisition-price ceiling: insufficient substantiated route economics.</p>}

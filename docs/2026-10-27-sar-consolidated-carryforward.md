@@ -1,5 +1,17 @@
 # SAR Consolidated Macro-Batch Carry-Forward and Acceptance Register
 
+## CURRENT SAR ENTERPRISE MACRO 007 CHECKPOINT — 28 OCT 2026
+
+**Single-mainline source of truth, no new branches:** SAR website `shobanesiyanda/sar-website` has corporate-first source, revised public contact hardening and retired Exchange safely on `main` (post-checkpoint head `162e4f6ab046a5bd82ef3009d5606a6462c741be`). The SAR ResourceOS/DealScope repository keeps the approved v6 architecture on `main`; its **application** migration PR #1 and current DealScope Macro006/007 PR #4 are **UNMERGED SOURCE CANDIDATES** and must not be claimed on main.
+
+**Code head for the tested addition:** `0c50ce77bb225ea34fbfcf4bf88d42df1c873956` on existing SAR branch `engineering/dealscope-contract-intelligence-v6-20261028`, followed by a new Macro007 checkpoint in the SAME branch at `ae5e40fbfb654003d557e69c949064139b276f8f`. New domains: fail-closed bounded HTTP request parser in DealScope; protected allowlisted CustomerDecisionBrief with restricted source IDs and no `...candidate` response; ResourceOS approved project-baseline activation intent requiring distinct legal/technical/commercial/treasury approvals and transactional audit/outbox; website consent/attestation verified unapproved supplier intake receiver. Project activation API remains HTTP503 until SAR authenticated atomic writer is live, not a phantom deployment. No payments, buyer matching, executive licensing, supplier approvals or production inventory actions enabled.
+
+**Evidence:** 116 distinct Node22 local standalone tests PASS, 0 FAIL: 53 master contracts + 12 weekly price + 12 website security/handoff + 39 new DealScope/ResourceOS including 1 cross-product producer/receiver test. Hash equality verified for new source/test modules. This is **not** the actual Node24 Next/TS full build, actual SAR Supabase RLS, market data rights, live E2E or the 122-case acceptance matrix. The 122 items remain a *design-only* acceptance catalogue.
+
+**Open administrative/infra blockers:** Current PR4 GitHub Actions `dealscope-verify` FAILED with zero job steps/no retrievable logs; correct SAR-owned Supabase projects not available through connected account (only BidOS-related, forbidden as substitutes); the SAR ResourceOS GitHub repo remains PUBLIC despite private proprietary engine requirements; privacy/admin and runner resolution required. Vercel project and `vercel.json` ignore-build guards remain in force. Do not mainline-merge both dependent candidate PRs until correct source-authority/privacy, safe build and tenant-level negative acceptance or explicit release-policy revision.
+
+
+
 ## CURRENT MAINLINE CONVERGENCE — 28 OCTOBER 2026, SOURCE ONLY / RELEASE HELD
 
 **Corporate website:** Original SAR repository `shobanesiyanda/sar-website` was fast-forwarded into `main` from `a60c6cb0edad364173630f19dbe7d6eeae2c70fa` to `654f0c0190611893cdf3fb7e2bc825562f5143a3` after source audit and 12 local Node22 security/handoff tests; further checkpoint commits are recorded in its main `docs/IMPLEMENTATION_STATUS.md`. Vercel project settings and source `vercel.json` cancel automatic builds (exit 0). Full Node24/Next, browser, DB, consented handoff acceptance NOT executed.

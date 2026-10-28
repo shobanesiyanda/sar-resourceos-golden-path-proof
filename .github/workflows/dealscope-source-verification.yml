@@ -1,0 +1,62 @@
+name: DealScope source integration verification (no deployment)
+
+on:
+  push:
+    branches:
+      - engineering/dealscope-contract-intelligence-v6-20261028
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dealscope-verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dealscope-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: apps/dealscope
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      CI: "true"
+    steps:
+      - name: Checkout exact source commit without persistent credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node 24 toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install application dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Capture resolved dependency versions
+        run: npm ls --depth=0
+
+      - name: Run all DealScope unit, security-contract and registry tests
+        run: npm test
+
+      - name: Compile isolated Next.js application
+        run: npm run build
+
+      - name: Strict TypeScript verification
+        run: npm run typecheck
+
+      - name: Confirm no production activation was enabled
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require("node:fs");
+          const p=fs.readFileSync("lib/server/assessment-runtime.mjs","utf8");
+          const a=fs.readFileSync("app/api/health/route.ts","utf8");
+          if(!/getDealScopeAssessmentServices\(\)\{return null;\}/.test(p)) process.exit(1);
+          if(!/preview_only/.test(a) || !/checkout: "disabled"/.test(a)) process.exit(1);
+          console.log("Release gate remains closed. No customer service activated.");
+          NODE

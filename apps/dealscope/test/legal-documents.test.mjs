@@ -19,7 +19,7 @@ test("company records are identified but no invented independent DealScope entit
  const legal=read("app/legal/page.tsx");
  assert.match(legal,/2019\/626848\/07/);
  assert.match(legal,/4040314793/);
- assert.match(legal,/pending current official CIPC and SARS/);
+ assert.match(legal,/require current CIPC and SARS documentary confirmation/);
  assert.doesNotMatch(legal,/DealScope \(Pty\) Ltd/);
 });
 test("terms mandate one complete free assessment without automatic paid conversion",()=>{

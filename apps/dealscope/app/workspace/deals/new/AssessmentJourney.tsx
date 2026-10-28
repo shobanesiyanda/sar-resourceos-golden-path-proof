@@ -25,6 +25,7 @@ export default function DealAssessmentJourney(){
  const [mode,setMode]=useState<"upload"|"paste"|"manual">("upload");
  const [files,setFiles]=useState<File[]>([]);
  const [pasted,setPasted]=useState("");
+ const [manualNotes,setManualNotes]=useState("");
  const [destination,setDestination]=useState("");
  const [quantity,setQuantity]=useState("");
  const [grade,setGrade]=useState("");
@@ -53,7 +54,8 @@ export default function DealAssessmentJourney(){
    data.set("commodity",commodity);data.set("materialForm",material);data.set("commercialRole",role);
    data.set("deliveryTerm",term);data.set("entryPoint",entryPoint);data.set("fulfilmentRoute",fulfilmentRoute);
    data.set("sourceMode",mode);
-   if(pasted.trim())data.set("pastedText",pasted);
+   const suppliedText=[pasted.trim(),manualNotes.trim()].filter(Boolean).join("\n\n");
+   if(suppliedText)data.set("pastedText",suppliedText);
    if(destination.trim())data.set("deliveryLocation",destination);
    if(quantity.trim())data.set("quantity",quantity);
    if(grade.trim())data.set("productGrade",grade);
@@ -138,7 +140,15 @@ export default function DealAssessmentJourney(){
     </label>}
     {mode==="paste"&&<label>Copy and paste details from WhatsApp, an email or a document
      <textarea rows={7} value={pasted} onChange={e=>setPasted(e.target.value)} maxLength={15000} placeholder="Paste the buyer requirements, grade, delivery basis and available offer..."/></label>}
-    {mode==="manual"&&<div className="ds-journey-fields">
+    {mode==="manual"&&commodity!=="chrome"&&<div>
+    <p className="ds-advisory">This commodity has its own units and quality specifications. Describe your known stock, buyer terms, grade or quality measurements and prices in their original units. DealScope will not convert these into chrome tonnes or percentages.</p>
+    <label>What you know about the transaction
+      <textarea rows={7} maxLength={15000} value={manualNotes} onChange={e=>setManualNotes(e.target.value)}
+      placeholder={`Commodity: ${catalog[commodity].title}. Quantity and unit, material specification, location, price and contract obligations...`}/>
+    </label>
+    <small>Relevant quality dimensions: {catalog[commodity].qualityDimensions.join(", ")}. These are information-intake fields, not a validated valuation.</small>
+   </div>}
+   {mode==="manual"&&commodity==="chrome"&&<div className="ds-journey-fields">
       <label>{entryPoint==="sale_contract"?"Buyer delivery location":"Stockpile or source location"}<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder="e.g. City Deep, Johannesburg"/></label>
       <label>{entryPoint==="sale_contract"?"Required product quantity":"Available stock quantity"} (dry tonnes if known)<input type="number" min="0" value={quantity} onChange={e=>setQuantity(e.target.value)} placeholder="e.g. 1000"/></label>
       <label>{entryPoint==="sale_contract"?"Required product grade":"Source material grade"} (%)<input type="number" min="0" max="100" value={grade} onChange={e=>setGrade(e.target.value)} placeholder="e.g. 42"/></label>

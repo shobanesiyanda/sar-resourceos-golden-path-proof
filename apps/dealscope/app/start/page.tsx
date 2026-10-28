@@ -5,8 +5,8 @@ import "../landing.css";
 const categories=[
  {id:"originator",label:"Deal originator / intermediary",detail:"Investigate mandates, the claimed stock and buyer credibility, then compare routes."},
  {id:"trader",label:"Commodity trader",detail:"Screen sourcing, grade, delivered cost, pricing, capital exposure and profitability."},
- {id:"company",label:"Mining or supply company",detail:"Maintain private opportunity and buyer/seller documentation under role-based access."},
- {id:"buyer",label:"Buyer / off-taker",detail:"Evaluate counterparties and expressly disclosed offers in a governed workspace."}
+ {id:"company",label:"Mining or supply company",detail:"Maintain your own confidential transaction dossier, supporting documents and reassessment history under role-based access."},
+ {id:"buyer",label:"Buyer / off-taker",detail:"Assess the terms and evidence of your own proposed purchase or offtake requirement."}
 ] as const;
 type Role=(typeof categories)[number]["id"];
 export default function TrialJourney(){
@@ -15,7 +15,7 @@ export default function TrialJourney(){
  return <main className="ds-site">
   <div className="ds-preview-bar"><div className="wrap"><strong>Account provisioning not live.</strong> This is a preview of the one-free-complete-deal-cycle introduction. No identities, invitations or payments are being collected here.</div></div>
   <header className="ds-header"><div className="wrap ds-header-inner"><Link href="/" className="ds-logo">DEALSCOPE<span>.</span></Link><div className="ds-header-actions"><Link href="/integrity" className="ds-header-signin">Explore integrity checks</Link><Link href="/" className="ds-btn ds-btn-outline ds-btn-small">Back to website</Link></div></div></header>
-  <section className="ds-hero" style={{padding:"66px 0 60px"}}><div className="wrap"><div className="ds-eyebrow">GET TO KNOW THE PLATFORM</div><h1 style={{maxWidth:850}}>Your first <em>complete deal assessment</em> — free.</h1><p className="ds-hero-copy">One complete Deal Assistance & Assessment cycle is designed for eligible new people and companies, not a restricted calculator or unrestricted free analyses. Learn the steps for activating your account and preparing your first opportunity.</p></div></section>
+  <section className="ds-hero" style={{padding:"66px 0 60px"}}><div className="wrap"><div className="ds-eyebrow">GET TO KNOW THE PLATFORM</div><h1 style={{maxWidth:850}}>Your first <em>complete deal assessment</em> — free.</h1><p className="ds-hero-copy">One complete Deal Assistance & Assessment cycle is designed for eligible new people and companies, not a restricted calculator or unrestricted free analyses. Learn the steps for activating your account and assessing your first customer-submitted transaction.</p></div></section>
   <section className="ds-section"><div className="wrap">
    <div className="ds-section-top"><div><div className="ds-eyebrow">STEP 01 · CHOOSE YOUR COMMERCIAL WORKFLOW</div><h2>What brings you to DealScope?</h2></div><p>Select your primary use case to see the relevant first activity. This selection remains in your browser session only.</p></div>
    <div className="ds-feature-grid" style={{gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))"}}>

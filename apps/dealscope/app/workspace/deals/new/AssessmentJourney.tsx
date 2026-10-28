@@ -23,6 +23,9 @@ type Report={state:string;assessmentId:string;missingFacts?:string[];nextActions
  outputs?:{gradeAlternatives?:{feedstockGradeCr2o3Pct:number;requiredDryTonnes:number}[];
  routeOptions?:{code:string;label:string}[];
  directTrade?:{minimumProductDryTonnes:number|null;maximumPurchaseZarPerDryT:number|null;quantityBasis:string;status:string};
+ sourceOfferPosition?:{state:string;targetSaleBasis:string;maximumPurchaseZarPerDryT:number|null;
+ supplierAskingZarPerDryT:number|null;provisionalNetZar:number|null;provisionalMarginPct:number|null;
+ comparableMarketZarPerDryT:number;confidence:string;priceEvidence:{sourceId:string;observedOn:string;validUntil:string}};
  freightBudget?:{estimatedZarPerDryT:number;estimatedTrips:number}|null;
  purchaseCeiling?:{feedstockGradeCr2o3Pct:number;maximumPurchaseZarPerDryT:number|null}[]|null}};
 const terms=["Terms stated in my contract","EXW","FCA","FOB","CFR","CIF","DAP","DPU","DDP","FOT / ex-warehouse (contract-specific)","Not yet known"];
@@ -39,6 +42,7 @@ export default function DealAssessmentJourney(){
  const [quantity,setQuantity]=useState("");
  const [grade,setGrade]=useState("");
  const [buyerPrice,setBuyerPrice]=useState("");
+ const [sourcePrice,setSourcePrice]=useState("");
  const [prepared,setPrepared]=useState<Prepared|null>(null);
  const [confirmed,setConfirmed]=useState(false);
  const [report,setReport]=useState<Report|null>(null);
@@ -66,7 +70,8 @@ export default function DealAssessmentJourney(){
    if(destination.trim())data.set("deliveryLocation",destination);
    if(quantity.trim())data.set("quantity",quantity);
    if(grade.trim())data.set("productGrade",grade);
-   if(buyerPrice.trim())data.set("buyerPrice",buyerPrice);
+   if(buyerPrice.trim()&&entryPoint==="sale_contract")data.set("buyerPrice",buyerPrice);
+   if(sourcePrice.trim()&&entryPoint==="source_offer")data.set("sourcePrice",sourcePrice);
    files.forEach(file=>data.append("documents",file,file.name));
    const res=await fetch("/api/assessments/intake",{method:"POST",body:data,credentials:"same-origin",cache:"no-store"});
    const body=await res.json();
@@ -148,7 +153,7 @@ export default function DealAssessmentJourney(){
       <label>{entryPoint==="sale_contract"?"Buyer delivery location":"Stockpile or source location"}<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder="e.g. City Deep, Johannesburg"/></label>
       <label>{entryPoint==="sale_contract"?"Required product quantity":"Available stock quantity"} (dry tonnes if known)<input type="number" min="0" value={quantity} onChange={e=>setQuantity(e.target.value)} placeholder="e.g. 1000"/></label>
       <label>{entryPoint==="sale_contract"?"Required product grade":"Source material grade"} (%)<input type="number" min="0" max="100" value={grade} onChange={e=>setGrade(e.target.value)} placeholder="e.g. 42"/></label>
-      <label>Known buyer price (R per dry tonne), optional<input type="number" min="0" value={buyerPrice} onChange={e=>setBuyerPrice(e.target.value)} placeholder="Leave blank if unknown"/></label>
+      {entryPoint==="sale_contract"?<label>Known buyer price (R per dry tonne), optional<input type="number" min="0" value={buyerPrice} onChange={e=>setBuyerPrice(e.target.value)} placeholder="Leave blank if unknown"/></label>:<label>Supplier asking price (R per dry tonne), optional<input type="number" min="0" value={sourcePrice} onChange={e=>setSourcePrice(e.target.value)} placeholder="DealScope assesses a price ceiling even if unknown"/></label>}
     </div>}
     <p className="ds-advisory">DealScope cannot certify stock, mandates or contracts from uploaded documents alone.</p>
     <div className="ds-journey-actions"><button type="button" className="secondary" onClick={()=>setStep(0)}>Back</button>
@@ -174,6 +179,14 @@ export default function DealAssessmentJourney(){
     {report.outputs?.directTrade&&<div><h3>Direct supply or resale</h3><p>Minimum material before allowances: {report.outputs.directTrade.minimumProductDryTonnes?.toLocaleString("en-ZA")??"Not established"} dry tonnes.</p>
     <p>Proposed purchase ceiling: {report.outputs.directTrade.maximumPurchaseZarPerDryT===null?"Not established":`R${report.outputs.directTrade.maximumPurchaseZarPerDryT.toLocaleString("en-ZA")} per dry tonne (conditional)`}.</p>
     <small>{report.outputs.directTrade.quantityBasis}</small></div>}
+    {report.outputs?.sourceOfferPosition&&<div className="ds-advisory">
+     <h3>Your supplier offer against the market</h3>
+     <p>Comparable market indication: R{report.outputs.sourceOfferPosition.comparableMarketZarPerDryT.toLocaleString("en-ZA")} per dry tonne · {report.outputs.sourceOfferPosition.targetSaleBasis}</p>
+     <p>Recommended maximum buying price: {report.outputs.sourceOfferPosition.maximumPurchaseZarPerDryT===null?"Not viable at selected margin":`R${report.outputs.sourceOfferPosition.maximumPurchaseZarPerDryT.toLocaleString("en-ZA")}/dry tonne (conditional)`}</p>
+     <p>Supplier asking price: {report.outputs.sourceOfferPosition.supplierAskingZarPerDryT===null?"Not provided":`R${report.outputs.sourceOfferPosition.supplierAskingZarPerDryT.toLocaleString("en-ZA")}/dry tonne`}</p>
+     <p>Provisional margin: {report.outputs.sourceOfferPosition.provisionalMarginPct===null?"Not available":`${report.outputs.sourceOfferPosition.provisionalMarginPct}%`}</p>
+     <small>Source: {report.outputs.sourceOfferPosition.priceEvidence.sourceId} · Observed {report.outputs.sourceOfferPosition.priceEvidence.observedOn}. Market indications are not binding buyer commitments.</small>
+    </div>}
     <h3>Negotiation and next steps</h3>
     {report.outputs?.freightBudget?<p>Indicative freight allowance: R{report.outputs.freightBudget.estimatedZarPerDryT.toLocaleString("en-ZA")}/dry tonne · {report.outputs.freightBudget.estimatedTrips} loads</p>:<p>Freight allowance: evidence required.</p>}
     {report.outputs?.purchaseCeiling?.length?<ul>{report.outputs.purchaseCeiling.map(x=><li key={x.feedstockGradeCr2o3Pct}>{x.feedstockGradeCr2o3Pct}% feedstock: {x.maximumPurchaseZarPerDryT===null?"Price ceiling not established":`Maximum indicative R${x.maximumPurchaseZarPerDryT.toLocaleString("en-ZA")}/dry tonne`}</li>)}</ul>:<p>Acquisition-price ceiling: insufficient substantiated route economics.</p>}

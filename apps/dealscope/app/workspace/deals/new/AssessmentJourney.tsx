@@ -19,7 +19,7 @@ const catalog={
  "I am procuring bulk fuel for resale","I have a delivery contract to fulfil"]}
 } as const;
 type Commodity=keyof typeof catalog;
-type Prepared={caseId:string;knownFacts:Record<string,{value:string|number;evidence:string}>;missingFacts:string[];conflicts:{field:string}[]};
+type Prepared={caseId:string;sourceRevision:number;knownFacts:Record<string,{value:string|number;evidence:string}>;missingFacts:string[];conflicts:{field:string}[]};
 type Report={state:string;assessmentId:string;missingFacts?:string[];nextActions?:{code:string;description:string}[];
  outputs?:{gradeAlternatives?:{feedstockGradeCr2o3Pct:number;requiredDryTonnes:number}[];
  freightBudget?:{estimatedZarPerDryT:number;estimatedTrips:number}|null;
@@ -70,6 +70,12 @@ export default function DealAssessmentJourney(){
   if(!prepared||!confirmed)return;
   setError("");setWorking(true);
   try{
+   const confirmation=await fetch("/api/assessments/confirm",{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({caseId:prepared.caseId,sourceRevision:prepared.sourceRevision,confirm:true}),
+    credentials:"same-origin",cache:"no-store"});
+   const confirmedBody=await confirmation.json();
+   if(!confirmation.ok)throw Error(confirmedBody.message||"Saved fact confirmation is not available.");
    const res=await fetch("/api/assessments",{method:"POST",
     headers:{"Content-Type":"application/json"},body:JSON.stringify({caseId:prepared.caseId}),
     credentials:"same-origin",cache:"no-store"});

@@ -22,7 +22,8 @@ type Prepared={caseId:string;sourceRevision:number;knownFacts:Record<string,{val
 type Report={state:string;assessmentId:string;missingFacts?:string[];nextActions?:{code:string;description:string}[];
  outputs?:{gradeAlternatives?:{feedstockGradeCr2o3Pct:number;requiredDryTonnes:number}[];
  routeOptions?:{code:string;label:string}[];
- directTrade?:{minimumProductDryTonnes:number|null;maximumPurchaseZarPerDryT:number|null;quantityBasis:string;status:string};
+ directTrade?:{minimumProductDryTonnes:number|null;availableSourceDryTonnes:number|null;
+ estimatedSaleableDryTonnes:number|null;maximumPurchaseZarPerDryT:number|null;quantityBasis:string;status:string};
  sourceOfferPosition?:{state:string;targetSaleBasis:string;maximumPurchaseZarPerDryT:number|null;
  supplierAskingZarPerDryT:number|null;provisionalNetZar:number|null;provisionalMarginPct:number|null;
  comparableMarketZarPerDryT:number;confidence:string;priceEvidence:{sourceId:string;observedOn:string;validUntil:string}};
@@ -176,7 +177,8 @@ export default function DealAssessmentJourney(){
      <table><thead><tr><th>Feedstock grade</th><th>Required dry tonnes</th></tr></thead>
      <tbody>{report.outputs.gradeAlternatives.map(x=><tr key={x.feedstockGradeCr2o3Pct}><td>{x.feedstockGradeCr2o3Pct}%</td><td>{x.requiredDryTonnes.toLocaleString("en-ZA")}</td></tr>)}</tbody></table></div>}
     {!!report.outputs?.routeOptions?.length&&<div><h3>Possible fulfilment routes</h3><ul>{report.outputs.routeOptions.map(x=><li key={x.code}>{x.label}</li>)}</ul><p>Choose the route you want DealScope to assess. No processing yield has been assumed.</p></div>}
-    {report.outputs?.directTrade&&<div><h3>Direct supply or resale</h3><p>Minimum material before allowances: {report.outputs.directTrade.minimumProductDryTonnes?.toLocaleString("en-ZA")??"Not established"} dry tonnes.</p>
+    {report.outputs?.directTrade&&<div><h3>Direct supply or resale</h3>
+    {report.outputs.directTrade.availableSourceDryTonnes!==null?<p>Available source: {report.outputs.directTrade.availableSourceDryTonnes.toLocaleString("en-ZA")} dry tonnes. Estimated saleable: {report.outputs.directTrade.estimatedSaleableDryTonnes?.toLocaleString("en-ZA")??"Not established"} dry tonnes.</p>:<p>Required purchase quantity: {report.outputs.directTrade.minimumProductDryTonnes?.toLocaleString("en-ZA")??"Not established"} dry tonnes.</p>}
     <p>Proposed purchase ceiling: {report.outputs.directTrade.maximumPurchaseZarPerDryT===null?"Not established":`R${report.outputs.directTrade.maximumPurchaseZarPerDryT.toLocaleString("en-ZA")} per dry tonne (conditional)`}.</p>
     <small>{report.outputs.directTrade.quantityBasis}</small></div>}
     {report.outputs?.sourceOfferPosition&&<div className="ds-advisory">

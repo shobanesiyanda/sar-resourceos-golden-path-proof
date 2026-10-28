@@ -1,3 +1,4 @@
+import {readBoundedJson,BodyIntakeError} from "./bounded-body.mjs";
 import {registryVersion} from "../specialist-registry.mjs";
 import {prepareAssessmentCandidate} from "./assessment-workflow.mjs";
 const stopped=(status,code)=>({status,body:{status:code},cacheControl:"no-store"});
@@ -16,10 +17,8 @@ export async function executeAssessmentRequest({request,services}){
  if(!auth?.verified||!auth?.activeMembership||!auth?.tenantId||!auth?.userId||
     auth.entitledToAssessment!==true||auth.currentLegalAcceptance!==true)
   return stopped(403,"assessment_access_not_granted");
- const length=Number(request.headers?.get?.("content-length")||0);
- if(!Number.isFinite(length)||length>8192)return stopped(413,"request_too_large");
- let data;
- try{data=await request.json();}catch{return stopped(400,"invalid_request");}
+ let data;try{data=await readBoundedJson(request,8192);}
+ catch(error){return stopped(error instanceof BodyIntakeError?error.status:400,error instanceof BodyIntakeError?error.code:"invalid_request");}
  if(!data||Object.keys(data).length!==1||!caseIdValid(data.caseId))
   return stopped(400,"case_reference_required");
  let owned;

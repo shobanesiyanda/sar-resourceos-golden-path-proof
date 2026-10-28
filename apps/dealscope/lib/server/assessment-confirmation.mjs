@@ -1,3 +1,4 @@
+import {registryVersion} from "../specialist-registry.mjs";
 const stopped=(status,code)=>({status,body:{status:code},cacheControl:"no-store"});
 const caseIdValid=s=>typeof s==="string"&&/^[a-zA-Z0-9_-]{1,80}$/.test(s);
 /** Independent saved confirmation; a local checkbox cannot grant case approval. */
@@ -19,6 +20,7 @@ export async function executeConfirmationRequest({request,services}){
  catch{return stopped(503,"secure_case_storage_unavailable");}
  if(!owned||owned.tenantId!==auth.tenantId||owned.ownerUserId!==auth.userId)
   return stopped(404,"case_not_available");
+ if(owned.registryVersion!==registryVersion)return stopped(409,"case_specialist_registry_revision_required");
  if(owned.sourceRevision!==data.sourceRevision)return stopped(409,"facts_revision_changed");
  if(!owned.sourcePersisted||!Array.isArray(owned.sources)||!owned.sources.length)
   return stopped(409,"intake_not_committed");

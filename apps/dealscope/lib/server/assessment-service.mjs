@@ -1,3 +1,4 @@
+import {registryVersion} from "../specialist-registry.mjs";
 import {prepareAssessmentCandidate} from "./assessment-workflow.mjs";
 const stopped=(status,code)=>({status,body:{status:code},cacheControl:"no-store"});
 const caseIdValid=s=>typeof s==="string"&&/^[a-zA-Z0-9_-]{1,80}$/.test(s);
@@ -30,6 +31,7 @@ export async function executeAssessmentRequest({request,services}){
    owned.confirmedSourceRevision!==owned.sourceRevision||!owned.entryPoint||
    !Array.isArray(owned.sources))
    return stopped(404,"case_not_available");
+ if(owned.registryVersion!==registryVersion)return stopped(409,"case_specialist_registry_revision_required");
  let referenceData;
  try{referenceData=await services.loadInternalReferences({ownedCase:owned,tenantId:auth.tenantId});}
  catch{return stopped(503,"reference_data_unavailable");}

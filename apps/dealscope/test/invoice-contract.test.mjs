@@ -28,6 +28,7 @@ test("wrong tenant, duplicate order, false capture and mismatched totals block",
  assert.equal(prepareInvoiceCandidate({...base,processedOrderIds:["ORDER1"]}).state,"blocked");
  assert.equal(prepareInvoiceCandidate({...base,order:{...order,capturedMinor:100}}).state,"blocked");
  assert.equal(prepareInvoiceCandidate({...base,order:{...order,grossMinor:1}}).state,"blocked");
+ assert.equal(prepareInvoiceCandidate({...base,order:{...order,netMinor:0,grossMinor:0,capturedMinor:0}}).state,"blocked");
 });
 test("provider refund yields original invoice-linked candidate and no replay",()=>{
  const invoice=prepareInvoiceCandidate(base).document;

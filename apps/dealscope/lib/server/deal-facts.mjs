@@ -3,11 +3,13 @@ const allowedFields = new Set([
   'commodity','material_form','commercial_role','delivery_term','delivery_location',
   'buyer_product_grade_pct','buyer_quantity_dry_t','buyer_price_zar_per_dry_t',
   'feedstock_grade_pct','feedstock_quantity_dry_t','source_location',
-  'contract_reference','payment_terms','seller_name','buyer_name'
+  'contract_reference','payment_terms','seller_name','buyer_name',
+  'fulfilment_route'
 ]);
 const channels = new Set(['uploaded_document','pasted_text','manual']);
 const finitePositive = v => typeof v === 'number' && Number.isFinite(v) && v > 0;
 function validValue(k, v) {
+  if (k === 'fulfilment_route') return ['undecided','direct_trade','process_feedstock','own_stock'].includes(v);
   if (k.endsWith('_pct')) return finitePositive(v) && v <= 100;
   if (k.endsWith('_dry_t') || k.endsWith('_dry_tonnes')) return finitePositive(v);
   if (k.endsWith('_zar_per_dry_t')) return finitePositive(v);

@@ -1,3 +1,4 @@
+import {readBoundedForm,BodyIntakeError} from "./bounded-body.mjs";
 import {verifyMaterialRoute} from "../specialist-registry.mjs";
 import {normaliseManualDealIntake} from "./manual-intake-normalizer.mjs";
 import {reconcileDealFacts} from "./deal-facts.mjs";
@@ -16,9 +17,8 @@ export async function executeIntakeRequest({request,services}){
  if(!auth?.verified||!auth?.activeMembership||!auth?.tenantId||!auth?.userId||
   auth.entitledToAssessment!==true||auth.currentLegalAcceptance!==true)
   return blocked(403,"assessment_access_not_granted");
- const length=Number(request.headers?.get?.("content-length")||0);
- if(!Number.isFinite(length)||length>15728640)return blocked(413,"intake_too_large");
- let form;try{form=await request.formData();}catch{return blocked(400,"invalid_intake");}
+ let form;try{form=await readBoundedForm(request,15728640);}
+ catch(error){return blocked(error instanceof BodyIntakeError?error.status:400,error instanceof BodyIntakeError?error.code:"invalid_intake");}
  const commodity=form.get("commodity"), entryPoint=form.get("entryPoint");
  const materialForm=form.get("materialForm"), commercialRole=form.get("commercialRole");
  const deliveryTerm=form.get("deliveryTerm");

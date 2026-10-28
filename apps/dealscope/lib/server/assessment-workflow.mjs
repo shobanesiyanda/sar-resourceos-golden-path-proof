@@ -6,6 +6,7 @@
  */
 import {reconcileDealFacts} from "./deal-facts.mjs";
 import {buildChromeFeedstockScenarios,estimateRoadHaulage,acquisitionCeiling} from "./chrome-route-engine.mjs";
+import {assessSourceResalePosition} from "./source-offer-engine.mjs";
 
 const clean=v=>typeof v==="string" && v.trim().length>0 && v.length<=300;
 const positive=v=>typeof v==="number" && Number.isFinite(v) && v>0;
@@ -73,8 +74,30 @@ export function prepareAssessmentCandidate({entryPoint,sources,referenceData={}}
     outputs.directTrade.status="conditional_purchasing_ceiling";
    }
   }
+  if(entryPoint==="source_offer"&&route==="direct_trade"){
+   const position=assessSourceResalePosition({
+    sourceDryTonnes:qty,sourceCr2o3Pct:gradePct,
+    sourceOfferZarPerDryT:value(known,"source_purchase_price_zar_per_dry_t"),
+    commodity,materialForm:value(known,"material_form"),
+    deliveryBasis:referenceData.targetSaleBasis,
+    sourceRetentionPct:referenceData.directTradeRetentionPct,
+    marketEvidence:referenceData.saleBenchmark,
+    costEvidence:referenceData.sourceOfferCosts,
+    assessmentDate:referenceData.assessmentDate
+   });
+   if(position.valuationIssued){
+    outputs.sourceOfferPosition={state:position.state,
+     targetSaleBasis:referenceData.targetSaleBasis,
+     maximumPurchaseZarPerDryT:position.maximumAcquisitionZarPerDryT,
+     supplierAskingZarPerDryT:position.supplierAskingZarPerDryT,
+     provisionalNetZar:position.provisionalNetZar,
+     provisionalMarginPct:position.provisionalMarginPct,
+     comparableMarketZarPerDryT:position.marketReferenceZarPerDryT,
+     priceEvidence:position.priceEvidence,confidence:"indicative_not_executable"};
+   }else nextActions.push(task("source_offer_valuation_evidence",position.reason));
+  }
   if(route==="own_stock")nextActions.push(task("verify_stock_title","Confirm lawful ownership, storage conditions and actual releasable stock"));
-  else if(outputs.directTrade.maximumPurchaseZarPerDryT===null)nextActions.push(task("confirm_direct_trade_costs","Confirm buyer price, product retention, full delivery costs and funding to establish a buying ceiling"));
+  else if(entryPoint==="sale_contract"&&outputs.directTrade.maximumPurchaseZarPerDryT===null)nextActions.push(task("confirm_direct_trade_costs","Confirm buyer price, product retention, full delivery costs and funding to establish a buying ceiling"));
   return safe("provisional_partial",known,facts.missing,[],outputs,nextActions);
  }
  const outputs={gradeAlternatives:[],freightBudget:null,purchaseCeiling:null};

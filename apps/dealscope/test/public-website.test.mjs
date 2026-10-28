@@ -56,7 +56,7 @@ test("DealScope remains the primary public brand; correct legal operator only in
  assert.match(legal,/Current operator and legal status/);
  assert.match(legal,operator);
  assert.match(legal,/not represented as a separately incorporated company/);
- assert.match(legal,/does not register customer accounts/);
+ assert.match(legal,/does not yet accept customer signup/);
  assert.doesNotMatch(legal,/registration number:\s*\d|VAT number:\s*\d/i);
 });
 test("marketing and app metadata do not advertise parent or cross-link corporate business",()=>{

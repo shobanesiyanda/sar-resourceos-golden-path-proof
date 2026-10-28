@@ -1,6 +1,7 @@
 import {readBoundedJson,BodyIntakeError} from "./bounded-body.mjs";
 import {registryVersion} from "../specialist-registry.mjs";
 import {prepareAssessmentCandidate} from "./assessment-workflow.mjs";
+import {toCustomerDecisionBrief} from "./customer-brief.mjs";
 const stopped=(status,code)=>({status,body:{status:code},cacheControl:"no-store"});
 const caseIdValid=s=>typeof s==="string"&&/^[a-zA-Z0-9_-]{1,80}$/.test(s);
 /**
@@ -41,8 +42,8 @@ export async function executeAssessmentRequest({request,services}){
  catch{return stopped(503,"assessment_storage_unavailable");}
  if(!saved?.committed||saved.tenantId!==auth.tenantId||saved.caseId!==data.caseId||
     !caseIdValid(saved.assessmentId))return stopped(503,"assessment_not_committed");
- return {status:200,cacheControl:"no-store",body:{
-  assessmentId:saved.assessmentId,caseId:data.caseId,
-  ...candidate,reportIssued:false,assessmentKind:"provisional",executionPermitted:false
- }};
+ let brief;
+ try{brief=toCustomerDecisionBrief({assessmentId:saved.assessmentId,caseId:data.caseId,candidate});}
+ catch{return stopped(503,"customer_projection_failed");}
+ return {status:200,cacheControl:"no-store",body:brief};
 }

@@ -4,6 +4,7 @@
  * Never import into a client component. Customer facts are assertions, NOT
  * independent verification. This module produces a candidate decision brief.
  */
+import {verifyMaterialRoute} from "../specialist-registry.mjs";
 import {reconcileDealFacts} from "./deal-facts.mjs";
 import {buildChromeFeedstockScenarios,estimateRoadHaulage,acquisitionCeiling} from "./chrome-route-engine.mjs";
 import {assessSourceResalePosition} from "./source-offer-engine.mjs";
@@ -29,8 +30,14 @@ export function prepareAssessmentCandidate({entryPoint,sources,referenceData={}}
    {gradeAlternatives:[],freightBudget:null,purchaseCeiling:null},[task("resolve_conflicts","Confirm conflicting source facts before assessment")]);
  const commodity=String(value(known,"commodity")||"").toLowerCase();
  const nextActions=[];
+ const material=value(known,"material_form");
+ const routeChoice=value(known,"fulfilment_route")||"undecided";
+ const registryCheck=verifyMaterialRoute({commodity,materialForm:material,route:routeChoice,entryPoint});
+ if(!registryCheck.valid)return safe("specialist_input_invalid",known,facts.missing,[],
+  {gradeAlternatives:[],freightBudget:null,purchaseCeiling:null},
+  [task("correct_material_route","The selected material form and fulfilment route are incompatible with this commodity")]);
  if(facts.missing.length) nextActions.push(task("complete_critical_facts","Confirm missing transaction facts"));
- if(commodity!=="chrome")return safe("specialist_pending",known,facts.missing,[],
+ if(registryCheck.capability!=="indicative_chrome_only")return safe("specialist_pending",known,facts.missing,[],
    {gradeAlternatives:[],freightBudget:null,purchaseCeiling:null},
    [...nextActions,task("activate_specialist","A validated commodity-specific assessment engine is required")]);
  const route=value(known,"fulfilment_route");

@@ -66,6 +66,6 @@ export default function IntegrityGuidance(){
     </aside>
    </div>
   </section>
-  <footer className="foot"><div className="wrap">DealScope · Full Commercial Intelligence and Exchange Suite · Development preview</div></footer>
+  <footer className="foot"><div className="wrap">DealScope · Integrity self-check preview · <Link href="/legal">Legal information</Link> · <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link></div></footer>
  </main>;
 }

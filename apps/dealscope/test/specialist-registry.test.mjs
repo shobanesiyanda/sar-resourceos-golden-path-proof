@@ -50,7 +50,9 @@ test("intake rejects invalid material and route before invoking storage adapter"
  const formValues={commodity:"chrome",entryPoint:"source_offer",materialForm:"Chrome concentrate",
   commercialRole:"trader",deliveryTerm:"EXW",fulfilmentRoute:"process_feedstock",
   pastedText:"Seller has material at mine"};
- const request={headers:{get:()=>String(600)},formData:async()=>({get:k=>formValues[k]??null,getAll:()=>[]})};
+ const payload=new FormData();
+ for(const [key,value] of Object.entries(formValues))if(value!==null&&value!==undefined)payload.append(key,String(value));
+ const request=new Request("https://dealscope.co.za/api/assessments/intake",{method:"POST",body:payload});
  const services={authenticate:async()=>({verified:true,activeMembership:true,tenantId:"TEN",userId:"USR",
   entitledToAssessment:true,currentLegalAcceptance:true}),
   persistAndExtractIntake:async()=>{touched=true;return null}};

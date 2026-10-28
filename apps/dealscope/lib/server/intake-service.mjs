@@ -1,8 +1,8 @@
+import {verifyMaterialRoute} from "../specialist-registry.mjs";
 import {normaliseManualDealIntake} from "./manual-intake-normalizer.mjs";
 import {reconcileDealFacts} from "./deal-facts.mjs";
 const blocked=(status,code)=>({status,body:{status:code},cacheControl:"no-store"});
 const required=["authenticate","persistAndExtractIntake"];
-const permitted=new Set(["chrome","coal","gold","diesel"]);
 const validString=v=>typeof v==="string"&&v.trim().length>0&&v.length<=300;
 const validCase=s=>typeof s==="string"&&/^[a-zA-Z0-9_-]{1,80}$/.test(s);
 /**
@@ -23,10 +23,12 @@ export async function executeIntakeRequest({request,services}){
  const materialForm=form.get("materialForm"), commercialRole=form.get("commercialRole");
  const deliveryTerm=form.get("deliveryTerm");
  const fulfilmentRoute=form.get("fulfilmentRoute")||"undecided";
- if(!permitted.has(commodity)||!["sale_contract","source_offer"].includes(entryPoint)||
+ if(!["sale_contract","source_offer"].includes(entryPoint)||
   !validString(materialForm)||!validString(commercialRole)||!validString(deliveryTerm)||
   !["undecided","direct_trade","process_feedstock","own_stock"].includes(fulfilmentRoute))
   return blocked(422,"deal_context_incomplete");
+ const capability=verifyMaterialRoute({commodity,materialForm,route:fulfilmentRoute});
+ if(!capability.valid)return blocked(422,capability.reason);
  const documents=form.getAll("documents");
  if(documents.length>5)return blocked(413,"too_many_documents");
  const validExt=/\.(pdf|docx|txt|png|jpg|jpeg)$/i;
@@ -49,7 +51,9 @@ export async function executeIntakeRequest({request,services}){
  try{
   persisted=await services.persistAndExtractIntake({
    tenantId:auth.tenantId,userId:auth.userId,
-   context:{commodity,entryPoint,materialForm,commercialRole,deliveryTerm,fulfilmentRoute},
+   context:{commodity,entryPoint,materialForm,commercialRole,deliveryTerm,fulfilmentRoute,
+    registryVersion:capability.registryVersion,materialStage:capability.materialStage,
+    assessmentCapability:capability.capability},
    sources:{documents,pastedText:typeof pasted==="string"?pasted:"",manual:{
     deliveryLocation:form.get("deliveryLocation"),quantity,grade,
     buyerPrice:form.get("buyerPrice"),sourcePrice:form.get("sourcePrice")},

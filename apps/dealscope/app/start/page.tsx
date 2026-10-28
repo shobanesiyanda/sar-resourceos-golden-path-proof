@@ -31,7 +31,7 @@ export default function TrialJourney(){
     <div className="ds-eyebrow">YOUR RECOMMENDED FIRST ACTIVITY</div>
     <h3 style={{marginTop:12}}>{role==="buyer"?"Review the evidence behind a proposed offer":role==="company"?"Create a permissioned opportunity dossier":role==="trader"?"Compare the economics of a sourced parcel":"Check whether the proposed deal is credible"}</h3>
     <p>{choice.detail}</p>
-    <div className="ds-hero-actions"><Link href="/integrity" className="ds-btn ds-btn-gold">Explore the public Deal Integrity self-check →</Link><Link href="/runs" className="ds-btn ds-btn-outline">Explore the Deal Run calculator ↗</Link></div>
+    <div className="ds-hero-actions"><Link href="/integrity" className="ds-btn ds-btn-gold">Explore the public Deal Integrity self-check →</Link><Link href="/workspace/deals/new" className="ds-btn ds-btn-outline">Open private Deal Intelligence workspace ↗</Link></div>
     <div className="ds-trial-rule">These preview tools do not save customer records or provide live counterparty verification.</div>
    </div>
   </div></section>

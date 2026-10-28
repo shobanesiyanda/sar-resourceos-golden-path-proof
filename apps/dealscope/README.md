@@ -12,7 +12,7 @@ The versioned specialist catalogue lives in `lib/specialist-registry.mjs`. Chrom
 
 `lib/server/assessment-runtime.mjs` remains deliberately null; customer Auth/RLS/storage, malware scanning, document extraction, licences/market feeds and payments are not live. The three protected assessment API functions fail closed. No database migrations have been applied or production deployment approved.
 
-**Verification:** source-level focused tests 53/53 and marketing tests 10/10 passed in a GitHub-fetched JS-isolate harness after Macro 006 changes. A no-deployment, read-only Node24 test/build workflow was committed at `.github/workflows/dealscope-source-verification.yml`, but GitHub has not yet reported a workflow run; pinned Next production build, complete native Node test suite, browser E2E and real database/RLS acceptance remain OPEN. No claim of production readiness.
+**Verification:** source-level focused tests 54/54 and marketing tests 10/10 passed in a GitHub-fetched JS-isolate harness after Macro 006 changes. A no-deployment, read-only Node24 test/build workflow was committed at `.github/workflows/dealscope-source-verification.yml`, but the recorded GitHub Actions runs failed without retrievable job steps/logs; pinned Next production build, complete native Node test suite, browser E2E and real database/RLS acceptance remain OPEN. No claim of production readiness.
 
 Controlling handover: `docs/control/DEALSCOPE_2026-10-28_MACRO_006_ENGINEERING_AND_RELEASE_HOLD.md`.
 

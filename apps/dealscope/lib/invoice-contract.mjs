@@ -28,13 +28,15 @@ export function prepareInvoiceCandidate({order,customer,approval,issuedBy,invoic
  order.state!=="captured_verified"||!str(customer.name)||!str(customer.address)||
  customer.tenantId!==order.tenantId||!str(approval.companyAddress)||
  !str(invoiceNumber,90)||!date(invoiceDate)||
- !money(order.netMinor)||!money(order.quantity)||order.quantity<1||
+ !money(order.netMinor)||order.netMinor===0||!money(order.quantity)||order.quantity<1||
  order.currency!=="ZAR"||!Array.isArray(processedOrderIds)||
  processedOrderIds.includes(order.id)||!Number.isSafeInteger(taxRateBasisPoints)||
  ![0,1500].includes(taxRateBasisPoints)||taxRateBasisPoints!==approval.approvedRateBasisPoints||
  !str(customer.taxIdOrExemption,80))
  return block("Verified company, VAT, approved Finance, real capture, customer and unique invoice record required");
- const vatMinor=Math.round(order.netMinor*taxRateBasisPoints/10000);
+ const vatExact=(BigInt(order.netMinor)*BigInt(taxRateBasisPoints)+5000n)/10000n;
+ if(vatExact>BigInt(Number.MAX_SAFE_INTEGER))return block('VAT calculation overflow');
+ const vatMinor=Number(vatExact);
  if(!money(vatMinor)||!money(order.grossMinor)||order.grossMinor!==order.netMinor+vatMinor)
   return block("VAT, total and capture amount must reconcile in ZAR cents");
  if(!money(order.capturedMinor)||order.capturedMinor!==order.grossMinor)

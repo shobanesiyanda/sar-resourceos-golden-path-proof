@@ -3,8 +3,8 @@
 **ID:** SAR-XSYS-001 • **Owner:** Shobane African Resources (Pty) Ltd • **Revision:** 2026-10-27 / v0.1  
 **Status:** Founder-ratified cross-system boundary specification; backend integration and security acceptance still OPEN. Defines the intended boundaries; does not claim working connectors or databases.
 
-## Public presentation supersession (28 October 2026)
-DealScope and the SAR website are two DISTINCT externally presented identities. **Do not cross-link them or identify DealScope as Shobane/SAR-owned in either public UI**. Internal accurate ownership/custody records still exist and should be restricted. Do not use separate brand presentation to misstate the legal supplier: an authorised standalone DealScope legal contracting entity, merchant, email, tax and required consumer legal disclosures must be established/verified before ecommerce. No public Shobane link, logo, metadata, footer, invoice or marketing references. Details: [public brand/entity separation](14-DEALSCOPE-PUBLIC-BRAND-AND-ENTITY-SEPARATION.md).
+## Customer-facing brand and truthful legal operator (latest 28 October direction)
+DealScope is a **separately presented product brand**, not a separate legal company today. A discreet legible **Shobane African Resources (Pty) Ltd** legal operator reference in DealScope footers and accessible /legal company particulars are REQUIRED, while the product hero, commercial proposition, ordinary marketing and interface remain DealScope-branded. Standalone company incorporation is deferred pending merit, not a prerequisite to continue. The legal contracting party, payment merchant and invoices must accurately reflect SAR until an explicitly approved lawful change. Verify consumer statutory, POPIA, contact, trading-name and payment disclosures before production. Cross-domain brand promotion between the SAR corporate website and DealScope is not required. Customer DB, private dossiers and access controls remain isolated. Authority: [SAR-ADR-020 and brand/legal policy](14-DEALSCOPE-PUBLIC-BRAND-AND-ENTITY-SEPARATION.md).
 
 ## 1. Product boundary register
 

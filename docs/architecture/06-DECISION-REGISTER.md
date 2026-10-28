@@ -1,5 +1,13 @@
 # SAR Controlled Architecture Decision Register
 
+## SAR-ADR-021 — 28 October 2026: Current DealScope v6 two-service supersession
+
+**Founder-directed current requirement, not application certification.** The 28 October 2026 [DealScope v6 Master Engineering Contract](16-DEALSCOPE-UNIFIED-COMMERCIAL-INTELLIGENCE-V6-20261028.md) supersedes legacy DealScope exchange/discovery/matching assumptions and older browser calculator interpretations. Customers may subscribe to rights-cleared weekly **Market Intelligence** or provide their own physical-commodity transaction for protected, adaptive **Deal Intelligence**. Source evidence, contract obligations, specialist-grade model, direct/source-first/beneficiation routes, legal wet/dry freight, working capital, pricing basis, verification and customer-safe reports are required; unverified values do not become approvals. One independently governed complete introductory assessment cycle; no assumed thirty-day unrestricted trial. Proprietary calculation methods remain server-side. SAR is the operator and legal owner; customer tenancy is separately secured. All implementation/runtime/release tests remain separately gated.
+
+**Code reconciliation:** SAR ResourceOS migration PR #1 is the ancestor; DealScope Macro 006 PR #4 is the latest unmerged implementation candidate. SAR mainline documentation now contains the v6 contract, but it is NOT proof the PR4 implementation has merged or passed native CI. No Customer Exchange and no automatic buyer/seller discovery.
+
+
+
 **ID:** SAR-ADR-REGISTER-001 • **Initial revision:** 27 October 2026  
 **Scope:** Records explicit operating/product decisions communicated by SAR leadership. Their inclusion here preserves provenance; it does not fabricate signed corporate policies or turn code into a completed product.  
 **State:** **Founder-ratified direction register; not a substitute for signed statutory minutes or authority appointments**.

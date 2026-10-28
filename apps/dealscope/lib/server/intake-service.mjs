@@ -43,8 +43,7 @@ export async function executeIntakeRequest({request,services}){
  const normalised=normaliseManualDealIntake({entryPoint,
   context:{commodity,materialForm,commercialRole,deliveryTerm,fulfilmentRoute},
   manual:{deliveryLocation:form.get("deliveryLocation"),quantity,grade,
-   buyerPrice:form.get("buyerPrice"),sourcePrice:form.get("sourcePrice")},
-    structuredCustomerFacts:normalised.sourceFacts}});
+   buyerPrice:form.get("buyerPrice"),sourcePrice:form.get("sourcePrice")}});
  if(normalised.state!=="customer_claims_prepared")return blocked(422,"invalid_manual_facts");
  let persisted;
  try{
@@ -53,7 +52,8 @@ export async function executeIntakeRequest({request,services}){
    context:{commodity,entryPoint,materialForm,commercialRole,deliveryTerm,fulfilmentRoute},
    sources:{documents,pastedText:typeof pasted==="string"?pasted:"",manual:{
     deliveryLocation:form.get("deliveryLocation"),quantity,grade,
-    buyerPrice:form.get("buyerPrice"),sourcePrice:form.get("sourcePrice")}}
+    buyerPrice:form.get("buyerPrice"),sourcePrice:form.get("sourcePrice")},
+    structuredCustomerFacts:normalised.sourceFacts}
   });
  }catch{return blocked(503,"secure_intake_unavailable");}
  if(!persisted?.committed||persisted.tenantId!==auth.tenantId||

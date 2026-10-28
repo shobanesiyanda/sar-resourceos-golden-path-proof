@@ -1,3 +1,4 @@
+import {normaliseManualDealIntake} from "./manual-intake-normalizer.mjs";
 import {reconcileDealFacts} from "./deal-facts.mjs";
 const blocked=(status,code)=>({status,body:{status:code},cacheControl:"no-store"});
 const required=["authenticate","persistAndExtractIntake"];
@@ -39,6 +40,12 @@ export async function executeIntakeRequest({request,services}){
  const manualPresent=[form.get("deliveryLocation"),quantity,grade,form.get("buyerPrice"),form.get("sourcePrice")].some(v=>validString(v));
  if(documents.length===0&&!(typeof pasted==="string"&&pasted.trim())&&!manualPresent)
   return blocked(422,"no_information_supplied");
+ const normalised=normaliseManualDealIntake({entryPoint,
+  context:{commodity,materialForm,commercialRole,deliveryTerm,fulfilmentRoute},
+  manual:{deliveryLocation:form.get("deliveryLocation"),quantity,grade,
+   buyerPrice:form.get("buyerPrice"),sourcePrice:form.get("sourcePrice")},
+    structuredCustomerFacts:normalised.sourceFacts}});
+ if(normalised.state!=="customer_claims_prepared")return blocked(422,"invalid_manual_facts");
  let persisted;
  try{
   persisted=await services.persistAndExtractIntake({

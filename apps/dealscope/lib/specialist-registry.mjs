@@ -116,11 +116,24 @@ const registry={
 export const commodityRegistry=Object.freeze(Object.fromEntries(Object.entries(registry).map(([id,p])=>[id,Object.freeze({...p,id,roles:Object.freeze(p.roles),materials:Object.freeze(p.materials),qualityDimensions:Object.freeze(p.qualityDimensions),restrictions:Object.freeze(p.restrictions)})])));
 export const commodityIds=Object.freeze(Object.keys(commodityRegistry));
 export function findSpecialist(commodity){return typeof commodity==="string"?commodityRegistry[commodity]??null:null;}
+const legacyLabels=Object.freeze({
+ chrome:Object.freeze({"concentrate":"Chrome concentrate","Concentrate":"Chrome concentrate",
+  "Sweepings":"Chrome sweepings","Tailings":"Chrome tailings",
+  "Fines":"Chrome fines","Lumpy ore":"Lumpy chrome ore"}),
+ coal:Object.freeze({"ROM coal":"ROM coal","Unwashed coal":"Unwashed coal",
+  "Washed coal":"Washed coal","Coal fines":"Coal fines","Slurry / discard":"Slurry / discard"}),
+ gold:Object.freeze({"Concentrate":"Gold concentrate","Doré":"Gold doré",
+  "Refined bullion":"Refined gold bullion","Gold-bearing ore":"Gold-bearing ore"}),
+ diesel:Object.freeze({"Diesel 10ppm":"Diesel 10ppm","Diesel 50ppm":"Diesel 50ppm",
+  "Bulk diesel supply":"Bulk diesel supply"})
+});
 export function verifyMaterialRoute({commodity,materialForm,route}){
  const spec=findSpecialist(commodity);
  if(!spec)return {valid:false,reason:"unsupported_commodity"};
- const form=spec.materials.find(m=>m.label===materialForm);
+ const normalized=legacyLabels[commodity]?.[materialForm]??materialForm;
+ const form=spec.materials.find(m=>m.label===normalized);
  if(!form)return {valid:false,reason:"unsupported_material_form"};
  if(!["undecided",...form.routeTypes].includes(route))return {valid:false,reason:"incompatible_material_route"};
- return {valid:true,materialStage:form.stage,capability:spec.assessmentCapability,registryVersion};
+ return {valid:true,materialStage:form.stage,canonicalMaterialForm:form.label,
+  capability:spec.assessmentCapability,registryVersion};
 }

@@ -32,6 +32,51 @@ export function prepareAssessmentCandidate({entryPoint,sources,referenceData={}}
  if(commodity!=="chrome")return safe("specialist_pending",known,facts.missing,[],
    {gradeAlternatives:[],freightBudget:null,purchaseCeiling:null},
    [...nextActions,task("activate_specialist","A validated commodity-specific assessment engine is required")]);
+ const route=value(known,"fulfilment_route");
+ if(!["direct_trade","process_feedstock","own_stock"].includes(route)){
+  return safe("route_choice_required",known,facts.missing,[],{
+   gradeAlternatives:[],freightBudget:null,purchaseCeiling:null,
+   routeOptions:[
+    {code:"direct_trade",label:"Purchase and resell material in the same form"},
+    {code:"process_feedstock",label:"Procure feedstock, process, then supply the product"},
+    {code:"own_stock",label:"Fulfil using existing stock or owned production"}
+   ]},[...nextActions,task("choose_fulfilment_route","Select a route before producing process-dependent quantities or purchase guidance")]);
+ }
+ if(route==="direct_trade"||route==="own_stock"){
+  const qty=entryPoint==="sale_contract"?value(known,"buyer_quantity_dry_t"):value(known,"feedstock_quantity_dry_t");
+  const gradePct=entryPoint==="sale_contract"?value(known,"buyer_product_grade_pct"):value(known,"feedstock_grade_pct");
+  const outputs={gradeAlternatives:[],freightBudget:null,purchaseCeiling:null,
+   directTrade:{minimumProductDryTonnes:positive(qty)?qty:null,productGradeCr2o3Pct:positive(gradePct)?gradePct:null,
+    maximumPurchaseZarPerDryT:null,quantityBasis:"excludes losses and contract allowances",status:"provisional"}};
+  if(referenceData.haulage){
+   const freight=estimateRoadHaulage(referenceData.haulage);
+   if(freight.state==="indicative_budget")outputs.freightBudget={state:"indicative",
+    estimatedZarPerDryT:freight.budgetZarPerDryT,estimatedTotalZar:freight.totalBudgetZar,
+    estimatedTrips:freight.trips,binding:false};
+  }
+  const retention=referenceData.directTradeRetentionPct;
+  if(positive(qty)&&positive(retention)&&retention<=100){
+   outputs.directTrade.minimumProductDryTonnes=Math.ceil(qty/(retention/100)*100)/100;
+   outputs.directTrade.quantityBasis="conditional on documented direct-route retention";
+  }else nextActions.push(task("confirm_quantity_allowance","Confirm loading, moisture and handling allowances before issuing a required purchase quantity"));
+  const costs=referenceData.costs?.routeCostsComplete===true?referenceData.costs:null;
+  const salePrice=value(known,"buyer_price_zar_per_dry_t");
+  if(route==="direct_trade"&&entryPoint==="sale_contract"&&positive(qty)&&positive(salePrice)&&
+   positive(retention)&&retention<=100&&costs&&outputs.freightBudget){
+   const quote=acquisitionCeiling({saleProductDryT:qty,priceZarPerDryT:salePrice,
+    feedstockDryT:outputs.directTrade.minimumProductDryTonnes,
+    totalTransportZar:outputs.freightBudget.estimatedTotalZar,
+    processingZar:costs.processingZar,otherDirectZar:costs.otherDirectZar,
+    financeZar:costs.financeZar,targetNetMarginPct:costs.targetNetMarginPct});
+   if(quote.state==="calculated_ceiling"){
+    outputs.directTrade.maximumPurchaseZarPerDryT=quote.maxFeedstockPriceZarPerDryT;
+    outputs.directTrade.status="conditional_purchasing_ceiling";
+   }
+  }
+  if(route==="own_stock")nextActions.push(task("verify_stock_title","Confirm lawful ownership, storage conditions and actual releasable stock"));
+  else if(outputs.directTrade.maximumPurchaseZarPerDryT===null)nextActions.push(task("confirm_direct_trade_costs","Confirm buyer price, product retention, full delivery costs and funding to establish a buying ceiling"));
+  return safe("provisional_partial",known,facts.missing,[],outputs,nextActions);
+ }
  const outputs={gradeAlternatives:[],freightBudget:null,purchaseCeiling:null};
  const quantity=value(known,"buyer_quantity_dry_t");
  const productGrade=value(known,"buyer_product_grade_pct");

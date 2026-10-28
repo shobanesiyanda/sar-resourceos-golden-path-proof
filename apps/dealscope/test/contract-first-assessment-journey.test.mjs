@@ -8,7 +8,7 @@ import {prepareAssessmentCandidate} from "../lib/server/assessment-workflow.mjs"
 const auth={verified:true,activeMembership:true,tenantId:"SAR-CUSTOMER-A",userId:"USER-A",
   entitledToAssessment:true,currentLegalAcceptance:true};
 const source={sourceId:"doc1",channel:"uploaded_document",facts:{
- commodity:"chrome",material_form:"concentrate",commercial_role:"mandate",delivery_term:"FOT contract-defined",
+ commodity:"chrome",material_form:"concentrate",commercial_role:"mandate",fulfilment_route:"process_feedstock",delivery_term:"FOT contract-defined",
  delivery_location:"City Deep",buyer_product_grade_pct:42,buyer_quantity_dry_t:1000,buyer_price_zar_per_dry_t:2300}};
 const references={recovery:{pct:75,evidence:"hypothetical"},feedGrades:[28,29,30,31],
  haulage:{dryTonnes:1000,moisturePct:10,payloadWetTonnes:34,billableKmPerTrip:120,rateZarPerKm:25,rateBasis:"dated_market_indication"},
@@ -82,6 +82,26 @@ test("assessment rejects stale customer confirmation after source amendment",asy
  const result=await executeAssessmentRequest({request:request({caseId:"CASE-A"}),
   services:{...assessmentServices,readOwnedCase:async()=>({...saved,sourceRevision:2,confirmedSourceRevision:1})}});
  assert.equal(result.status,404);
+});
+test("undeclared fulfilment route cannot trigger speculative wash recovery",()=>{
+ const undecided={...source,facts:{...source.facts,fulfilment_route:"undecided"}};
+ const result=prepareAssessmentCandidate({entryPoint:"sale_contract",sources:[undecided],referenceData:references});
+ assert.equal(result.state,"route_choice_required");
+ assert.equal(result.outputs.gradeAlternatives.length,0);
+ assert.equal(result.outputs.routeOptions.length,3);
+});
+test("direct resale avoids ROM recovery and requires complete trading economics",()=>{
+ const direct={...source,facts:{...source.facts,fulfilment_route:"direct_trade"}};
+ const result=prepareAssessmentCandidate({entryPoint:"sale_contract",sources:[direct],referenceData:references});
+ assert.equal(result.outputs.gradeAlternatives.length,0);
+ assert.equal(result.outputs.directTrade.minimumProductDryTonnes,1000);
+ assert.equal(result.outputs.directTrade.maximumPurchaseZarPerDryT,null);
+});
+test("direct purchase ceiling only when retention and full costs are provided",()=>{
+ const direct={...source,facts:{...source.facts,fulfilment_route:"direct_trade"}};
+ const result=prepareAssessmentCandidate({entryPoint:"sale_contract",sources:[direct],referenceData:{...references,directTradeRetentionPct:100}});
+ assert.ok(result.outputs.directTrade.maximumPurchaseZarPerDryT>0);
+ assert.equal(result.outputs.gradeAlternatives.length,0);
 });
 test("unverified or incomplete costs cannot generate a purchasing ceiling",()=>{
  const x=prepareAssessmentCandidate({entryPoint:"sale_contract",sources:[source],

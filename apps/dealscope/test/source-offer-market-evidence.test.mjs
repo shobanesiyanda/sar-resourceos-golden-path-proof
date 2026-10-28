@@ -63,6 +63,12 @@ test("submitted supplier offer connects to protected source market evaluation",(
  assert.equal(result.outputs.sourceOfferPosition.confidence,"indicative_not_executable");
  assert.equal(result.verifiedDeal,false);
 });
+test("stock-led source quantity is not wrongly inverted into a procurement requirement",()=>{
+ const result=prepareAssessmentCandidate({entryPoint:"source_offer",sources:[source],referenceData:refs});
+ assert.equal(result.outputs.directTrade.availableSourceDryTonnes,500);
+ assert.equal(result.outputs.directTrade.estimatedSaleableDryTonnes,490);
+ assert.equal(result.outputs.directTrade.minimumProductDryTonnes,null);
+});
 test("missing sourced prices return required next action, not fabricated value",()=>{
  const result=prepareAssessmentCandidate({entryPoint:"source_offer",sources:[source],referenceData:{...refs,saleBenchmark:null}});
  assert.equal(result.outputs.sourceOfferPosition,undefined);

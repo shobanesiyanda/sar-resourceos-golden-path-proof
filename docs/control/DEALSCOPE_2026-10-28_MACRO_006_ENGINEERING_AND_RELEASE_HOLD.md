@@ -1,5 +1,37 @@
 # DealScope — Macro 006 Engineering Integration & Release Hold
 
+## MACRO 007 — 28 OCT 2026 — MULTI-PRODUCT EXECUTION CHECKPOINT (SOURCE CANDIDATE ONLY)
+
+**Critical checkpoint after head `0c50ce77bb225ea34fbfcf4bf88d42df1c873956`, before this documentation commit.** Reused the SAME SAR-owned Macro006 branch and draft PR #4, no new engineering branch, deployment, mainline merge, migration, live identity or payment. All existing Vercel project/branch deployment holds remain enforced.
+
+### Executed source changes, not architecture substitutes
+- **DealScope protected intake and assessment request byte limits:** `apps/dealscope/lib/server/bounded-body.mjs` replaces reliance on user-supplied `Content-Length` and unbounded `request.json()`/`request.formData()` in intake (15 MiB), confirmation (2 KiB), assessment (8 KiB). Exact local and GitHub code blob `c943dd1262c904d555fe65612a7771bbf7b46593`. Positive/negative test coverage includes valid multipart, malformed JSON/UTF-8, invalid MIME, absent content length, oversized streaming JSON/upload.
+- **DealScope confidential CustomerDecisionBrief:** `apps/dealscope/lib/server/customer-brief.mjs` explicitly allowlists permitted results, limitations, generic source-publication label and actions, drops private raw market source IDs, solver traces, cost bridge, weights, other-tenant fields and unknown new properties. Exact code blob `955fa2027b7c60c72db2c0e90d6c9da9038e93fc`. `assessment-service.mjs` now calls the projector instead of returning `...candidate`. Additional source regression `apps/dealscope/test/api-release-gates.test.mjs` rejects unrestricted serialization.
+- **ResourceOS/BusinessOS P09 activation control:** `packages/project-core/src/activation-command.mjs` checks SAR actor, tenant, approved baseline and unchanged source/version, funding, permits, separate technical/commercial/legal/treasury signatories, freshness, immutable event IDs. It prepares an atomic audit/idempotency/outbox intent; it cannot authorise funds, RFQ sending or work by itself. Its exact code blob is `a238c320009d4f56bd20339471fb41341445bf69`. `app/api/projects/activation/route.ts` is wired to it but the runtime adapter remains explicitly NULL and returns 503 until a genuine SAR-owned trusted database/authority service passes acceptance.
+- **Website→ResourceOS supplier handoff receiver:** `packages/project-core/src/supplier-intake-receiver.mjs` validates website channel attestation, source/consent/reviewer hash, actor authority and replay keys. It may create only an **unverified** intake *candidate*, never a commodity campaign, purchase, stock-ownership claim, funds release or service-role bypass. Exact code blob `0ee7d3e317571ddd70aff810267eaeb046aeeca4`.
+- Root `package.json` now exposes `test:project-core` and `verify:enterprise-source`; DealScope package's existing `npm test` globs include new tests. Current mock tests in DealScope were updated to use actual `Request` and `FormData` for the affected service workflows.
+
+### Actual executed checks (LOCAL Node 22; NOT full native Node 24)
+- New protected body-reader: **11/11 PASS**.
+- New customer-safe brief contract: **6/6 PASS**.
+- New project activation gate and atomic writer contract: **13/13 PASS**.
+- New ResourceOS website receiver: **8/8 PASS**.
+- Cross-repository website producer → ResourceOS receiver contract (local only): **1/1 PASS**.
+- SAR website security/handoff standalone existing suite: **12/12 PASS**.
+- Original master source contracts: **53/53 PASS**.
+- Standalone weekly-price source tests: **12/12 PASS**.
+**Total distinct local tests run in this continuation: 116/116 PASS**, all standalone unit or contract tests. The master 122-item matrix is a **DESIGN index**, not 122 executed E2E tests. Seven committed new domain/module files match GitHub blob hashes of locally tested originals.
+
+### Mandatory holds
+- SAR-owned Supabase Auth/RLS/source storage, site-to-ResourceOS data-service channel, tenant-isolation, live AccountingOS/PayrollOS/GL, treasury/settlement and provider integrations remain **UNVERIFIED/NOT ACTIVATED**. Connected Supabase lists BidOS projects only; never reuse them.
+- Current PR #4 `dealscope-verify` at code head `0c50ce77bb225ea34fbfcf4bf88d42df1c873956` is **FAILURE** in GitHub Actions; runs terminate with `steps:[]` and missing logs. This is not evidence of a source compiler error or of a passing full Node24 build. **NO-GO to mark full enterprise acceptance.**
+- SAR repo metadata still reports `private=false`. Protect proprietary source under SAR-controlled GitHub privacy/admin before further confidential engine expansion and mainline promotion.
+- ResourceOS migration PR #1 and this draft PR #4 remain open. Mainline can only include accepted code with no accidental Vercel release. The corporate website is already consolidated in its own SAR-owned main; do NOT restart or recreate it.
+
+**Next exact execution:** GitHub/runner administration and private source controls; trusted Node24 checkout/install/test/build/typecheck; SAR-controlled Supabase allocation and audited migrations/RLS; trusted cross-system transactional writer, functional payroll/accounting/treasury integration and negative E2E; then source merges in verified ancestry order and Founder release acceptance. No auto activation.
+
+
+
 ## UNIFIED-V6-AUTHORITY — latest same-day Founder product and protected-engine design (28 October 2026)
 
 The consolidated 256-line v6 design source is preserved in SAR's **same Git repository and same active engineering branch** at `docs/architecture/16-DEALSCOPE-UNIFIED-COMMERCIAL-INTELLIGENCE-V6-20261028.md`. It governs the two services (weekly Market Intelligence and customer-supplied Deal Intelligence); commodity-adaptive registry; multi-role/contract- and source-first routes; customer-document, paste and manual evidence intake; explicit facts/unknowns/contradictions; legal freight/wet-dry and plant recovery modelling; data-provenance and pricing basis; protected proprietary internal engine; customer-safe decision brief; one full free assessment cycle subject to approved entitlement; separate SAR-owned customer tenancy; no deal finder/Exchange.

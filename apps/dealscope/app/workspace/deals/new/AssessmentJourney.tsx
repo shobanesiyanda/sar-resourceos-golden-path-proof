@@ -1,22 +1,8 @@
 "use client";
 import {useState} from "react";
 import Link from "next/link";
-const catalog={
- chrome:{materials:["ROM — low grade","ROM — high grade","Sweepings","Tailings","Fines","Lumpy ore","Concentrate"],roles:[
- "I supply material from a mine or stockpile","I represent a seller / mandate holder",
- "I buy material for direct resale","I buy feedstock to process and sell",
- "I have a buyer contract to fulfil","I produce and sell concentrate"]},
- coal:{materials:["ROM coal","Unwashed coal","Washed coal","Coal fines","Slurry / discard","Screened coal"],roles:[
- "I supply coal from a mine or stockpile","I represent a seller / mandate holder",
- "I buy raw coal for direct resale","I buy coal to wash and sell",
- "I trade washed coal","I have a buyer contract to fulfil"]},
- gold:{materials:["Gold-bearing ore","Concentrate","Doré","Refined bullion"],roles:[
- "I supply mine production","I represent a lawful seller","I buy for direct resale",
- "I intend to process material","I have a buyer contract to fulfil"]},
- diesel:{materials:["Diesel 10ppm","Diesel 50ppm","Bulk diesel supply"],roles:[
- "I am a licensed supplier","I represent a supplier / mandate holder",
- "I am procuring bulk fuel for resale","I have a delivery contract to fulfil"]}
-} as const;
+import {commodityRegistry,commodityIds} from "../../../../lib/specialist-registry.mjs";
+const catalog=commodityRegistry;
 type Commodity=keyof typeof catalog;
 type Prepared={caseId:string;sourceRevision:number;knownFacts:Record<string,{value:string|number;evidence:string}>;missingFacts:string[];conflicts:{field:string}[]};
 type Report={state:string;assessmentId:string;missingFacts?:string[];nextActions?:{code:string;description:string}[];
@@ -33,7 +19,7 @@ const terms=["Terms stated in my contract","EXW","FCA","FOB","CFR","CIF","DAP","
 export default function DealAssessmentJourney(){
  const [commodity,setCommodity]=useState<Commodity>("chrome");
  const [role,setRole]=useState<string>(catalog.chrome.roles[0]);
- const [material,setMaterial]=useState<string>(catalog.chrome.materials[0]);
+ const [material,setMaterial]=useState<string>(catalog.chrome.materials[0].label);
  const [term,setTerm]=useState(terms[0]);
  const [step,setStep]=useState(0);
  const [mode,setMode]=useState<"upload"|"paste"|"manual">("upload");
@@ -51,7 +37,7 @@ export default function DealAssessmentJourney(){
  const [working,setWorking]=useState(false);
  const [entryPoint,setEntryPoint]=useState<"sale_contract"|"source_offer">("sale_contract");
  const [fulfilmentRoute,setFulfilmentRoute]=useState<"undecided"|"direct_trade"|"process_feedstock"|"own_stock">("undecided");
- function chooseCommodity(next:Commodity){setCommodity(next);setRole(catalog[next].roles[0]);setMaterial(catalog[next].materials[0]);setFulfilmentRoute("undecided")}
+ function chooseCommodity(next:Commodity){setCommodity(next);setRole(catalog[next].roles[0]);setMaterial(catalog[next].materials[0].label);setFulfilmentRoute("undecided")}
  function chooseRole(next:string){
   setRole(next);
   const lower=next.toLowerCase();
@@ -114,16 +100,18 @@ export default function DealAssessmentJourney(){
    </div>
    {step===0&&<section className="ds-journey-panel">
     <h2>1. Tell us where you are in the value chain</h2>
+    {catalog[commodity].assessmentCapability==="intake_only"&&
+      <p className="ds-advisory">This commodity is available for structured information capture only. A validated specialist financial assessment is not yet active, and no price or return will be invented.</p>}
     <div className="ds-journey-fields">
      <label>Commodity<select value={commodity} onChange={e=>chooseCommodity(e.target.value as Commodity)}>
-      {Object.keys(catalog).map(x=><option key={x} value={x}>{x[0].toUpperCase()+x.slice(1)}</option>)}
+      {commodityIds.map(x=><option key={x} value={x}>{catalog[x].title}</option>)}
      </select></label>
      <label>Contractual delivery terms<select value={term} onChange={e=>setTerm(e.target.value)}>
       {terms.map(x=><option key={x}>{x}</option>)}</select></label>
      <label>Your commercial role<select value={role} onChange={e=>chooseRole(e.target.value)}>
       {catalog[commodity].roles.map(x=><option key={x}>{x}</option>)}</select></label>
      <label>Material / product form<select value={material} onChange={e=>setMaterial(e.target.value)}>
-      {catalog[commodity].materials.map(x=><option key={x}>{x}</option>)}</select></label>
+      {catalog[commodity].materials.map(x=><option key={x.id} value={x.label}>{x.label}</option>)}</select></label>
      <label>What are you starting with?<select value={entryPoint} onChange={e=>setEntryPoint(e.target.value as typeof entryPoint)}>
       <option value="sale_contract">A buyer requirement or offtake contract</option>
       <option value="source_offer">Available stock or a supplier offer</option></select></label>

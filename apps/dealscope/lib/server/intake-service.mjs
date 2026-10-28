@@ -61,7 +61,8 @@ export async function executeIntakeRequest({request,services}){
     structuredCustomerFacts:normalised.sourceFacts}
   });
  }catch{return blocked(503,"secure_intake_unavailable");}
- if(!persisted?.committed||persisted.tenantId!==auth.tenantId||
+ if(!persisted?.committed||persisted.registryVersion!==capability.registryVersion||
+   persisted.tenantId!==auth.tenantId||
    persisted.ownerUserId!==auth.userId||!validCase(persisted.caseId)||
    !Number.isSafeInteger(persisted.sourceRevision)||persisted.sourceRevision<1||
    !Array.isArray(persisted.sources))return blocked(503,"intake_not_committed");
@@ -69,6 +70,7 @@ export async function executeIntakeRequest({request,services}){
  if(facts.state==="blocked")return blocked(422,"invalid_extracted_facts");
  return {status:200,cacheControl:"no-store",body:{
   caseId:persisted.caseId,sourceRevision:persisted.sourceRevision,
+  registryVersion:persisted.registryVersion,
   knownFacts:facts.known,missingFacts:facts.missing,conflicts:facts.conflicts,
   customerFactsConfirmed:false,independentlyVerified:false
  }};

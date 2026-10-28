@@ -88,13 +88,12 @@ alter table public.ds_customer_policy_versions enable row level security;
 alter table public.ds_customer_policy_acceptances enable row level security;
 alter table public.ds_customer_verification_reviews enable row level security;
 
--- Public reads: only currently-effective versions whose sign-off exists.
--- Actual immutable documents require separate hash-checked publication.
-create policy ds_customer_policy_current_read on public.ds_customer_policy_versions
- for select to anon,authenticated using (
-  state='effective' and effective_at<=now() and
-  reviewed_by is not null and published_by is not null and
-  reviewed_by<>published_by and approval_event_id is not null);
+-- NO direct anonymous/browser read of policy-version rows: they contain
+-- internal staff reviewer/publisher user IDs and approval audit references.
+-- Public legal documents are delivered by approved static /terms, /privacy and
+-- /payments pages; an eventual server endpoint may publish a projection with
+-- only public version/hash/effective date AFTER verifying approved status.
+-- RLS defaults deny when there is no policy; Data API grants are reviewed too.
 
 -- Only a customer with an active member row may see their own receipt.
 create policy ds_customer_acceptance_self_read on public.ds_customer_policy_acceptances

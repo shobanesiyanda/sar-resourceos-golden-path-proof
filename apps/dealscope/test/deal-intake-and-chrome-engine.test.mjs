@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {reconcileDealFacts} from '../lib/server/deal-facts.mjs';
 import {buildChromeFeedstockScenarios,estimateRoadHaulage,acquisitionCeiling} from '../lib/server/chrome-route-engine.mjs';
-const source={sourceId:'contract1',channel:'uploaded_document',facts:{commodity:'chrome',material_form:'concentrate',commercial_role:'mandate',delivery_term:'FOT contractual',delivery_location:'City Deep, Johannesburg',buyer_product_grade_pct:42,buyer_quantity_dry_t:1000}};
+const source={sourceId:'contract1',channel:'uploaded_document',facts:{commodity:'chrome',material_form:'concentrate',commercial_role:'mandate',fulfilment_route:"process_feedstock",delivery_term:'FOT contractual',delivery_location:'City Deep, Johannesburg',buyer_product_grade_pct:42,buyer_quantity_dry_t:1000}};
 test('contract facts captured but never verified',()=>{const x=reconcileDealFacts({entryPoint:'sale_contract',sources:[source]});assert.equal(x.state,'facts_captured');assert.equal(x.independentlyVerified,false);assert.equal(x.known.buyer_quantity_dry_t.value,1000)});
 test('contradictory pasted and uploaded buyer quantities are not silently overridden',()=>{const x=reconcileDealFacts({entryPoint:'sale_contract',sources:[source,{sourceId:'pasted1',channel:'pasted_text',facts:{buyer_quantity_dry_t:1500}}]});assert.equal(x.state,'conflicted');assert.equal(x.known.buyer_quantity_dry_t,undefined);assert.equal(x.conflicts[0].field,'buyer_quantity_dry_t')});
 test('unknown contract terms block completeness',()=>{const x=reconcileDealFacts({entryPoint:'sale_contract',sources:[{...source,facts:{commodity:'chrome'}}]});assert.ok(x.missing.includes('delivery_term'));assert.equal(x.state,'needs_facts')});

@@ -53,7 +53,7 @@ test("secure intake adapter receives the mapped customer claims, not a verified 
  const services={authenticate:async()=>({verified:true,activeMembership:true,tenantId:"ORG",userId:"USER",
   entitledToAssessment:true,currentLegalAcceptance:true}),
   persistAndExtractIntake:async payload=>{observed=payload;return {committed:true,tenantId:"ORG",ownerUserId:"USER",
-   caseId:"CASE",sourceRevision:1,sources:[{sourceId:"M1",channel:"manual",facts:payload.sources.structuredCustomerFacts}]}}};
+   caseId:"CASE",sourceRevision:1,registryVersion:payload.context.registryVersion,sources:[{sourceId:"M1",channel:"manual",facts:payload.sources.structuredCustomerFacts}]}}};
  const form={get:k=>({commodity:"chrome",materialForm:context.materialForm,commercialRole:context.commercialRole,
   deliveryTerm:context.deliveryTerm,fulfilmentRoute:"direct_trade",entryPoint:"source_offer",
   deliveryLocation:manual.deliveryLocation,quantity:manual.quantity,productGrade:manual.grade,sourcePrice:manual.sourcePrice}[k]??null),

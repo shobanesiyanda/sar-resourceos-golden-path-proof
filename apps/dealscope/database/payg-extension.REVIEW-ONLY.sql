@@ -82,8 +82,8 @@ create table if not exists public.ds_payg_report_runs (
   unique(organization_id,customer_user_id,id),
   foreign key(organization_id,customer_user_id)
     references public.ds_payg_wallets(organization_id,customer_user_id) on delete restrict,
-  foreign key(organization_id,deal_run_id)
-    references public.ds_deal_runs(organization_id,id) on delete restrict,
+  foreign key(organization_id,deal_run_id,customer_user_id)
+    references public.ds_deal_runs(organization_id,id,creator_user_id) on delete restrict,
   check((delivery_state='delivered' and issued_output_hash is not null and delivered_at is not null)
         or delivery_state<>'delivered')
 );

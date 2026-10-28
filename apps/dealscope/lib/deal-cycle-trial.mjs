@@ -59,7 +59,7 @@ export function reserveDealCycle({record,principal,caseFile,serverTime}){
   record:{...record,cyclesRemaining:record.cyclesRemaining-1,
    cyclesReserved:record.cyclesReserved+1,
    cases:[...record.cases,{id:caseFile.id,originalSourceHash:caseFile.sourceSetHash,
-    stagesDone:[],state:"in_progress",reservedAt:serverTime}]}};
+    stagesDone:[],stageEventIds:[],state:"in_progress",reservedAt:serverTime}]}};
 }
 export function recordCycleStage({record,principal,caseId,stage,evidence,serverTime}){
  if(!record||!owner(record,principal)||record.status!=="active"||!at(serverTime)||
@@ -67,12 +67,16 @@ export function recordCycleStage({record,principal,caseId,stage,evidence,serverT
  !evidence||evidence.trustedBackendVerified!==true||!valid(evidence.eventId)||
  !hash(evidence.evidenceHash))
  return fail("Authenticated, evidence-attested assessment stage required");
+ if(record.cases.some(c=>c.stageEventIds?.includes(evidence.eventId)||
+  c.deliveryEventId===evidence.eventId||c.failureEventId===evidence.eventId))
+ return fail("An event cannot attest multiple assessment steps");
  const pos=record.cases.findIndex(c=>c.id===caseId),old=record.cases[pos];
  if(!old||old.state!=="in_progress"||!Array.isArray(old.stagesDone)||
  stage!==REQUIRED_STAGES[old.stagesDone.length]||
  stage===REQUIRED_STAGES[REQUIRED_STAGES.length-1])
  return fail("Ordered stages only, final issuance needs actual delivery proof");
  const next={...old,stagesDone:[...old.stagesDone,stage],
+  stageEventIds:[...(old.stageEventIds??[]),evidence.eventId],
   lastAttestationEventId:evidence.eventId,lastEvidenceHash:evidence.evidenceHash};
  return {state:"stage_candidate",reason:"Only authenticated transaction may append event",
   record:{...record,cases:record.cases.map((c,i)=>i===pos?next:c)}};
@@ -88,6 +92,9 @@ export function deliverCycle({record,principal,caseId,delivery,serverTime}){
  JSON.stringify(old.stagesDone)!==JSON.stringify(REQUIRED_STAGES.slice(0,-1))||
  record.cyclesReserved<1)
  return fail("A full assessment cannot be consumed before its stages and final report");
+ if(record.cases.some(c=>c.stageEventIds?.includes(delivery.eventId)||
+  c.deliveryEventId===delivery.eventId||c.failureEventId===delivery.eventId))
+ return fail("Report delivery event must not be replayed");
  const next={...old,state:"delivered",reportId:delivery.reportId,reportHash:delivery.reportHash,
   deliveryEventId:delivery.eventId,deliveredAt:serverTime,
   stagesDone:[...old.stagesDone,REQUIRED_STAGES[REQUIRED_STAGES.length-1]]};
@@ -96,17 +103,25 @@ export function deliverCycle({record,principal,caseId,delivery,serverTime}){
    cyclesCompleted:record.cyclesCompleted+1,
    cases:record.cases.map((c,i)=>i===pos?next:c)}};
 }
-export function restoreFailedCycle({record,principal,caseId,reason}){
+export function restoreFailedCycle({record,principal,caseId,reason,failureEvidence}){
  if(!record||!owner(record,principal)||record.status!=="active"||
- !valid(caseId)||!valid(reason)||!Array.isArray(record.cases))
- return fail("Failed-service evidence and same tenant required");
+ !valid(caseId)||!valid(reason)||!Array.isArray(record.cases)||
+ !failureEvidence||failureEvidence.trustedBackendVerified!==true||
+ failureEvidence.verifiedFailure!==true||failureEvidence.caseId!==caseId||
+ !valid(failureEvidence.eventId)||!hash(failureEvidence.evidenceHash))
+ return fail("Independently attested service failure and same tenant required");
+ if(record.cases.some(c=>c.stageEventIds?.includes(failureEvidence.eventId)||
+  c.deliveryEventId===failureEvidence.eventId||c.failureEventId===failureEvidence.eventId))
+ return fail("Failure event must not be replayed");
  const pos=record.cases.findIndex(c=>c.id===caseId),old=record.cases[pos];
  if(!old||old.state!=="in_progress"||record.cyclesReserved<1)
  return fail("Only an incomplete reserved case can restore one free cycle");
  return {state:"restore_candidate",reason:"Server must authenticate failure and apply one idempotent compensating entry",
   record:{...record,cyclesRemaining:record.cyclesRemaining+1,
    cyclesReserved:record.cyclesReserved-1,
-   cases:record.cases.map((c,i)=>i===pos?{...c,state:"failed_recredited",failureReason:reason}:c)}};
+   cases:record.cases.map((c,i)=>i===pos?{...c,state:"failed_recredited",
+    failureReason:reason,failureEventId:failureEvidence.eventId,
+    failureEvidenceHash:failureEvidence.evidenceHash}:c)}};
 }
 export function readCycleTrial({record,principal}){
  if(!record||!owner(record,principal)||record.status!=="active")

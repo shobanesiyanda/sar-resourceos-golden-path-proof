@@ -54,7 +54,8 @@ create table if not exists public.ds_deal_runs (
   evidence_state text not null
     check (evidence_state in ('user_provided','pending_review','verified','rejected')),
   created_at timestamptz not null default now(),
-  unique (organization_id,id)
+  unique (organization_id,id),
+  unique (organization_id,id,creator_user_id)
 );
 create index if not exists ds_deal_runs_owner_idx
   on public.ds_deal_runs(organization_id,creator_user_id,created_at desc);

@@ -461,3 +461,8 @@ Founder expressly rejected the earlier 30-day unlimited-use trial as potential r
 
 ## 23. DealScope sequenced engineering macro 002 — 28 October 2026
 Read docs/engineering/2026-10-28-dealscope-engineering-macro-002.md BEFORE DealScope coding. Customer AccountOS authorisation, immutable legal consent, source-bound dossier/review/scenarios, end-to-end full free cycle and report issuance candidates, SQL FK repair and legal-identity consent schema were committed on the controlled development branch. Four customer/service API routes explicitly 503 and health is preview-only. The suite contains 100 source-level passing JS checks across current and existing DealScope modules, but no native Next/TS/Postgres/Auth/PSP run. Dedicated SAR-owned DealScope Supabase remains unavailable; connected TenderDesk/BidOS projects cannot be used. CIPC/VAT official status, effective legal approvals, actual SAR merchant, complete browser/database security and Founder production approval remain hard gates. Do not resurrect 30-day unlimited trial, fake DealScope company or SAR-free statutory disclosure.
+
+
+## 28 October 2026 — Macro 003 guarded continuation
+### 28 October 2026 — DealScope Macro 003 source-only integrity
+Trial stage event replay prevention, independently attested failure/recredit and PAYG report-to-own-deal composite FK are proposed on the draft development branch with negative regressions. Native Node24 build, PostgreSQL/RLS/tenant tests, counsel/PSP approvals and customer enrolment remain BLOCKED/NOT RUN. See docs/engineering/2026-10-28-dealscope-engineering-macro-003.md. No production release.

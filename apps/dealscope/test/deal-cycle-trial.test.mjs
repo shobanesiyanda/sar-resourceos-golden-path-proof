@@ -64,7 +64,36 @@ test("wrong tenant, bogus verified stages, missing report and fraudulent re-use 
 });
 test("failed undelivered service is restored exactly once",()=>{
  const r=reserve(active()).record;
- const v=restoreFailedCycle({record:r,principal,caseId:"d1",reason:"Unable to deliver agreed service"});
+ const proof={trustedBackendVerified:true,verifiedFailure:true,caseId:"d1",eventId:"FAIL1",evidenceHash:H};
+ assert.equal(restoreFailedCycle({record:r,principal,caseId:"d1",reason:"unsupported complaint"}).state,"blocked");
+ assert.equal(restoreFailedCycle({record:r,principal,caseId:"d1",reason:"unsupported complaint",
+  failureEvidence:{...proof,trustedBackendVerified:false}}).state,"blocked");
+ const v=restoreFailedCycle({record:r,principal,caseId:"d1",reason:"Unable to deliver agreed service",failureEvidence:proof});
  assert.equal(v.state,"restore_candidate");assert.equal(v.record.cyclesRemaining,1);
- assert.equal(restoreFailedCycle({record:v.record,principal,caseId:"d1",reason:"again"}).state,"blocked");
+ assert.equal(v.record.cases[0].failureEventId,"FAIL1");
+ assert.equal(restoreFailedCycle({record:v.record,principal,caseId:"d1",reason:"again",failureEvidence:proof}).state,"blocked");
+});
+
+test("assessment event IDs cannot be reused across stages or as delivery",()=>{
+ let r=reserve(active()).record;
+ let x=recordCycleStage({record:r,principal,caseId:"d1",stage:REQUIRED_STAGES[0],
+  evidence:{trustedBackendVerified:true,eventId:"EV-SAME",evidenceHash:H},serverTime:T});
+ assert.equal(x.state,"stage_candidate");r=x.record;
+ assert.equal(recordCycleStage({record:r,principal,caseId:"d1",stage:REQUIRED_STAGES[1],
+  evidence:{trustedBackendVerified:true,eventId:"EV-SAME",evidenceHash:H},serverTime:T}).state,"blocked");
+ for(const stage of REQUIRED_STAGES.slice(1,-1)){
+  x=recordCycleStage({record:r,principal,caseId:"d1",stage,
+   evidence:{trustedBackendVerified:true,eventId:"EV-"+stage,evidenceHash:H},serverTime:T});
+  assert.equal(x.state,"stage_candidate");r=x.record;
+ }
+ assert.equal(deliverCycle({record:r,principal,caseId:"d1",
+  delivery:{backendConfirmed:true,reportId:"R1",eventId:"EV-SAME",reportHash:RPT,caseId:"d1"},serverTime:T}).state,"blocked");
+});
+test("failure recredit requires an independent event not used for a stage",()=>{
+ let r=reserve(active()).record;
+ const x=recordCycleStage({record:r,principal,caseId:"d1",stage:REQUIRED_STAGES[0],
+  evidence:{trustedBackendVerified:true,eventId:"STAGE-1",evidenceHash:H},serverTime:T});
+ assert.equal(x.state,"stage_candidate");r=x.record;
+ assert.equal(restoreFailedCycle({record:r,principal,caseId:"d1",reason:"failed service",
+  failureEvidence:{trustedBackendVerified:true,verifiedFailure:true,caseId:"d1",eventId:"STAGE-1",evidenceHash:H}}).state,"blocked");
 });

@@ -39,3 +39,9 @@ test("proposal is explicitly non-deployed and excludes access to unrelated datab
  assert.match(sql,/NOT an applied Supabase migration/);
  assert.match(sql,/NEVER run against BidOS/);
 });
+
+const paygSql=readFileSync(fileURLToPath(new URL("./payg-extension.REVIEW-ONLY.sql",import.meta.url)),"utf8");
+test("PAYG report references only the actual creating user within tenant",()=>{
+ assert.match(sql,/unique\s*\(organization_id,\s*id,\s*creator_user_id\)/i);
+ assert.match(paygSql,/foreign key\s*\(organization_id,\s*deal_run_id,\s*customer_user_id\)\s*references public\.ds_deal_runs\s*\(organization_id,\s*id,\s*creator_user_id\)/i);
+});

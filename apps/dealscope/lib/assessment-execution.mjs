@@ -21,10 +21,11 @@ export function prepareAssistedStart({principal,membership,organisation,
  contractAcceptance.legalSupplier!==LEGAL_OPERATOR||
  contractAcceptance.serviceCode!=="COMPLETE_DEAL_ASSESSMENT"||
  contractAcceptance.automaticCharge!==false||
+ contractAcceptance.acceptedAmountMinor!==0||
+ contractAcceptance.offerVersion!==entitlement?.offerVersion||
  !text(contractAcceptance.acceptanceEventId)||
- !contractAcceptance.policies?.terms||
- !contractAcceptance.policies?.privacy||
- !contractAcceptance.policies?.payments)
+ !["terms","privacy","payments"].every(k=>text(contractAcceptance.policyVersions?.[k]?.version)&&
+  digest(contractAcceptance.policyVersions?.[k]?.sha256)))
  return fail("Previously persisted current SAR customer agreement required");
  const base={principal,membership,organisation};
  const canCreate=authorizeCustomerAction({...base,action:"create_dossier"});

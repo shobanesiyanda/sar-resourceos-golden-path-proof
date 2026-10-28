@@ -5,11 +5,13 @@
  * company's Supabase credentials.
  *
  * @typedef {Object} DealScopeServices
- * @property {()=>Promise<{verified:boolean,activeMembership:boolean,entitledToAssessment:boolean,currentLegalAcceptance:boolean}>} authenticatePage
+ * @property {()=>Promise<{verified:boolean,activeMembership:boolean,entitledToAssessment:boolean,currentLegalAcceptance:boolean,tenantId:string,userId:string}>} authenticatePage
  * @property {(request:unknown)=>Promise<unknown>} authenticate
  * @property {(args:unknown)=>Promise<unknown>} readOwnedCase
  * @property {(args:unknown)=>Promise<unknown>} loadInternalReferences
  * @property {(args:unknown)=>Promise<unknown>} persistCandidate
+ * @property {(args:unknown)=>Promise<unknown>} persistAndExtractIntake
+ * @property {(args:unknown)=>Promise<unknown>} persistFactConfirmation
  */
 /** @returns {DealScopeServices|null} */
 export function getDealScopeAssessmentServices(){return null;}

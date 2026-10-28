@@ -55,7 +55,7 @@ test("DealScope remains the primary public brand; correct legal operator only in
  const legal=source("app/legal/page.tsx");
  assert.match(legal,/Current operator and legal status/);
  assert.match(legal,operator);
- assert.match(legal,/not represented here as a separately incorporated company/);
+ assert.match(legal,/not represented as a separately incorporated company/);
  assert.match(legal,/does not register customer accounts/);
  assert.doesNotMatch(legal,/registration number:\s*\d|VAT number:\s*\d/i);
 });

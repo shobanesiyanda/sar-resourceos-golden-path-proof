@@ -1,7 +1,6 @@
 "use client";
 import {useState} from "react";
 import Link from "next/link";
-import "./journey.css";
 const catalog={
  chrome:{materials:["ROM — low grade","ROM — high grade","Sweepings","Tailings","Fines","Lumpy ore","Concentrate"],roles:[
  "I supply material from a mine or stockpile","I represent a seller / mandate holder",

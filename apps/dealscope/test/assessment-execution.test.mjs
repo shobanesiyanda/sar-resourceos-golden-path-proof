@@ -9,7 +9,8 @@ const membership={source:"membership-ledger",serverReadVerified:true,tenantId:"O
 const organisation={id:"ORG1",verificationState:"verified"};
 const contractAcceptance={source:"accepted-policy-ledger",persistedAndCurrent:true,tenantId:"ORG1",userId:"U1",
  legalSupplier:"Shobane African Resources (Pty) Ltd",serviceCode:"COMPLETE_DEAL_ASSESSMENT",
- automaticCharge:false,acceptanceEventId:"CONSENT1",policies:{terms:"v1",privacy:"v1",payments:"v1"}};
+ automaticCharge:false,acceptedAmountMinor:0,offerVersion:"v1",acceptanceEventId:"CONSENT1",
+ policyVersions:Object.fromEntries(["terms","privacy","payments"].map(k=>[k,{version:"v1",sha256:H}]))};
 const record=prepareCycleTrial({person:{id:"U1"},organisation:{id:"ORG1"},
  eligibility:{personId:"U1",organisationId:"ORG1",verifiedPerson:true,verifiedOrganisation:true,
   authorisedRepresentative:true,independentReviewApproved:true,reviewEventId:"REV1",policyVersion:"v1"},
@@ -31,6 +32,9 @@ test("first dossier and one complete cycle become one uncommitted atomic pair",(
 test("legal acceptance must actually be persisted, not a mock check",()=>{
  assert.equal(prepareAssistedStart({...base,contractAcceptance:{...contractAcceptance,persistedAndCurrent:false}}).state,"blocked");
  assert.equal(prepareAssistedStart({...base,contractAcceptance:{...contractAcceptance,source:"browser_submit"}}).state,"blocked");
+ assert.equal(prepareAssistedStart({...base,contractAcceptance:{...contractAcceptance,offerVersion:"other"}}).state,"blocked");
+ assert.equal(prepareAssistedStart({...base,contractAcceptance:{...contractAcceptance,acceptedAmountMinor:1}}).state,"blocked");
+ assert.equal(prepareAssistedStart({...base,contractAcceptance:{...contractAcceptance,policyVersions:{...contractAcceptance.policyVersions,terms:{version:"v1",sha256:"bad"}}}}).state,"blocked");
 });
 test("no second free dossier or cross-tenant reservation",()=>{
  const x=prepareAssistedStart(base).mutations.trialEntitlement;

@@ -27,7 +27,7 @@ export async function executeIntakeRequest({request,services}){
   !validString(materialForm)||!validString(commercialRole)||!validString(deliveryTerm)||
   !["undecided","direct_trade","process_feedstock","own_stock"].includes(fulfilmentRoute))
   return blocked(422,"deal_context_incomplete");
- const capability=verifyMaterialRoute({commodity,materialForm,route:fulfilmentRoute});
+ const capability=verifyMaterialRoute({commodity,materialForm,route:fulfilmentRoute,entryPoint});
  if(!capability.valid)return blocked(422,capability.reason);
  const documents=form.getAll("documents");
  if(documents.length>5)return blocked(413,"too_many_documents");

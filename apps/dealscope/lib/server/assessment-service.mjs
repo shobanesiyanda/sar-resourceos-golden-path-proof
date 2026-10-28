@@ -25,7 +25,9 @@ export async function executeAssessmentRequest({request,services}){
  try{owned=await services.readOwnedCase({tenantId:auth.tenantId,userId:auth.userId,caseId:data.caseId});}
  catch{return stopped(503,"assessment_storage_unavailable");}
  if(!owned||owned.tenantId!==auth.tenantId||owned.ownerUserId!==auth.userId||
-   owned.customerFactsConfirmed!==true||owned.sourcePersisted!==true||!owned.entryPoint||
+   owned.customerFactsConfirmed!==true||owned.sourcePersisted!==true||
+   !Number.isSafeInteger(owned.sourceRevision)||owned.sourceRevision<1||
+   owned.confirmedSourceRevision!==owned.sourceRevision||!owned.entryPoint||
    !Array.isArray(owned.sources))
    return stopped(404,"case_not_available");
  let referenceData;

@@ -76,3 +76,8 @@ F. Reconcile old public marketing claims; independently accept signed-out UX and
 - No live document extraction, malware scans, encrypted storage, trusted market feeds, production Auth, RLS or customer persistence has been implemented; `assessment-runtime.mjs` remains null and protected routes return 503 until correct SAR infrastructure is established.
 - No signed-off financial feasibility for gold, coal, petroleum or other commodities: selectable is not validated; unsupported specialists return a pending assessment rather than generic arithmetic.
 - Dedicated SAR-owned DealScope Supabase project provisioning, cross-tenant RLS acceptance and exact full checkout build remain blocking prerequisites; do not route through connected TenderDesk infrastructure.
+
+### Supplemental result and acceptance hold
+A further stock-led vs buyer-led quantity regression test was committed, then all four focused source suites rerun from GitHub-fetched blobs: **46/46 PASS** in an isolated JS evaluation harness. This supersedes the earlier 45/45 count for the same source-only tranche; it does not establish a successful pinned Node/Next repository build or live customer acceptance.
+
+**Next unblocked work:** complete specialist registry and benchmark-provider contracts, independently test full source checkout and Next build, then bind SAR-owned authenticated tenant storage once that infrastructure is available. Preserve the protected APIs' 503 fail-closed state until approved and independently proven. No production merge or deployment.

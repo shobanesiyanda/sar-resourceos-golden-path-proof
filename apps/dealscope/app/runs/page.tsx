@@ -105,6 +105,6 @@ export default function DealRunPreview() {
         </aside>
       </div>
     </section>
-    <footer className="foot"><div className="wrap">DealScope — External commercial application | Infrastructure migration preview</div></footer>
+    <footer className="foot"><div className="wrap">DealScope · Development calculator preview · <Link href="/legal">Legal information</Link> · <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link> · <Link href="/payments">Payment rights</Link></div></footer>
   </main>;
 }

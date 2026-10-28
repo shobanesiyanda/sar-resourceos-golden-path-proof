@@ -127,13 +127,19 @@ const legacyLabels=Object.freeze({
  diesel:Object.freeze({"Diesel 10ppm":"Diesel 10ppm","Diesel 50ppm":"Diesel 50ppm",
   "Bulk diesel supply":"Bulk diesel supply"})
 });
-export function verifyMaterialRoute({commodity,materialForm,route}){
+export function verifyMaterialRoute({commodity,materialForm,route,entryPoint}){
  const spec=findSpecialist(commodity);
  if(!spec)return {valid:false,reason:"unsupported_commodity"};
  const normalized=legacyLabels[commodity]?.[materialForm]??materialForm;
  const form=spec.materials.find(m=>m.label===normalized);
  if(!form)return {valid:false,reason:"unsupported_material_form"};
- if(!["undecided",...form.routeTypes].includes(route))return {valid:false,reason:"incompatible_material_route"};
+ // For sale contracts, the material is the OUTPUT product. A concentrate
+ // may be supplied through processing of separately sourced raw feedstock.
+ // For source offers, the material is the INPUT and process compatibility applies.
+ const outputFromProcessing=entryPoint==="sale_contract"&&route==="process_feedstock"&&
+   form.stage==="saleable_product"&&spec.assessmentCapability==="indicative_chrome_only";
+ if(!outputFromProcessing&&!["undecided",...form.routeTypes].includes(route))
+  return {valid:false,reason:"incompatible_material_route"};
  return {valid:true,materialStage:form.stage,canonicalMaterialForm:form.label,
   capability:spec.assessmentCapability,registryVersion};
 }

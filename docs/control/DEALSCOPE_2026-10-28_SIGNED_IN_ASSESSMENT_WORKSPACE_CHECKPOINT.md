@@ -54,3 +54,25 @@ C. Add non-LLM deterministic extraction plus contract parsing with user-confirme
 D. Implement dated market/transport/processing evidence adapters and specialist registry, with fees and market provenance.
 E. Execute authenticated full journey including session expiry, role denial, wrong tenant, contradictory sources, incomplete costs, immutable revision and report issuance.
 F. Reconcile old public marketing claims; independently accept signed-out UX and product with founder release authority.
+
+## Macro 005 — customer route integrity and forward supplier-offer assessment (28 October)
+
+**State:** Source integrated into the SAME draft PR #4; all production release holds remain. This append-only update supersedes the focused test count in Macro 004, not its underlying evidence.
+
+### Engineering changes
+- Case assessment rejects stale customer confirmation when `confirmedSourceRevision` differs from the currently persisted `sourceRevision`. The storage provider must atomically enforce this condition on any concurrent amendment.
+- `deal-facts.mjs` accepts explicit, customer-asserted `fulfilment_route` (undecided/direct_trade/process_feedstock/own_stock) and optional supplier purchase offers; unknown routes never silently activate wash recovery.
+- `assessment-workflow.mjs` distinguishes buyer-contract backward requirements from supplier-stock forward outputs. Direct trading does not invoke ROM processing. The current processing route remains indicative pending documented plant recovery.
+- `source-offer-engine.mjs` adds guarded market/grade/form/delivery-basis/date checks, source-offer purchase ceilings and margin assessments. All numeric reference fixtures are synthetic in tests. This code has **no connected live price provider or verified buyer**.
+- `manual-intake-normalizer.mjs` maps customer-entered quantities/grades/prices by transaction entry point; no supplier asking price may silently become a buyer sale price. Intake passes these customer-asserted facts into the future authenticated, encrypted storage/extraction adapter.
+- The signed-in assessment UI supports selecting a direct/processing/own-stock route or asking DealScope to clarify route choices; source-offer asking price and decision results are displayed as conditional, without proprietary internal formulas.
+
+### Focused verification and boundaries
+- GitHub blob-fetched module execution in isolated JS test harness, tests from `deal-intake-and-chrome-engine.test.mjs`, `contract-first-assessment-journey.test.mjs`, `source-offer-market-evidence.test.mjs` and `manual-intake-normalizer.test.mjs`: **45/45 PASS**, after repairing an invalid intake-normaliser insertion discovered by syntax check. This is NOT pinned Node's full `npm test`, `tsc`, Next build or live API acceptance.
+- Earlier marketing-page source checks: 8/8 passed before Macro 005, not rerun as full build.
+- Source-offer fixture 40% chrome ROM, synthetic R2,300/dry t FOT reference and R1,600 supplier offer is an **engineering fixture**, not a verified market offer or current buyer price.
+- Sourced price evidence must be dated, valid, grade/form/currency/unit matched and on the intended **sale delivery basis**, never equate source purchase EXW/FOT with the target market basis without supported route costs.
+- All formula/valuation modules remain within `apps/dealscope/lib/server/`; customer components import only framework UI and call protected endpoints.
+- No live document extraction, malware scans, encrypted storage, trusted market feeds, production Auth, RLS or customer persistence has been implemented; `assessment-runtime.mjs` remains null and protected routes return 503 until correct SAR infrastructure is established.
+- No signed-off financial feasibility for gold, coal, petroleum or other commodities: selectable is not validated; unsupported specialists return a pending assessment rather than generic arithmetic.
+- Dedicated SAR-owned DealScope Supabase project provisioning, cross-tenant RLS acceptance and exact full checkout build remain blocking prerequisites; do not route through connected TenderDesk infrastructure.

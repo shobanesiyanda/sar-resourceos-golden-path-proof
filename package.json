@@ -8,7 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "verify:architecture": "node scripts/verify-architecture.mjs",
-    "test:documents": "node --experimental-strip-types --test lib/document-studio.test.mjs"
+    "test:documents": "node --experimental-strip-types --test lib/document-studio.test.mjs",
+    "test:project-core": "node --experimental-strip-types --test packages/project-core/test/*.test.mjs",
+    "verify:enterprise-source": "npm run verify:architecture && npm run test:project-core && npm run test:documents && npm run test:enterprise-trade && npm run test:warehouse && npm run test:payroll",
+    "test:enterprise-trade": "node --test packages/enterprise-core/test/*.test.mjs",
+    "test:warehouse": "node --test packages/operations-core/test/*.test.mjs",
+    "test:payroll": "node --test packages/payroll-core/test/*.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "latest",

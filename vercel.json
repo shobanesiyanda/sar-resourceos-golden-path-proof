@@ -1,3 +1,4 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "ignoreCommand": "echo 'SAR SOURCE HOLD - automatic Vercel build disabled until release gates pass' && exit 0"
 }

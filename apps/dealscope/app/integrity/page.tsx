@@ -26,7 +26,7 @@ export default function IntegrityGuidance(){
  return <main>
   <header className="top"><div className="wrap topInner">
    <Link className="brand" href="/">DEALSCOPE<span className="dot">.</span></Link>
-   <nav><Link href="/">Deal Runs</Link><Link href="/exchange">Commercial Exchange</Link></nav>
+   <nav><Link href="/market-intelligence">Market Intelligence</Link><Link href="/start">Assess My Deal</Link></nav>
   </div></header>
   <section className="hero"><div className="wrap">
    <p className="eyebrow">Deal Integrity / Guided diligence</p>
@@ -62,7 +62,7 @@ export default function IntegrityGuidance(){
      </dl>
      <p className="fine">This self-check uses your own selections, not authenticated issuer responses or DealScope-confirmed evidence. Even all items marked independently checked cannot certify a legitimate transaction, title, counterparty capacity or authority to pay.</p>
      <button onClick={()=>setStatuses({})} className="outlineLink" style={{cursor:"pointer",background:"transparent",width:"100%"}}>Clear self-check</button>
-     <p className="fine">Full DealScope platform engineering includes privately stored evidence, regulator/laboratory verification interfaces where permitted, versioned assessments, paid Deal Runs, monitoring, negotiation and consent-gated Exchange. Those production capabilities are not activated in this preview.</p>
+     <p className="fine">The DealScope engineering programme provides for private customer-submitted deals, controlled evidence intake, validated commodity-specific assessments and authorised market intelligence. Secure customer accounts, independent verification, live price feeds and paid assessments are not activated in this preview.</p>
     </aside>
    </div>
   </section>

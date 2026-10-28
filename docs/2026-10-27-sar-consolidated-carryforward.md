@@ -1,5 +1,17 @@
 # SAR Consolidated Macro-Batch Carry-Forward and Acceptance Register
 
+## CURRENT MAINLINE CONVERGENCE — 28 OCTOBER 2026, SOURCE ONLY / RELEASE HELD
+
+**Corporate website:** Original SAR repository `shobanesiyanda/sar-website` was fast-forwarded into `main` from `a60c6cb0edad364173630f19dbe7d6eeae2c70fa` to `654f0c0190611893cdf3fb7e2bc825562f5143a3` after source audit and 12 local Node22 security/handoff tests; further checkpoint commits are recorded in its main `docs/IMPLEMENTATION_STATUS.md`. Vercel project settings and source `vercel.json` cancel automatic builds (exit 0). Full Node24/Next, browser, DB, consented handoff acceptance NOT executed.
+
+**ResourceOS/BusinessOS/DealScope:** This SAR-owned `main` already preserves ratified enterprise blueprints and now the full exact v6 DealScope engineering contract. The separate ResourceOS migration PR #1 (ancestor, 311-commit source delta) and current DealScope Macro 006 PR #4 (79 additional source commits before late docs changes) remain **draft and unmerged**. Current PR4 GH `dealscope-verify` reports FAILURE with job steps=null and no downloadable logs; this does not identify a compile error. No verified full Node24 tests, private SAR-only DealScope DB/RLS, independent document/market feeds, or customer runtime. Do not merge PR1 alone while leaving an older public browser DealScope implementation on main; integrate the dependency pair only after source integrity, reproducible application build and negative tenant tests under the approved release hold. No new branch.
+
+**Deployment protection:** SAR-owned ResourceOS main `vercel.json`, the PR4 root and child DealScope configs, and the 3 Vercel project-level Ignored Build Step settings hold automatic builds with `exit 0`. A main merge is not a production release and cannot enable customer/financial writes. Source-copy staging in unrelated organisations is historical and must never be promoted as SAR ownership.
+
+**Next executable dependency:** diagnose/restore authentic GitHub Actions runner execution or trusted full Node24 checkout; execute root Next build, DealScope native tests/typecheck/build and security/negative controls; reconcile original migration + PR4 dependencies against the main architecture; then source-integrate in order with nonforced ancestry and no automatic deployment, checkpoint and retire redundant branches after proof. These are OPEN gates, not completed work.
+
+
+
 Document ID: SAR-MACRO-CARRY-2026-10-27-001  
 Date: 27 October 2026 (Africa/Johannesburg)  
 Status: **UNRELEASED INTEGRATION CANDIDATE — NOT FULLY ACCEPTED**  

@@ -60,7 +60,7 @@ export function prepareAssessmentCandidate({entryPoint,sources,referenceData={}}
   };
   else nextActions.push(task("haulage_evidence","Confirm road distance, payload, moisture and a dated per-kilometre rate"));
  }else nextActions.push(task("haulage_evidence","Obtain the route and current comparable transporter-rate evidence"));
- const costs=referenceData.costs;
+ const costs=referenceData.costs?.routeCostsComplete===true ? referenceData.costs : null;
  if(grade?.state==="scenario_only"&&outputs.gradeAlternatives.length&&
     positive(value(known,"buyer_price_zar_per_dry_t"))&&costs&&
     outputs.freightBudget?.state==="indicative"){

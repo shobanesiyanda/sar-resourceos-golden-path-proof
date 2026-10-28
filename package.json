@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "verify:architecture": "node scripts/verify-architecture.mjs",
-    "test:documents": "node --experimental-strip-types --test lib/document-studio.test.mjs"
+    "test:documents": "node --experimental-strip-types --test lib/document-studio.test.mjs",
+    "test:project-core": "node --experimental-strip-types --test packages/project-core/test/*.test.mjs",
+    "verify:enterprise-source": "npm run verify:architecture && npm run test:project-core && npm run test:documents"
   },
   "dependencies": {
     "@supabase/ssr": "latest",

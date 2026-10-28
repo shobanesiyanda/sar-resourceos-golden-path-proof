@@ -1,5 +1,28 @@
 # DealScope — Macro 006 Engineering Integration & Release Hold
 
+## ENTERPRISE-WIDE SOURCE CONTROL CHECKPOINT — 28 OCT 2026
+
+**This is a verified source checkpoint, not complete production end-to-end acceptance.** The Founder requirement is the entire SAR corporate website + ResourceOS/BusinessOS + independent DealScope v6, not a selection of convenient controls. The explicit, evidence-mapped 122-case acceptance register is in SAR-owned `main` at `docs/control/SAR_ENTERPRISE_122_CAPABILITY_SOURCE_RECONCILIATION_2026-10-28.md`: 59 PARTIAL, 22 MISSING, 38 BLOCKED, 3 OBSOLETE, 0 COMPLETE E2E. It reconciles current architecture, historical 7/17 table SQL, actual code and superseded Exchange/discovery proposals. No unsupported percentage is claimed.
+
+**Source reality:** SAR website `main` is consolidated, now at `48e1d00b23db93244574800440f9b22e346cdd2e` when its read-only Node24 CI was added. SAR ResourceOS `main` contains architecture/governance/122-case acceptance (latest audited state read separately); **application** PR #1 and dependency PR #4 remain unmerged. PR #4 latest verified pre-checkpoint source head `4e1ddeef58c53fbb853937926761b58c90359a89` and source tree 270+ files, all on the same SAR-owned engineering branch. No new branch.
+
+**New single cross-domain source vertical (after Macro007):**
+- `packages/physical-core/src/fulfilment.mjs`: signed buyer call-off, source/title evidence, owner/tenant, 34t-class wet loading, dry yield, driver/insurance, weighbridge/assay/receipt match, replay/overload protection, provisional custody only.
+- `packages/accounting-core/src/journal.mjs`: balanced integer-cent journal **candidates**, legal-entity, open-period, invoice and receipt correlation, source hash and duplicate blocks; separate treasury maker/checker and bank verification; never posts a real GL or releases money.
+- `packages/enterprise-core/src/trade-closure.mjs`: source/receipt/invoice/ledger/bank confirmation join with tenant, ID and exception consistency; only prepares atomic closure **intent**.
+- `packages/operations-core/src/warehouse-control.mjs`: Brits-type controlled warehouse intake proof/assay/weighbridge mass and capacity, then committed-lot-versioned reservations, wet truck payload and idempotency; no public declaration of stock ownership, no title transfer.
+- `packages/payroll-core/src/payroll-accrual.mjs`: private employee-level verified payroll source and effective-dated statutory policy fed only as aggregate balanced accounting candidate; no hard-coded PAYE, UIF or SDL rates, no salary data in public ledger or API, no banking operation. Live PayrollOS remains missing.
+- Executable source suites `packages/enterprise-core/test/trade-vertical.test.mjs` (32), `packages/operations-core/test/warehouse-control.test.mjs` (16), `packages/payroll-core/test/payroll-accrual.test.mjs` (16). All 64 local tests passed. GitHub content SHA verified byte-for-byte against local sources for all 8 new files.
+- Existing ResourceOS source scripts now call these three test suites in `verify:enterprise-source`, alongside the actual project core, documents and architecture validators.
+
+**Current local evidence this execution:** 115 source boundary tests (new 64 + previously developed 39 DealScope/ResourceOS + 12 SAR website) PASS; 53 master contracts PASS; 12 weekly-price unit tests PASS: **180 locally executed tests, 0 failures**. These run in Node22, against checked sources and fixtures, **not** a full Node24 Next/React application, live database, real carrier, bank, tenant or true browser E2E.
+
+**Native build attempts/proof:** The connected SAR GitHub Actions workflow was retried; run attempt 2 again failed with *zero executed job steps*. The new `.github/workflows/sar-enterprise-native-acceptance.yml` explicitly requires both ResourceOS and DealScope native Node24 installs, all source suites, strict TS and separate Next builds (no deploy). Its first run: **both jobs failed with zero steps**. The main website now has `.github/workflows/sar-website-native-acceptance.yml`. A manual Vercel DealScope Git preview build was attempted and rejected with **402 `api-deployments-free-per-day`**, 24h retry; no prod deployment, alias or project release settings changed. Local container provides Node22 and cannot resolve GitHub or obtain a full checkout/dependencies. Therefore **native/real E2E remain unverified**.
+
+**Other nonwaivable holds:** the SAR ResourceOS repository is currently public and proprietary DealScope implementation must be protected; Supabase connected access includes only BidOS-related projects (no SAR-owned ResourceOS/DealScope database), which must never be reused; no SAR tenant DB/RLS, external physical counterparties, commercial authority or verified live data feeds; PaymentOS/PayrollOS/AccountingOS transactional services, vendor dispatch, signed banking, audit outbox, operational capital and immutable financial books remain unimplemented end to end. Keep all three Vercel project and source `exit 0` build holds. Do not merge PR #1 to publish an obsolete DealScope while leaving PR #4 unaccepted. Do not merge #4 with failed native CI, public proprietary source or unverified tenant boundaries. Neither 64 synthetic vertical tests nor 122 acceptance cases are proof of production readiness.
+
+
+
 ## MACRO 007 — 28 OCT 2026 — MULTI-PRODUCT EXECUTION CHECKPOINT (SOURCE CANDIDATE ONLY)
 
 **Critical checkpoint after head `0c50ce77bb225ea34fbfcf4bf88d42df1c873956`, before this documentation commit.** Reused the SAME SAR-owned Macro006 branch and draft PR #4, no new engineering branch, deployment, mainline merge, migration, live identity or payment. All existing Vercel project/branch deployment holds remain enforced.

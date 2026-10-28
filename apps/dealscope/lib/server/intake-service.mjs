@@ -43,7 +43,7 @@ export async function executeIntakeRequest({request,services}){
  if(documents.length===0&&!(typeof pasted==="string"&&pasted.trim())&&!manualPresent)
   return blocked(422,"no_information_supplied");
  const normalised=normaliseManualDealIntake({entryPoint,
-  context:{commodity,materialForm,commercialRole,deliveryTerm,fulfilmentRoute},
+  context:{commodity,materialForm:capability.canonicalMaterialForm,commercialRole,deliveryTerm,fulfilmentRoute},
   manual:{deliveryLocation:form.get("deliveryLocation"),quantity,grade,
    buyerPrice:form.get("buyerPrice"),sourcePrice:form.get("sourcePrice")}});
  if(normalised.state!=="customer_claims_prepared")return blocked(422,"invalid_manual_facts");
@@ -51,7 +51,8 @@ export async function executeIntakeRequest({request,services}){
  try{
   persisted=await services.persistAndExtractIntake({
    tenantId:auth.tenantId,userId:auth.userId,
-   context:{commodity,entryPoint,materialForm,commercialRole,deliveryTerm,fulfilmentRoute,
+   context:{commodity,entryPoint,materialForm:capability.canonicalMaterialForm,
+    commercialRole,deliveryTerm,fulfilmentRoute,
     registryVersion:capability.registryVersion,materialStage:capability.materialStage,
     assessmentCapability:capability.capability},
    sources:{documents,pastedText:typeof pasted==="string"?pasted:"",manual:{

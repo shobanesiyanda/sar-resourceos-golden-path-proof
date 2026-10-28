@@ -73,7 +73,7 @@ export function appendScenario({record,grant,scenario,serverTime}){
  scenario.currency!=="ZAR"||
  !Array.isArray(scenario.assumptions)||scenario.assumptions.length<1||
  scenario.assumptions.some(a=>!valid(a.name)||!valid(a.sourceState)||
- !["customer_claim","market_indicative","independently_corrobated"].includes(a.sourceState))||
+ !["customer_claim","market_indicative","independently_corroborated"].includes(a.sourceState))||
  !time(serverTime)||record.scenarios?.some(s=>s.id===scenario.id))
  return stop("Unique source-stated economics scenario and trusted calculator result required");
  const next=clone(record);

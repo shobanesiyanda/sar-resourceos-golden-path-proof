@@ -1,0 +1,75 @@
+name: SAR company native source/build matrix (no deployment)
+on:
+  push:
+    branches:
+      - engineering/dealscope-contract-intelligence-v6-20261028
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  resourceos:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      CI: "true"
+    steps:
+      - name: Checkout full SAR enterprise candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Root dependency installation without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Entire ResourceOS and BusinessOS source suite
+        run: npm run verify:enterprise-source
+      - name: TypeScript
+        run: ./node_modules/.bin/tsc --noEmit
+      - name: Native ResourceOS build
+        run: npm run build
+      - name: Confirm root release hold and unactivated project writer
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const v=JSON.parse(fs.readFileSync('vercel.json','utf8'));
+          if(!v.ignoreCommand?.includes('exit 0'))process.exit(1);
+          const s=fs.readFileSync('lib/sar-project-activation-runtime.mjs','utf8');
+          if(!/getSARProjectActivationServices\(\)\{return null;\}/.test(s))process.exit(1);
+          NODE
+  dealscope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/dealscope
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      CI: "true"
+    steps:
+      - name: Checkout exact SAR-owned candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install DealScope application
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Full DealScope source and security tests
+        run: npm test
+      - name: Native DealScope Next build
+        run: npm run build
+      - name: TypeScript
+        run: npm run typecheck
+      - name: Verify independent backend remains unactivated and release held
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const v=JSON.parse(fs.readFileSync('vercel.json','utf8'));
+          const a=fs.readFileSync('lib/server/assessment-runtime.mjs','utf8');
+          if(!v.ignoreCommand?.includes('exit 0')||!/getDealScopeAssessmentServices\(\)\{return null;\}/.test(a))process.exit(1);
+          NODE

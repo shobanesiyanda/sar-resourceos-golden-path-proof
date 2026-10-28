@@ -21,8 +21,10 @@ export async function executeIntakeRequest({request,services}){
  const commodity=form.get("commodity"), entryPoint=form.get("entryPoint");
  const materialForm=form.get("materialForm"), commercialRole=form.get("commercialRole");
  const deliveryTerm=form.get("deliveryTerm");
+ const fulfilmentRoute=form.get("fulfilmentRoute")||"undecided";
  if(!permitted.has(commodity)||!["sale_contract","source_offer"].includes(entryPoint)||
-  !validString(materialForm)||!validString(commercialRole)||!validString(deliveryTerm))
+  !validString(materialForm)||!validString(commercialRole)||!validString(deliveryTerm)||
+  !["undecided","direct_trade","process_feedstock","own_stock"].includes(fulfilmentRoute))
   return blocked(422,"deal_context_incomplete");
  const documents=form.getAll("documents");
  if(documents.length>5)return blocked(413,"too_many_documents");
@@ -41,7 +43,7 @@ export async function executeIntakeRequest({request,services}){
  try{
   persisted=await services.persistAndExtractIntake({
    tenantId:auth.tenantId,userId:auth.userId,
-   context:{commodity,entryPoint,materialForm,commercialRole,deliveryTerm},
+   context:{commodity,entryPoint,materialForm,commercialRole,deliveryTerm,fulfilmentRoute},
    sources:{documents,pastedText:typeof pasted==="string"?pasted:"",manual:{
     deliveryLocation:form.get("deliveryLocation"),quantity,grade,buyerPrice:form.get("buyerPrice")}}
   });

@@ -44,28 +44,28 @@ test("search indexing remains disabled until authenticated launch",()=>{
 });
 
 test("DealScope remains the primary public brand; correct legal operator only in footers and legal page",()=>{
- const operator=/Shobane African Resources \\(Pty\\) Ltd/;
+ const operator=/Shobane African Resources \(Pty\) Ltd/;
  for(const path of ["app/page.tsx","app/start/page.tsx"]){
   const src=source(path),index=src.indexOf("<footer");
   assert.ok(index>0,"Footer exists for "+path);
-  assert.doesNotMatch(src.slice(0,index),/Shobane African Resources|shobane\\.co\\.za|\\bSAR\\b/i);
+  assert.doesNotMatch(src.slice(0,index),/Shobane African Resources|shobane\.co\.za|\bSAR\b/i);
   assert.match(src.slice(index),operator);
-  assert.match(src.slice(index),/href="\\/legal"/);
+  assert.match(src.slice(index),/href="\/legal"/);
  }
  const legal=source("app/legal/page.tsx");
  assert.match(legal,/CURRENT LEGAL OPERATOR/);
  assert.match(legal,operator);
  assert.match(legal,/not represented here as a separately incorporated company/);
  assert.match(legal,/does not register customer accounts/);
- assert.doesNotMatch(legal,/registration number:\\s*\\d|VAT number:\\s*\\d/i);
+ assert.doesNotMatch(legal,/registration number:\s*\d|VAT number:\s*\d/i);
 });
 test("marketing and app metadata do not advertise parent or cross-link corporate business",()=>{
  for(const path of ["app/runs/page.tsx","app/integrity/page.tsx",
    "app/exchange/page.tsx","app/layout.tsx"]){
   const src=source(path);
-  assert.doesNotMatch(src,/Shobane African Resources|shobane\\.co\\.za|\\bSAR\\b/i);
+  assert.doesNotMatch(src,/Shobane African Resources|shobane\.co\.za|\bSAR\b/i);
  }
  const css=source("app/landing.css");
- assert.match(css,/\\.ds-legal\\{[^}]*font-size:\\.72rem/);
- assert.match(css,/\\.ds-legal a:focus-visible/);
+ assert.match(css,/\.ds-legal\{[^}]*font-size:\.72rem/);
+ assert.match(css,/\.ds-legal a:focus-visible/);
 });

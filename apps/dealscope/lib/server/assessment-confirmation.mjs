@@ -1,3 +1,4 @@
+import {readBoundedJson,BodyIntakeError} from "./bounded-body.mjs";
 import {registryVersion} from "../specialist-registry.mjs";
 const stopped=(status,code)=>({status,body:{status:code},cacheControl:"no-store"});
 const caseIdValid=s=>typeof s==="string"&&/^[a-zA-Z0-9_-]{1,80}$/.test(s);
@@ -9,9 +10,8 @@ export async function executeConfirmationRequest({request,services}){
  if(!auth?.verified||!auth?.activeMembership||!auth?.tenantId||!auth?.userId||
   auth.entitledToAssessment!==true||auth.currentLegalAcceptance!==true)
   return stopped(403,"assessment_access_not_granted");
- const length=Number(request.headers?.get?.("content-length")||0);
- if(!Number.isFinite(length)||length>2048)return stopped(413,"request_too_large");
- let data;try{data=await request.json();}catch{return stopped(400,"invalid_request");}
+ let data;try{data=await readBoundedJson(request,2048);}
+ catch(error){return stopped(error instanceof BodyIntakeError?error.status:400,error instanceof BodyIntakeError?error.code:"invalid_request");}
  if(!data||Object.keys(data).sort().join(",")!=="caseId,confirm,sourceRevision"||
   !caseIdValid(data.caseId)||data.confirm!==true||
   !Number.isSafeInteger(data.sourceRevision)||data.sourceRevision<1)

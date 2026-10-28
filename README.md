@@ -57,3 +57,7 @@ SAR-owned DealScope is a separate full commercial-intelligence and Exchange busi
 
 ## 28 October — DealScope legal and tax readiness
 The controlled DealScope legal-source directory is docs/legal/README.md. It includes customer terms, privacy/POPIA, PAIA, payments/refunds, invoices, supplier disclosures and a launch checklist. Customer draft legal routes are /legal, /terms, /privacy, /payments and /invoicing. SAR remains the true legal company operating the DealScope brand; separate incorporation is deferred. All drafts require current company verification, approval, actual merchant and secure deployment before customer use. See docs/engineering/2026-10-28-dealscope-legal-macro-checkpoint.md. Production remains on hold.
+
+
+## DealScope engineering macro 002 — 28 October 2026
+Current engineering continuation: docs/engineering/2026-10-28-dealscope-engineering-macro-002.md. Covers verified tenant AccountOS action candidate, counsel-approved immutable acceptance proposal, customer-owned Deal Assistance dossier and end-to-end free-cycle/report transaction proposals, corrected source-only SQL FKs, protected customer/checkout APIs and 100 passing SOURCE-ADAPTED test cases. No native clean build, actual Supabase database, customer data, legal issuance or live payments. Branch/PR still DRAFT. The full legal documents remain controlled under docs/legal/README.md and SAR-ADR-018/020/021.

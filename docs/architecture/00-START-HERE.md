@@ -77,3 +77,6 @@ Read this index; check the **current branch and newest approved architecture rev
 ## Explicit incompleteness
 
 This initial index establishes navigation and traceability, **not proof that SAR's entire historical blueprint has been recovered**. Approval of the complete organizational hierarchy, division operations manuals, document-intelligence prompts and evals, equipment libraries, SOPs, approvals/delegation registers, finance/tax policies and procurement document templates is still OPEN. Recover and reconcile any historic material before marking the library COMPLETE.
+
+### 28 October DealScope engineering continuation pointer
+Engineering macro 002 checkpoint: [DealScope customer identity, legal consent, dossier and atomic free-cycle candidates](../engineering/2026-10-28-dealscope-engineering-macro-002.md). Start in `apps/dealscope/README.md`, `apps/dealscope/database/README.md`, `docs/legal/README.md`, ADR-018/020/021 and this checkpoint. None of the newly authored SQL is a migrated database. Preserve unmerged branch, no separate DealScope corporation, true SAR operator disclosure and customer tenant/data/PSP isolation.

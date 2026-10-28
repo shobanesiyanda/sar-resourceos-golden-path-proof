@@ -1,5 +1,13 @@
 # SAR Enterprise Architecture — Authoritative Documentation Index
 
+## CURRENT 28 OCTOBER 2026 — DealScope v6 supersession
+
+The latest Founder-directed customer system contract is **[DealScope Unified Commercial Intelligence Architecture v6](16-DEALSCOPE-UNIFIED-COMMERCIAL-INTELLIGENCE-V6-20261028.md)**. It defines two customer services: dated weekly Market Intelligence and user-supplied Deal Intelligence, with a protected commodity-adaptive specialist engine. It **supersedes the older opportunity-discovery, exchange and buyer–seller-matching proposals** in earlier blueprints. Public customer transactions are private; formulas remain server-side. This document is a **design authority only**, NOT a completed application.
+
+The current implemented candidate is SAR-owned `engineering/dealscope-contract-intelligence-v6-20261028` draft PR #4, dependent on SAR-owned migration PR #1. Its source tests were previously reported locally, but full Node24/Next native verification and live SAR-only tenant infrastructure are NOT ACCEPTED. The job `dealscope-verify` is failing with no retrievable steps/log; neither PR is accepted for promotion on this evidence. The SAR Corporate Website was separately fast-forward integrated into its `main` at source `654f0c0190611893cdf3fb7e2bc825562f5143a3`, with source-only security gates. No production release.
+
+
+
 **Document ID:** SAR-ARCH-INDEX-001  
 **Owner:** Shobane African Resources (Pty) Ltd  
 **Prepared:** 27 October 2026  

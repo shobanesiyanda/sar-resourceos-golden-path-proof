@@ -2,6 +2,7 @@
 const allowedFields = new Set([
   'commodity','material_form','commercial_role','delivery_term','delivery_location',
   'buyer_product_grade_pct','buyer_quantity_dry_t','buyer_price_zar_per_dry_t',
+  'source_purchase_price_zar_per_dry_t',
   'feedstock_grade_pct','feedstock_quantity_dry_t','source_location',
   'contract_reference','payment_terms','seller_name','buyer_name',
   'fulfilment_route'

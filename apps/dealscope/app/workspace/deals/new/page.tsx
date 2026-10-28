@@ -16,7 +16,7 @@ export default async function CustomerDealAssessment(){
  </main>;
  try{
   const principal=await services.authenticatePage();
-  if(!principal?.verified||!principal?.activeMembership||
+  if(!principal?.verified||!principal?.activeMembership||!principal?.tenantId||!principal?.userId||
      !principal?.entitledToAssessment||!principal?.currentLegalAcceptance)
     return <main style={{padding:"60px 24px",background:"#0b111b",minHeight:"100vh",color:"#fff"}}>
      <p>DealScope customer access has not been verified for this session.</p>

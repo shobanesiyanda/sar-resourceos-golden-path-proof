@@ -36,7 +36,7 @@ export async function executeIntakeRequest({request,services}){
  }
  const pasted=form.get("pastedText"),quantity=form.get("quantity"),grade=form.get("productGrade");
  if(typeof pasted==="string"&&pasted.length>15000)return blocked(413,"pasted_information_too_large");
- const manualPresent=[form.get("deliveryLocation"),quantity,grade,form.get("buyerPrice")].some(v=>validString(v));
+ const manualPresent=[form.get("deliveryLocation"),quantity,grade,form.get("buyerPrice"),form.get("sourcePrice")].some(v=>validString(v));
  if(documents.length===0&&!(typeof pasted==="string"&&pasted.trim())&&!manualPresent)
   return blocked(422,"no_information_supplied");
  let persisted;
@@ -45,7 +45,8 @@ export async function executeIntakeRequest({request,services}){
    tenantId:auth.tenantId,userId:auth.userId,
    context:{commodity,entryPoint,materialForm,commercialRole,deliveryTerm,fulfilmentRoute},
    sources:{documents,pastedText:typeof pasted==="string"?pasted:"",manual:{
-    deliveryLocation:form.get("deliveryLocation"),quantity,grade,buyerPrice:form.get("buyerPrice")}}
+    deliveryLocation:form.get("deliveryLocation"),quantity,grade,
+    buyerPrice:form.get("buyerPrice"),sourcePrice:form.get("sourcePrice")}}
   });
  }catch{return blocked(503,"secure_intake_unavailable");}
  if(!persisted?.committed||persisted.tenantId!==auth.tenantId||

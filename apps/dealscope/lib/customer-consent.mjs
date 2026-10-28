@@ -43,7 +43,7 @@ export function prepareContractAcceptance({grant,publications,choices,scope,serv
  for(const kind of REQUIRED){
   const p=publications[kind],a=choices.acceptedVersions?.[kind];
   if(!p||p.kind!==kind||p.state!=="effective"||
-   p.legalApproved!==true||p.currentSupplier===CONTRACT_OPERATOR||
+   p.legalApproved!==true||p.currentSupplier!==CONTRACT_OPERATOR||
    !text(p.version)||!hash(p.sha256)||!time(p.effectiveAt)||
    Date.parse(p.effectiveAt)>Date.parse(serverTime)||
    !a||a.version!==p.version||a.sha256!==p.sha256)

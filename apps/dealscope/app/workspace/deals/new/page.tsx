@@ -1,3 +1,4 @@
+import "./journey.css";
 import Link from "next/link";
 import AssessmentJourney from "./AssessmentJourney";
 import {getDealScopeAssessmentServices} from "../../../../lib/server/assessment-runtime.mjs";

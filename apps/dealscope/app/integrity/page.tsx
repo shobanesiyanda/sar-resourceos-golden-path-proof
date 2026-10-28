@@ -26,7 +26,7 @@ export default function IntegrityGuidance(){
  return <main>
   <header className="top"><div className="wrap topInner">
    <Link className="brand" href="/">DEALSCOPE<span className="dot">.</span></Link>
-   <nav><Link href="/">Deal Runs</Link><Link href="/exchange">Commercial Exchange</Link></nav>
+   <nav><Link href="/market-intelligence">Market Intelligence</Link><Link href="/start">Assess My Deal</Link></nav>
   </div></header>
   <section className="hero"><div className="wrap">
    <p className="eyebrow">Deal Integrity / Guided diligence</p>

@@ -1,34 +1,50 @@
-# DealScope — Public Brand Autonomy, Legal Supplier & Entity-Separation Gate
-**ID:** SAR-DSC-BRAND-20261028-001
-**Date:** 28 October 2026
-**Classification:** SAR confidential enterprise decision / DealScope brand engineering requirement
-**Status:** Founder-directed separation of public identity; legal vehicle, contracts and independent customer service operation NOT established or approved as complete.
+# DealScope — Standalone Brand, SAR Legal Operation and Statutory Disclosure
+**Control:** SAR-DSC-BRAND-20261028-002
+**Revised:** 28 October 2026 (SAST)
+**Owner:** Shobane African Resources (Pty) Ltd
+**State:** FOUNDER-APPROVED CUSTOMER IDENTITY AS WORK IN PROGRESS; code and documentation on draft development branch. Not an approved live service.
+**Supersedes:** SAR-DSC-BRAND-20261028-001 and previous zero-mention/mandatory standalone-incorporation direction (ADR-019). Retain earlier versions in Git history for provenance, but do not apply their conflicting policy.
 
-## Founder direction and scope
-DealScope is to appear to prospective customers as a **distinct platform with its own public identity**, not connected to or advertised as a product of Shobane African Resources. In particular the **entire signed-out DealScope website, customer interface, headlines, marketing footers, SEO/structured metadata, demonstration output, referral copy, social profiles, product PDFs, email display names, onboarding pages, customer documents and communications** must NOT mention SAR, Shobane, the corporate trading website, or link to the corporate business as an affiliated entity. No "powered by", "operated by" or owner references in brand-led copy. Avoid cross-linking shobane.co.za and dealscope.co.za from either public site.
+## 1. Current Founder decision
+DealScope operates as a **distinct customer-facing product and service brand of Shobane African Resources (Pty) Ltd** while the commercial concept is proven. **DO NOT incorporate a separate DealScope company at this stage** merely to launch or continue engineering. Corporate restructuring or a distinct operating company is a future explicit business decision if proven revenue, repeat customers, costs, strategic investment, liability allocation or comparable evidence justifies it. No automatic incorporation threshold has been approved.
 
-**Important: branding independence is not proof of separate legal personality or a licence to conceal mandatory supplier disclosures.** The current internal ownership record still states SAR owns DealScope. Do not silently change corporate shareholding, transfer IP or fabricate a new company, merchant, tax registration or bank account. Preserve the truthful internal ownership and financial audit records as restricted records, not public marketing content.
+DealScope brand identity and value proposition are presented as DealScope alone. The headline, hero, logo, menu, product capability cards, marketing journeys, account experience, market reports and ordinary promotional content must not advertise SAR's resources company. The relationship is truthfully and **discreetly** disclosed in a small but legible site footer and accessible legal/company information page. The parent does not acquire access to other customers' protected opportunities simply because it owns the product; independent multitenant Auth, RLS, privacy and permissions remain mandatory.
 
-## Required legal-commercial separation before transactional launch
-The founder wants DealScope and SAR to be separate **entities in the public eye**, not merely separate logos. To achieve a genuine standalone legal supplier presentation with truthful consumer disclosures, have counsel/accounting evaluate establishing or identifying a **separately registered DealScope operating legal entity** (exact statutory name and registration evidence pending). Intra-group equity/shareholding, IP licensing, services contract and transfer pricing may be structured separately from product branding. This cannot guarantee a hidden beneficial owner: official registers, financial compliance and legally mandated corporate disclosures may expose the ownership chain.
+## 2. Customer-visible source of truth
+Suggested/implemented footer language:
+**© 2026 DealScope · Operated by Shobane African Resources (Pty) Ltd · Legal information**
+The legal-information link leads to a clearly accessible dedicated page giving the truthful currently known operator, without inventing statutory registration numbers, service addresses, email, phone, VAT number, shareholders, bank or officer names. Page and footer must remain easily legible, keyboard accessible and available on mobile.
 
-Until a legitimate independent DealScope legal supplier is verified:
-- Keep signed-out **informational preview** branded solely DealScope; show no false legal entity.
-- Keep live customer account purchasing, contracts, checkout, invoicing, processor settlement and trade-facing service activation **HOLD**. Do not strip required company details merely to hide their existence. If SAR is in fact supplier, the required legal name must be truthfully disclosed where the law requires; this conflicts with zero mention and cannot be solved by copy editing alone.
-- Source truth and provider webhook/ledger entities must reflect the **actual contracting merchant**, not a cosmetically rebranded entity string. Existing internal merchant pinning to SAR is a historical placeholder/control, not a permitted public receipt once the brand split is approved; any change to independent DealScope supplier must follow actual legal incorporation, tax/bank/payment provider authority, invoices, consumer and POPIA notices, financial audit and DoA acceptance.
-- The current separate product at apps/dealscope under a parent repository named sar-resourceos-golden-path-proof leaks discoverable ownership provenance if source/commit links are made public. Future approved private repository/org, independent deployment identity, domain, mail, analytics, error tracking and merchant administration should be arranged without loss of Git provenance. No repository transfer or infrastructure creation is authorised by this document.
+Public product identity is **DealScope**; there is no requirement for a linked parent corporate logo or a corporate website link. Maintain the distinction between marketing attribution (light) and legally required supplier details (complete). It is acceptable that the legal page identifies the operator prominently as a matter of accurate statutory transparency. Do not claim 'DealScope (Pty) Ltd' or describe a nonexistent independently registered legal person. Commercial offers, invoices, contracts, refunds, privacy notices, payments and service of documents must name the actual SAR contracting legal entity until an approved lawful entity change.
 
-## Laws to review (source checks as at 28 October 2026)
-- South African Electronic Communications and Transactions Act 25 of 2002, **section 43(1)**: a supplier offering goods/services via an electronic transaction must disclose its **full legal name/status** and other specified contact/registration/terms/payment details to consumers. Official/consolidated text: https://lawlibrary.org.za/akn/za/act/2002/25/eng@2021-12-01
-- Consumer Protection Act 68 of 2008, **section 79**: regulates name under which business is carried on and particulars on trade catalogues, invoices and similar records. Consolidated text: https://lawlibrary.org.za/akn/za/act/2008/68/eng@2015-03-13
-These references are legal screening points, not bespoke counsel opinions. Verify currently operative regulations, applicability, exemptions and all mandatory contract/website disclosures before launch.
+## 3. Business and finance architecture
+- Legal operator and (subject to provider acceptance) prospective merchant: **Shobane African Resources (Pty) Ltd**. Keep truthful existing SAR legal-entity pinning in the current pure payment candidate contracts rather than substituting an invented DealScope merchant. Verify SAR's processor registration/contract, settlement bank account, tax treatment and suitable business activity before accepting any payments.
+- **Brand autonomy is not a separate accounting entity.** Track DealScope as an attributable business/product segment with distinct revenue, costs, contribution margin, third-party-verification fees, customer acquisition cost, support costs, credits, refunds and liabilities in SAR books. Use separate financial segments/cost centres and reconcilable journals, not a fabricated separate statutory ledger/company.
+- DealScope customer data, tenant permission model and hosted database remain ring-fenced from ResourceOS internal commercial data; existing privacy separation and no-access guarantees are not relaxed.
+- Staff using SAR internal ResourceOS cannot simply view DealScope customer dossiers without a named authorised DealScope role, independent consent and an auditable business reason.
+- Keep dedicated DealScope domain, sales acquisition, support communications, product presentation, external CRM and help identities as far as operationally possible, but the statutory supplier and merchant owner must be disclosed where required. Do not reuse TenderDesk, Possent or BidOS accounts or merchant keys.
 
-## Public website implementation acceptance
-- Current public routes /, /start, /runs, /integrity and /exchange must have no Shobane/SAR trade name, "operated by" or corporate website backlink, no corporate logo/images, no SAR URLs or parent name in title/meta/structured data/robots/sitemaps/OG/social share cards, no SAR brand in public email signatures, downloadable reports, PDFs, support/chat or public errors.
-- Marketing and onboarding use DealScope name, visual system, promise "Know what you're dealing with before you commit", and current Founder free offer: ONE complete Deal Assistance & Assessment cycle for an eligible customer; a second only via approved campaign.
-- Separate DealScope public sales contact/support and domain not invented; register and verify before publication. No live financial or verification claims without actual working backend.
-- Never publish sensitive internal SAR ownership documents, invoice merchant placeholders, repo URLs revealing corporate structure, or unverified individual/organisation identity data as marketing assets.
-- At launch the actual registered DealScope supplier must truthfully supply all mandated legal/contact details via applicable legal pages/checkout/customer notices. **It is impossible to guarantee completely hidden beneficial ownership where legitimate public registries or statutes require disclosure.**
+## 4. Statutory and consumer disclosures — mandatory launch gate, not a separate-company gate
+South Africa's Electronic Communications and Transactions Act 25 of 2002 section 43 requires (where it applies) information including the supplier's full legal name/status, physical and electronic contact particulars, registration/office-bearer details, pricing, terms, remedies, privacy and payment information to be available through the website for electronic transactions. Consumer Protection Act section 79 has business-name/supplier identification obligations, subject to applicability and legal review. Sources:
+- https://lawlibrary.org.za/akn/za/act/2002/25/eng@2021-12-01
+- https://lawlibrary.org.za/akn/za/act/2008/68/eng@2015-03-13
+Verify applicable statutory scope, regulations and current legal counsel guidance before launch. A small footer alone is **not** sufficient to satisfy the complete electronic-commerce disclosure rule.
 
-## Status / blocked gates
-Current website marketing/source footer copies remove corporate references; customer-visible test guards against reintroduction. Actual separate legal supplier not evidenced; dedicated DealScope Auth/database, own payment merchant, tax accounting, invoices, verified legal privacy/Terms, support/digital identity, source releases, PII/RLS/backup/restore, domain control and independent build remain unaccepted. Mainline/production untouched until authorised sign-off.
+Before live paid signup, contracting, invoicing, payments or live Exchange: verify exact SAR registration number, registered and physical/service addresses, telephone and email, domain ownership, business/trading-name treatment, legal terms, privacy/POPIA notices, complaints/disputes, cancellations and refunds, service delivery timeframes, prices/VAT/tax representation, staff/officer/issuer disclosures where applicable, and provider merchant approval. Publish these verified particulars in an accessible legal/contact policy surface and provide accurate supplier identity on applicable agreements, receipts and financial documents. Do not invent data or falsely imply regulatory acceptance.
+
+## 5. Public website scope/technical acceptance
+- apps/dealscope/app/page.tsx: DealScope brand-led marketing with subtle footer legal operator identification, accessible /legal link and development preview notice.
+- apps/dealscope/app/start/page.tsx: same minimal truthful footer and accessible legal link.
+- apps/dealscope/app/legal/page.tsx: dedicated actual-operator identification; explicit current preview and outstanding verified statutory disclosure gate.
+- apps/dealscope/app/landing.css: legible low-emphasis styling and keyboard focus outline.
+- apps/dealscope/test/public-website.test.mjs: asserts SAR name only in the footer or legal page, not hero/menu/feature cards/app metadata; no reciprocal SAR-domain marketing link; no fabricated independent company.
+- Do not imply customer registration/merchant verification/Exchange transactions work before true backend, independent evidence providers and tests.
+- Responsive mobile/desktop, legal route, cross-navigation, contrast, noindex release controls, security/tenant tests and complete build/browser acceptance remain open.
+
+## 6. Future possible standalone company review
+Separate incorporation may be considered only on a subsequent Founder-controlled business case with defensible customer numbers, paid repeat usage, unit economics and cash flows, service liability, legal/risk exposure, buyer/seller independence, equity/investor funding or investment structure. The group may then evaluate IP licensing/assignment, tax/accounting, banking, contracts, payment tokens/settlement, employer responsibilities, customer migrations, company notices and data-protection impact. **No separate DealScope entity is authorised or implied now.**
+
+## 7. Controlled change history
+- **28 October 2026 early:** SAR-ADR-019 originally demanded zero SAR mentions in all public DealScope surfaces and treated independently incorporated DealScope merchant/entity as a launch prerequisite. This is **superseded**.
+- **28 October 2026 latest instruction:** Founder approves the DealScope customer-facing identity as a work in progress, **defers separate legal incorporation pending merit**, and specifically authorises subtle visible Shobane African Resources attribution in site footer to accurately identify the legal operator. Recorded as **SAR-ADR-020**, which controls all conflicting references.
+- Mainline and production promotion are still held pending complete customer-facing, legal, product, security, finance and acceptance approvals. There is no claim that live merchant or independent verification exists.

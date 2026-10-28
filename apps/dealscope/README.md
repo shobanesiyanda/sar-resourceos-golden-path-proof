@@ -2,6 +2,20 @@
 
 **Legal owner: Shobane African Resources (Pty) Ltd.** Possent Systems is not associated with SAR or DealScope. The dedicated DealScope Supabase project does not exist yet and must be established only under SAR-controlled infrastructure.
 
+## CURRENT AUTHORITY — Macro 006, 28 October 2026 (unreleased integration branch)
+
+**Do not treat the historical dated entries below as active features when they conflict with this section.** DealScope has two approved customer services: (1) weekly **Market Intelligence** with dated commodity/grade/basis evidence, and (2) **Deal Intelligence**, which assesses transactions supplied by the customer. DealScope does not find customer deals, match buyer and seller parties, or activate the historical Exchange. `/exchange` now redirects to onboarding; the API is fail-closed.
+
+The actual signed-in Deal Intelligence journey is under `app/workspace/deals/new`: commodity -> delivery terms -> role -> material/fulfilment route -> upload/paste/manual information -> source-linked fact confirmation -> protected analysis -> customer-safe decision brief. `/runs` redirects to the private workspace and does not ship calculation methods. `app/market-intelligence` is the separate signed-out market-service explanation, **not** a live price feed.
+
+The versioned specialist catalogue lives in `lib/specialist-registry.mjs`. Chrome has indicative model support only. Other listed commodities are intake-only until an independently accepted specialist calculation model exists. Unknown material/route combinations are rejected. Contract-led chrome processing and stock-led direct resale have distinct physical/economic models. No guessed market prices or universal recovery yields.
+
+`lib/server/assessment-runtime.mjs` remains deliberately null; customer Auth/RLS/storage, malware scanning, document extraction, licences/market feeds and payments are not live. The three protected assessment API functions fail closed. No database migrations have been applied or production deployment approved.
+
+**Verification:** source-level focused tests 53/53 and marketing tests 10/10 passed in a GitHub-fetched JS-isolate harness after Macro 006 changes. A no-deployment, read-only Node24 test/build workflow was committed at `.github/workflows/dealscope-source-verification.yml`, but GitHub has not yet reported a workflow run; pinned Next production build, complete native Node test suite, browser E2E and real database/RLS acceptance remain OPEN. No claim of production readiness.
+
+Controlling handover: `docs/control/DEALSCOPE_2026-10-28_MACRO_006_ENGINEERING_AND_RELEASE_HOLD.md`.
+
 This is the isolated DealScope application added to the original SAR ResourceOS migration branch. Its source remains in `apps/dealscope`; SAR's existing internal ResourceOS app remains at the repository root.
 
 ## Run / deploy
@@ -16,10 +30,10 @@ Vercel project root directory: `apps/dealscope`. Publish only to a **preview** d
 
 ## Safety
 - All deal inputs are provided by the user; there is no market-feed claim and no trade execution.
-- The Deal Run calculator is client-local only; it does not store private data or transact.
+- The historical client-side Deal Run calculator has been superseded by a private customer journey. Its methods must not ship in customer code and the new endpoints are not activated.
 - Exchange and subscription activation are deliberately unavailable until a dedicated DealScope backend, verified tenant identity, billing and consent controls are live.
 - No access to SAR ResourceOS data, finance or internal approvals.
-- No GitHub Actions.
+- A source-only, read-only verification workflow exists on the draft integration branch. It is not a release or deployment workflow; no successful run is yet reported.
 - Future hosting uses portable Next.js standalone output, separately provisioned PostgreSQL/auth/storage/queue adapters.
 
 ## Separation regression
@@ -37,7 +51,7 @@ Do not interpret any published preview, source module or successful local tests 
 
 
 ## Public acquisition website and single full free deal cycle — 28 October
-The canonical child Next app now has separate signed-out / (trust/value-first marketing), /integrity (local guided unverified screening), /runs (the ORIGINAL self-entered calculator), /exchange (locked buyer/seller Exchange) and /start (full trial onboarding preview, NO personal-information capture). Public marketing styles are in app/landing.css; root app/layout.tsx retains noindex until release. Customer target domain: dealscope.co.za — domain/DNS/production not verified. No actual trial or signup has been activated.
+The canonical child Next app has signed-out / (two approved services), /market-intelligence (market-service overview), /integrity (local unverified self-check), /runs (compatibility redirect to protected assessment), /exchange (redirect away from superseded Exchange) and /start (introductory account information, NO personal-information capture). Public marketing styles are in app/landing.css; root app/layout.tsx retains noindex until release. Customer target domain: dealscope.co.za — domain/DNS/production not verified. No actual trial or signup has been activated.
 
 CURRENT: Founder replaced the historical 30-day unlimited trial with ONE free complete end-to-end deal-assistance and assessment cycle (optional independently approved second). See docs/architecture/13-DEALSCOPE-FULL-TRIAL-ONBOARDING-AND-ENTITLEMENTS.md and the business acquisition blueprint 12. Source implementation: apps/dealscope/lib/deal-cycle-trial.mjs and test/deal-cycle-trial.test.mjs. No signup/production entitlement or actual independent verification is live.
 

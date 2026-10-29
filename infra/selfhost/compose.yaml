@@ -1,0 +1,24 @@
+# Future self-hosting example. No database, auth or secrets provisioned by this file.
+services:
+  dealscope:
+    build:
+      context: ../..
+      dockerfile: infra/docker/DealScope.Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - "${DEALSCOPE_PORT:-3001}:3000"
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp"]
+  sar-resourceos:
+    build:
+      context: ../..
+      dockerfile: infra/docker/ResourceOS.Dockerfile
+    env_file:
+      - ./resourceos.env
+    ports:
+      - "${RESOURCEOS_PORT:-3002}:3000"
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp"]

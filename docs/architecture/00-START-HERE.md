@@ -40,6 +40,13 @@ Every engineer, software agent, business analyst and change reviewer **must** re
 ### Native corporate documentation architecture
 - [SAR Corporate Documentation and Templates Standard](07-DOCUMENT-DESIGN-AND-TEMPLATES.md) — **Founder-approved requirement** for all branded client, internal and counterparty documents, with ResourceOS-native creation, editing, preview, approvals and controlled issue.
 - [ResourceOS Document Studio — product and engineering blueprint](08-RESOURCEOS-DOCUMENT-STUDIO.md) — first-party editor/viewer workflow, templates, editing experience, revision/approval model, backend dependencies and acceptance gates.
+- [Controlled Document Amendment Authority](09-DOCUMENT-AMENDMENT-AUTHORITY.md) — new Founder-mandated request -> independent preapproval -> section-limited edit -> independent postreview -> exact revision governance; source implementation is NOT backend authority.
+- [DealScope PAYG Report Product](10-DEALSCOPE-PAYG-PRODUCT.md) — per-analysis paid service independent of whether a prospect becomes a contracted trade; price, consumer terms, payment infrastructure and acceptance pending.
+- [DealScope Deal Integrity & Counterparty Intelligence OS](11-DEALSCOPE-DEAL-INTEGRITY-OS.md) — explained claim-by-claim credibility assessment, evidence checks and investigation actions, separated from commercial profitability; live verification remains open.
+- [DealScope Public Website & Commercial Acquisition Blueprint](12-DEALSCOPE-CUSTOMER-ACQUISITION-AND-BUSINESS-MODEL.md) — independent dealscope.co.za signed-out experience, value proposition, trial funnel, flexible PAYG/subscription packaging and complete client retention strategy.
+- [DealScope Legal, Privacy, Customer Terms and Finance](../legal/README.md) — current 28 Oct controlled legal source: recorded CIPC/VAT, comprehensive draft terms, POPIA/PAIA, payments/refunds, invoicing/merchant, processor confidentiality, evidence-risk, public routes and mandatory legal release checklist. All drafts, not issued customer contracts.
+- [DealScope Customer Brand & SAR Legal Operation](14-DEALSCOPE-PUBLIC-BRAND-AND-ENTITY-SEPARATION.md) — latest ADR-020: brand stands alone, small truthful SAR legal-operator footer and detailed /legal information, separate incorporation deferred pending merit; verified statutory and payment disclosures required before live commerce.
+- [DealScope One Free Complete Deal Assessment](13-DEALSCOPE-FULL-TRIAL-ONBOARDING-AND-ENTITLEMENTS.md) — current 28 Oct Founder decision supersedes 30-day unlimited trial; one full opportunity assistance-and-report cycle by default, optional independently approved promotional second, Auth/eligibility/consumption and opt-in paid conversion.
 
 ## Architecture domain coverage and unresolved gaps
 
@@ -78,3 +85,6 @@ Read this index; check the **current branch and newest approved architecture rev
 ## Explicit incompleteness
 
 This initial index establishes navigation and traceability, **not proof that SAR's entire historical blueprint has been recovered**. Approval of the complete organizational hierarchy, division operations manuals, document-intelligence prompts and evals, equipment libraries, SOPs, approvals/delegation registers, finance/tax policies and procurement document templates is still OPEN. Recover and reconcile any historic material before marking the library COMPLETE.
+
+### 28 October DealScope engineering continuation pointer
+Engineering macro 002 checkpoint: [DealScope customer identity, legal consent, dossier and atomic free-cycle candidates](../engineering/2026-10-28-dealscope-engineering-macro-002.md). Start in `apps/dealscope/README.md`, `apps/dealscope/database/README.md`, `docs/legal/README.md`, ADR-018/020/021 and this checkpoint. None of the newly authored SQL is a migrated database. Preserve unmerged branch, no separate DealScope corporation, true SAR operator disclosure and customer tenant/data/PSP isolation.

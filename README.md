@@ -49,3 +49,15 @@ After this golden path, implement exception-path controls:
 - variance dispute
 - short delivery
 - finance hold
+
+
+## DealScope signed-out acquisition and one free complete deal cycle (development only)
+SAR-owned DealScope is a separate full commercial-intelligence and Exchange business with a public customer acquisition target at **dealscope.co.za**. Its development code under apps/dealscope now includes a signed-out public / marketing site, /start preview of the Founder-approved single free full Deal Assistance & Assessment cycle, /integrity guided self-check, /runs preserved calculator and locked /exchange. The product is NOT PAYG-only. For full requirements, business-model and site structure read docs/architecture/12-DEALSCOPE-CUSTOMER-ACQUISITION-AND-BUSINESS-MODEL.md; for trial identity and entitlement read docs/architecture/13-DEALSCOPE-FULL-TRIAL-ONBOARDING-AND-ENTITLEMENTS.md; for source checkpoint read docs/engineering/2026-10-27-dealscope-public-acquisition-trial-macro.md. No live account activation, real issuer verification, independent child-app build or production domain is implied.
+
+
+## 28 October — DealScope legal and tax readiness
+The controlled DealScope legal-source directory is docs/legal/README.md. It includes customer terms, privacy/POPIA, PAIA, payments/refunds, invoices, supplier disclosures and a launch checklist. Customer draft legal routes are /legal, /terms, /privacy, /payments and /invoicing. SAR remains the true legal company operating the DealScope brand; separate incorporation is deferred. All drafts require current company verification, approval, actual merchant and secure deployment before customer use. See docs/engineering/2026-10-28-dealscope-legal-macro-checkpoint.md. Production remains on hold.
+
+
+## DealScope engineering macro 002 — 28 October 2026
+Current engineering continuation: docs/engineering/2026-10-28-dealscope-engineering-macro-002.md. Covers verified tenant AccountOS action candidate, counsel-approved immutable acceptance proposal, customer-owned Deal Assistance dossier and end-to-end free-cycle/report transaction proposals, corrected source-only SQL FKs, protected customer/checkout APIs and 100 passing SOURCE-ADAPTED test cases. No native clean build, actual Supabase database, customer data, legal issuance or live payments. Branch/PR still DRAFT. The full legal documents remain controlled under docs/legal/README.md and SAR-ADR-018/020/021.

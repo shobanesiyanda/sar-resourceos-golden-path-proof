@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import ResourceShell from "../../components/ResourceShell";
 import { createClient } from "../../lib/supabase/client";
 
@@ -445,6 +446,19 @@ function useParcel() {
   return state;
 }
 
+function DocumentStudioLaunch() {
+  return <section className="rounded-2xl border border-[#C2A14A]/35 bg-gradient-to-r from-[#111d2f] via-[#091524] to-[#0b111a] p-5 shadow-xl">
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="max-w-xl">
+       <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#C2A14A]">SAR / Native Document Workspace</p>
+       <h2 className="mt-2 text-xl font-bold text-white">Document Studio</h2>
+       <p className="mt-2 text-sm leading-6 text-slate-300">Create, edit, structure and preview professionally branded SAR documents without opening Word. Session drafts only until the authenticated registry is connected.</p>
+      </div>
+      <Link href="/documents/studio" className="rounded-xl border border-[#C2A14A] bg-[#C2A14A]/15 px-5 py-3 text-sm font-bold text-[#f8df9d] hover:bg-[#C2A14A]/25">Open Document Studio →</Link>
+    </div>
+  </section>;
+}
+
 export default function DocumentsPage() {
   const state = useParcel();
 
@@ -454,6 +468,7 @@ export default function DocumentsPage() {
         title="Documents"
         subtitle="Reading saved parcel data."
       >
+        <DocumentStudioLaunch />
         <Card label="Loading" title="Reading saved parcel...">
           <p className="text-sm leading-6 text-slate-400">
             Loading the current saved parcel context from Supabase.
@@ -469,6 +484,7 @@ export default function DocumentsPage() {
         title="Documents"
         subtitle="Data could not load."
       >
+        <DocumentStudioLaunch />
         <Card label="Exception" title="Saved parcel unavailable">
           <p className="text-sm leading-6 text-red-200">
             {state.error || "No active parcel record found."}
@@ -486,6 +502,7 @@ export default function DocumentsPage() {
       title="Documents"
       subtitle="Commodity-specific document readiness reading the saved parcel."
     >
+        <DocumentStudioLaunch />
       <ParcelHeader model={model} />
 
       <Card

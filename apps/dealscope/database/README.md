@@ -63,3 +63,25 @@ It sketches 9 database entities:
 `DB-10` signed release approval. **Every gate is currently OPEN.**
 
 Do not relabel `project not created` as `existing project inaccessible`.
+
+
+## Full-suite October extensions (ALL UNAPPLIED)
+This is an interconnected proposed schema collection, not a sequence of migrations ready to run. Existing initial-schema.REVIEW-ONLY.sql has **nine** foundation entities. The following add complementary domain designs which may require reconciliation, referential-integrity review, append-only event locks, adviser checks, naming changes and generated migration files:
+- payg-extension.REVIEW-ONLY.sql: orders, provider receipts, wallets, report runs and atomic credit journal.
+- deal-integrity-extension.REVIEW-ONLY.sql: private tenant-bound evidence cases, structured source references, reviewer findings and protected event history.
+- trial-entitlements.REVIEW-ONLY.sql: current 28 Oct **ONE FREE COMPLETE DEAL ASSESSMENT** default, conditional independently approved second, no duration-based unlimited report entitlement; privacy-protected eligibility, organisation-bound balances, cases, stages and delivery ledger. NO SQL applied.
+Identity provider and company registry correlation, authorised reviewers, tenant-granted user memberships, source documents, offer slots, PAYG/annual plans and accounting authority remain distinct. **Do not apply multiple schema proposals blindly.** Reconcile one complete SAR-owned database plan; use real Supabase migrations and negative-path tests. No production data capture or trial entitlement while only the unrelated TenderDesk Supabase organisation is connected.
+
+
+### 28 October authoritative entitlement override
+The previously discussed 30-day time-based trial is superseded. The file trial-entitlements.REVIEW-ONLY.sql has been rewritten to represent **ONE COMPLETE FREE DEAL ASSISTANCE AND ASSESSMENT**, an optional separately approved second cycle, source-attested stages, delivered report events and safe recredit. No 30-day free usage or auto-converting subscription. These are still not applied database migrations. See architecture 13; any earlier duration description in archival material is obsolete.
+
+## 28 October 2026 macro: source-only identity, consent and complete free-case integration
+**Decision authority:** ADR-018, ADR-020, ADR-021 and engineering macro 002. SAR remains DealScope's actual legal operator; incorporation deferred. All new DB objects remain proposals, not migrations.
+- `trial-entitlements.REVIEW-ONLY.sql` corrected the missing composite candidate key `unique(organisation_id,id)` on `ds_intro_cycle_entitlements`. Claim ownership is now FK-bound through `(organisation_id,claim_id,owner_user_id)` to `ds_intro_cycle_claims`, with unique target; campaign approval must not be expired at review. Six-table RLS/no-client-write static tests added in `intro-cycle-schema-contract.test.mjs`.
+- `customer-identity-legal-consent.REVIEW-ONLY.sql` (NEW) proposes exactly THREE additional tables: immutable legal-policy versions, customer agreement acceptances (typed separate terms/privacy/payments FKs), and independent customer verification reviews. Every public-schema table has RLS; only active-member owner reads their own acceptance receipt. **No direct public Data API read of policy approval rows** because reviewer identities/approval references are not public marketing content. No browser policy/verification writes.
+- `customer-identity-schema-contract.test.mjs` protects those three tables, RLS, policy binding, no autonomous free-cycle billing, independent review and no public policy-ledger leaks.
+- These source proposals depend on initial-schema.READ-ONLY (actual filename `initial-schema.REVIEW-ONLY.sql`) and the existing Integrity and PAYG designs. They are NOT directly runnable production migrations; review the combined schema, object order, all FKs, RLS and duplicate policy names in a dedicated SAR-owned isolated DealScope database before migrating.
+- No SAR-owned Supabase project is accessible to this ChatGPT connection. As verified on 28 October, the connected organisation is TenderDesk and its projects are unrelated. **DO NOT apply any SAR/DealScope SQL there.**
+- Auth/session checking uses verified server session and authoritative `ds_memberships` ledger; never use user-editable metadata for roles. Policies must be effective and legally approved before contractual acceptance; HTTP customer services remain 503 until verified Auth, legal approvals and persistence exist.
+- Use latest Supabase RLS guidance, scope Data API grants and monitor current platform changes, including the published 2026 TLS compatibility deprecation affecting legacy TLS client cipher suites. Do not assume vendor version from historical documentation.
